@@ -1,2 +1,12 @@
 # Local administrative files
 /admin/
+/.R-library/
+/.local/
+/.artifacts/
+/.checks/
+*.tar.gz
+*.Rcheck/
+.Renviron
+.Rhistory
+.RData
+**/.DS_Store
