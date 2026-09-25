@@ -1,0 +1,29 @@
+---
+title: "Zwei Runden offline auswerten"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Zwei Runden offline auswerten}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Die synthetischen Beispielschwellen sind keine methodische Empfehlung.
+Das Kernpackage benötigt für diese Auswertung weder Shiny noch PostgreSQL.
+
+```{r}
+library(delphyr)
+protocol <- new_protocol(demo_protocol())
+first <- demo_snapshot()
+second <- demo_snapshot(c(2,4,7,7,7,8,8,9,9,9))
+analysis <- analyse_round(first)
+as.data.frame(analysis)
+compare_rounds(first, second)
+prepare_feedback(analysis)$results
+```
+
+`n_valid` ist der Nenner der Zustimmungsquote. Zugewiesene Personen,
+Abgaben und Sonderantworten werden separat berichtet. Quartile verwenden Typ 7.
+Die leere zweite Gruppe bleibt sichtbar und ergibt unzureichende Daten.
+Die Demo verwendet für ihre Gesamtentscheidung ausdrücklich das gepoolte Profil.
+Neue Itembedeutung muss im Mapping als nicht vergleichbar ausgewiesen werden.
+Konsens, deskriptive Veränderung und menschliche Itementscheidung bleiben getrennt.
