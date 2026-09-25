@@ -1,0 +1,274 @@
+A reason and confirmation are required.	Une justification et une confirmation sont requises.
+Action failed. Check your entries, permissions and round state. No success was confirmed.	L’action a échoué. Vérifiez vos saisies, vos autorisations et l’état du tour. Aucune réussite n’a été confirmée.
+Amendments apply only to future rounds. Existing rounds and frozen data retain their original protocol. This technical approval does not replace institutional or ethics approval.	Les modifications s’appliquent uniquement aux futurs tours. Les tours existants et les données figées conservent leur protocole initial. Cette approbation technique ne remplace pas l’approbation institutionnelle ou éthique.
+Analysis and subsequent round	Analyse et tour suivant
+Analysis queued. Check the operation.	Analyse mise en attente. Consultez l’opération.
+Approval or cancellation rationale	Justification de l’approbation ou de l’annulation
+Approve local test receipts	Approuver les traces de test locales
+Approve new protocol version	Approuver la nouvelle version du protocole
+Approved for local test receipts	Approuvé pour les traces de test locales
+Approved. No email will be sent.	Approuvé. Aucun e-mail ne sera envoyé.
+Assess evidence together	Évaluer ensemble les connaissances
+Assign to selected subsequent round	Affecter au tour suivant sélectionné
+Cancel pending test receipts	Annuler les traces de test en attente
+Cancelled	Annulé
+Change state	Changer l’état
+Check operation	Consulter l’opération
+Choose a rating	Choisir une note
+Choose a study to see your available work areas.	Choisissez une étude pour voir vos espaces de travail disponibles.
+Coding decision	Décision de codage
+Column	Colonne
+Comma	Virgule
+Complete message text	Texte intégral du message
+Complete new protocol (JSON, maximum 1 MB)	Nouveau protocole complet (JSON, 1 Mo maximum)
+Complete preview	Aperçu complet
+Complete study	Terminer l’étude
+Confirm end of participation	Confirmer la fin de la participation
+Conflict: reload and review the saved version. Your input remains visible.	Conflit : rechargez la page et vérifiez la version enregistrée. Votre saisie reste visible.
+Consent is recorded.	Le consentement est enregistré.
+Consent saved. Receipt:	Consentement enregistré. Reçu :
+contacts imported;	contacts importés ;
+Create a separate version	Créer une version distincte
+Create exact preview	Créer l’aperçu exact
+Create feedback	Créer la restitution
+CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.	Colonnes CSV : external_ref, email, display_name, locale, stakeholder_group. Utilisez UTF-8 ; le fichier entier doit être validé avant l’importation.
+Deadline	Date limite
+Deadline with timezone	Date limite avec fuseau horaire
+Decision rationale	Justification de la décision
+Definition and coding rule	Définition et règle de codage
+Delimiter	Séparateur
+Derivation rationale	Justification de la dérivation
+Download export	Télécharger l’export
+Draft	Brouillon
+Edited text	Texte révisé
+End participation	Mettre fin à la participation
+Exact recipient selection (pseudonyms)	Sélection exacte des destinataires (pseudonymes)
+exactly selected recipients	destinataires explicitement sélectionnés
+Exclude	Exclure
+Explicitly confirm withdrawal first.	Confirmez d’abord explicitement le retrait.
+Export queued. Check the operation.	Export mis en attente. Consultez l’opération.
+Feedback assigned.	Restitution affectée.
+Feedback created for review.	Restitution créée pour examen.
+Feedback released.	Restitution publiée.
+Field	Champ
+File	Fichier
+File schema	Schéma du fichier
+Freeze round	Figer le tour
+Give a response	Donner une réponse
+I confirm the displayed relationship.	Je confirme la relation affichée.
+I consent to the displayed study information.	Je consens à participer sur la base des informations affichées sur l’étude.
+I independently reviewed this exact version.	J’ai examiné cette version exacte de manière indépendante.
+I reviewed my answers. Submission ends editing.	J’ai vérifié mes réponses. L’envoi met fin aux modifications.
+I reviewed the round and target state	J’ai vérifié le tour et l’état cible
+I reviewed the text and exact recipient list.	J’ai vérifié le texte et la liste exacte des destinataires.
+I reviewed this exact file and every displayed contact.	J’ai vérifié ce fichier exact et chaque contact affiché.
+I reviewed this exact version and its application only to future rounds.	J’ai vérifié cette version exacte et son application uniquement aux futurs tours.
+I reviewed this feedback	J’ai vérifié cette restitution
+I want to end participation and understand the stated data retention.	Je souhaite mettre fin à ma participation et comprends les modalités indiquées de conservation des données.
+Import blocked. Correct every issue and preview a new file.	Importation bloquée. Corrigez tous les problèmes et prévisualisez un nouveau fichier.
+Import confirmed. Invitation drafts remain unbound; no email was sent.	Importation confirmée. Les brouillons d’invitation restent non associés ; aucun e-mail n’a été envoyé.
+Import rationale	Justification de l’importation
+Import receipt	Reçu d’importation
+Import reviewed invitation drafts	Importer les brouillons d’invitation vérifiés
+Import validated. No round created yet.	Importation validée. Aucun tour n’a encore été créé.
+Include	Inclure
+Independent review	Examen indépendant
+Initial version	Version initiale
+Inspect saved version	Examiner la version enregistrée
+Issue	Problème
+Item code	Code de l’item
+Item version	Version de l’item
+Language	Langue
+Link an item to its source	Relier un item à sa source
+Load round	Charger le tour
+Local test receipts only. This application sends no email. Recipients are represented only by study pseudonyms.	Traces de test locales uniquement. Cette application n’envoie aucun e-mail. Les destinataires sont représentés uniquement par les pseudonymes de l’étude.
+Manage the protocol, rounds and independent reviews. Choose a study section to prepare the next step.	Gérez le protocole, les tours et les examens indépendants. Choisissez une section de l’étude pour préparer l’étape suivante.
+Merge	Fusion
+Message language	Langue du message
+Message type	Type de message
+My participation	Ma participation
+New	Nouveau
+New items: one code,version per line	Nouveaux items : un code,version par ligne
+New state	Nouvel état
+New version confirmed:	Nouvelle version confirmée :
+No accessible study. Contact the study team.	Aucune étude accessible. Contactez l’équipe de l’étude.
+No assigned round.	Aucun tour attribué.
+No panel view is available for this study.	Aucune vue de participation n’est disponible pour cette étude.
+No partial import: the entire file remains blocked.	Aucune importation partielle : le fichier entier reste bloqué.
+Not yet saved	Pas encore enregistré
+Operation:	Opération :
+optional	facultatif
+Original text (synthetic only)	Texte original (synthétique uniquement)
+Originals are preserved. Redactions and summaries are stored separately; another person must release the exact version.	Les originaux sont conservés. Les versions expurgées et les résumés sont enregistrés séparément ; une autre personne doit approuver la version exacte.
+Panel file (CSV, maximum 1 MiB)	Fichier du panel (CSV, 1 Mio maximum)
+Parent	Parent
+Parent items: one code,version per line	Items parents : un code,version par ligne
+Participation ended. Saved data are retained. Receipt:	Participation terminée. Les données enregistrées sont conservées. Reçu :
+Pending receipts cancelled. Existing receipts are preserved.	Traces en attente annulées. Les traces existantes sont conservées.
+Prepare a new round	Préparer un nouveau tour
+Prepare round	Préparer le tour
+Preserve original	Conserver l’original
+Preserve original sources and document separate editorial versions, coding decisions and item provenance.	Conservez les sources originales et documentez les versions éditoriales distinctes, les décisions de codage et la provenance des items.
+Preview based on version	Aperçu fondé sur la version
+Preview created. Approval is still required.	Aperçu créé. L’approbation reste nécessaire.
+Preview exact version	Prévisualiser la version exacte
+Preview passed validation. Nothing has been imported yet.	Aperçu validé. Rien n’a encore été importé.
+Previous	Précédent
+Proposed	Proposé
+Protocol amendment rationale	Justification de la modification du protocole
+Protocol validated. No new version has been saved.	Protocole validé. Aucune nouvelle version n’a été enregistrée.
+Protocol versions	Versions du protocole
+Pseudonym	Pseudonyme
+Qualitative editorial work	Travail éditorial qualitatif
+Rating	Note
+Rationale	Justification
+Rationale or dissent	Justification ou avis divergent
+Reason	Motif
+Reason for changes	Motif des modifications
+Receipt state	État de la trace
+Receipt:	Reçu :
+Record an item split or merge	Enregistrer une division ou une fusion d’items
+Record an original source	Enregistrer une source originale
+Redacted version	Version expurgée
+Redaction	Expurgation
+Refresh editorial records	Actualiser les données éditoriales
+Refresh receipt status	Actualiser l’état des traces
+Relationship	Relation
+Release feedback	Publier la restitution
+Release version	Approuver la version
+Released previous-round feedback:	Restitution publiée du tour précédent :
+Request analysis	Demander l’analyse
+Request export	Demander l’export
+required	obligatoire
+response fields confirmed saved.	champs de réponse confirmés comme enregistrés.
+Response text	Texte de la réponse
+Response type	Type de réponse
+Restricted contact preview	Aperçu des contacts à accès restreint
+Review and release feedback	Examiner et publier la restitution
+Review rationale including dissent	Justification de l’examen, y compris les avis divergents
+Review relationship	Examiner la relation
+Review synthetic contacts and exact recipient lists before approving imports or local test receipts.	Vérifiez les contacts synthétiques et les listes exactes des destinataires avant d’approuver les importations ou les traces de test locales.
+Review the round state and record a reason for every transition. Permissions and state are checked again when the action runs.	Vérifiez l’état du tour et indiquez un motif pour chaque transition. Les autorisations et l’état sont de nouveau vérifiés lors de l’exécution de l’action.
+Round	Tour
+Round draft created. Review and approve before opening.	Brouillon du tour créé. Examinez-le et approuvez-le avant l’ouverture.
+Row	Ligne
+rows in the file.	lignes dans le fichier.
+Save all changes and confirm submission first.	Enregistrez toutes les modifications et confirmez d’abord l’envoi.
+Save coding decision	Enregistrer la décision de codage
+Save consent	Enregistrer le consentement
+Save each response and review the confirmed answers before explicitly submitting your round.	Enregistrez chaque réponse et vérifiez les réponses confirmées avant de soumettre explicitement votre tour.
+Save each response field explicitly. Saving is not automatic.	Enregistrez explicitement chaque champ de réponse. L’enregistrement n’est pas automatique.
+Save relationship	Enregistrer la relation
+Save response	Enregistrer la réponse
+Save source linkage	Enregistrer le lien à la source
+Save theme version	Enregistrer la version du thème
+Save version	Enregistrer la version
+Save your changes first. The current round stays open.	Enregistrez d’abord vos modifications. Le tour actuel reste ouvert.
+Saved response	Réponse enregistrée
+Saved version	Version enregistrée
+Saved:	Enregistré :
+Saved. Original history is preserved.	Enregistré. L’historique original est conservé.
+Saving …	Enregistrement…
+Select consent explicitly first.	Cochez d’abord explicitement le consentement.
+Semicolon	Point-virgule
+Snapshot confirmed.	Instantané confirmé.
+Source for redaction, coding and item linkage	Source pour l’expurgation, le codage et les liens aux items
+Source reference	Référence de la source
+Split	Division
+State	État
+State change confirmed.	Changement d’état confirmé.
+Study	Étude
+Study completed.	Étude terminée.
+Study information	Informations sur l’étude
+Study management	Gestion de l’étude
+Study sections	Sections de l’étude
+Subject	Objet
+Submission confirmed:	Envoi confirmé :
+Submission receipt:	Reçu d’envoi :
+Submit by:	À envoyer avant le :
+Submit final responses	Envoyer les réponses définitives
+Submitted. Further editing is unavailable.	Envoyé. Les modifications ne sont plus possibles.
+Summary (not a quotation)	Résumé (pas une citation)
+Synthetic communications	Communications synthétiques
+Synthetic contacts with .invalid addresses only. Import creates unbound invitation drafts. It does not create accounts, associate responses, or send email.	Contacts synthétiques avec adresses .invalid uniquement. L’importation crée des brouillons d’invitation non associés. Elle ne crée pas de comptes, n’associe pas de réponses et n’envoie aucun e-mail.
+Synthetic development environment. Do not enter real participant data. No email is sent.	Environnement de développement synthétique. Ne saisissez aucune donnée réelle de participants. Aucun e-mail n’est envoyé.
+Synthetic panel import	Importation d’un panel synthétique
+Template version	Version du modèle
+The round is closed or its deadline has passed. Saving is unavailable.	Le tour est fermé ou sa date limite est dépassée. L’enregistrement est impossible.
+The wording changed. Ratings are not directly comparable.	La formulation a changé. Les notes ne sont pas directement comparables.
+Theme code	Code du thème
+Theme for the selected source	Thème de la source sélectionnée
+Theme label	Libellé du thème
+Theme version	Version du thème
+Themes and coding	Thèmes et codage
+These actions use the round selected above. Analysis and exports are prepared in the background; use Check operation to see their progress.	Ces actions concernent le tour sélectionné ci-dessus. L’analyse et les exports sont préparés en arrière-plan ; utilisez Consulter l’opération pour suivre leur progression.
+This does not import or approve an instrument item.	Cette action n’importe ni n’approuve aucun item d’instrument.
+This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.	Cette action met fin aux réponses et aux invitations dans cette étude synthétique. Les données déjà enregistrées sont conservées. Il ne s’agit pas d’une demande de suppression.
+Unanswered	Sans réponse
+unbound invitation drafts.	brouillons d’invitation non associés.
+Unsaved change.	Modification non enregistrée.
+Validate and preview exact protocol	Valider et prévisualiser le protocole exact
+Validate file and create preview	Valider le fichier et créer l’aperçu
+Validate import	Valider l’importation
+Version	Version
+Version to review	Version à examiner
+Version type	Type de version
+View analysis	Afficher l’analyse
+View restricted original text	Afficher le texte original à accès restreint
+Your previous response:	Votre réponse précédente :
+In review	En cours d’examen
+Approved	Approuvé
+Open	Ouvert
+Closed	Fermé
+Frozen	Figé
+Analysed	Analysé
+Feedback released	Restitution publiée
+Finalized	Finalisé
+Eligible	Admissible
+In progress	En cours
+Submitted	Envoyé
+Protocol	Protocole
+Rounds and analysis	Tours et analyse
+Editorial review	Examen éditorial
+Panel import	Importation du panel
+Communications	Communications
+Connection restored. Review the last saved responses before continuing. Pending edits have not been confirmed saved.	Connexion rétablie. Vérifiez les dernières réponses enregistrées avant de continuer. L’enregistrement des modifications en attente n’a pas été confirmé.
+Connection lost. Changes are not being saved. Keep a copy of pending text before reloading; a reload restores only confirmed responses.	Connexion interrompue. Les modifications ne sont pas enregistrées. Conservez une copie des textes en cours avant de recharger la page ; seules les réponses confirmées seront restaurées.
+Abstain	S’abstenir
+Browse…	Parcourir…
+Deadline change	Modification de la date limite
+Display name	Nom affiché
+Instrument (CSV, protocol languages)	Instrument (CSV, langues du protocole)
+Invitation	Invitation
+Local receipt recorded	Trace locale enregistrée
+No approved translation is available; displayed language:	Aucune traduction approuvée n’est disponible ; langue affichée :
+No file selected	Aucun fichier sélectionné
+Normalized email	E-mail normalisé
+Not applicable	Sans objet
+Outcome unknown	Résultat inconnu
+Processing	Traitement en cours
+Queued	En attente
+Reminder	Rappel
+Round opening	Ouverture du tour
+Stakeholder group	Groupe de parties prenantes
+Study completion	Fin de l’étude
+Study text, scale anchors and consent remain in their approved language.	Les textes de l’étude, les libellés des échelles et le consentement restent dans leur langue approuvée.
+Suppressed	Supprimé de l’envoi
+Unable to judge	Impossible à évaluer
+CSV could not be parsed	Le fichier CSV n’a pas pu être lu
+Columns do not match the selected schema	Les colonnes ne correspondent pas au schéma sélectionné
+No contact rows	Aucune ligne de contact
+Invalid source reference	Référence de source invalide
+Invalid display name	Nom affiché invalide
+A valid synthetic .invalid email is required	Une adresse e-mail synthétique .invalid valide est requise
+Language is not supported by this study	Cette langue n’est pas prise en charge par l’étude
+Stakeholder group is not in the protocol	Le groupe de parties prenantes ne figure pas dans le protocole
+Duplicate in this file; resolve explicitly	Doublon dans ce fichier ; résolution explicite nécessaire
+Email case variants require explicit review	Les variantes de casse des e-mails nécessitent un examen explicite
+Source reference already exists	La référence de source existe déjà
+Email already exists	L’e-mail existe déjà
+Existing email case variant requires review	Une variante de casse d’un e-mail existant nécessite un examen
+Pending	En attente
+Running	En cours d’exécution
+Succeeded	Réussi
+Failed	Échec

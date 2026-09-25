@@ -1,6 +1,6 @@
 ---
-title: "delphyR – synthetischer Studienbericht"
-lang: de
+title: "delphyR – synthetic study report"
+lang: en
 format:
   html:
     embed-resources: true
@@ -20,7 +20,7 @@ execute:
 x <- jsonlite::fromJSON("report-data.json", simplifyVector = TRUE)
 escape <- function(value) {
   value <- as.character(value)
-  value[is.na(value)] <- "nicht verfügbar"
+  value[is.na(value)] <- "not available"
   value <- gsub("&", "&amp;", value, fixed = TRUE)
   value <- gsub("<", "&lt;", value, fixed = TRUE)
   value <- gsub(">", "&gt;", value, fixed = TRUE)
@@ -29,7 +29,7 @@ escape <- function(value) {
 }
 show_table <- function(table) {
   if (!is.data.frame(table) || !nrow(table)) {
-    cat("<p>Nicht dokumentiert oder keine Einträge im freigegebenen Profil.</p>\n")
+    cat("<p>Not documented or no entries in the approved profile.</p>\n")
     return(invisible(NULL))
   }
   cat('<div style="overflow-x:auto"><table><thead><tr>',
@@ -41,39 +41,39 @@ show_table <- function(table) {
 show_json <- function(value) cat("<pre>", escape(jsonlite::toJSON(value, auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null")), "</pre>\n")
 ```
 
-# Zweck und Datenstand
+# Purpose and data scope
 
-Dieser Bericht enthält synthetische Entwicklungsdaten. Er ist kein öffentlicher
-Datenrelease und keine wissenschaftliche oder institutionelle Studienfreigabe.
-Beispielschwellen sind keine methodische Empfehlung.
+This report contains synthetic development data. It is not a public data release
+or scientific or institutional study approval. Example thresholds are not
+methodological recommendations.
 
 ```{r}
 #| results: asis
 show_json(x$metadata)
 ```
 
-# Protokoll und Regeln
+# Protocol and rules
 
-Gültige numerische Bewertungen bilden den Nenner. Enthaltung und fehlende
-Beurteilbarkeit sind keine Nullbewertungen. Quartile verwenden Typ 7.
-Konsensklassifikation und menschliche Itementscheidung werden getrennt dargestellt.
+Valid numeric ratings form the denominator. Abstention and inability to judge
+are not zero ratings. Quartiles use type 7. Consensus classification and human
+item decisions are presented separately.
 
 ```{r}
 #| results: asis
 show_json(x$protocol)
 ```
 
-# Eingefrorenes Instrument
+# Frozen instrument
 
-Die folgenden Texte und Versionen stammen aus dem Instrument der analysierten
-Runde. Sie sind keine individuellen Antworten.
+The following texts and versions come from the instrument used in the analysed
+round. They are not individual responses.
 
 ```{r}
 #| results: asis
 show_table(x$instrument)
 ```
 
-# Ergebnisse und Nenner
+# Results and denominators
 
 ```{r}
 #| results: asis
@@ -81,7 +81,7 @@ show_table(x$results)
 show_table(x$denominators)
 ```
 
-# Fehlende Angaben und Verteilungen
+# Missingness and distributions
 
 ```{r}
 #| results: asis
@@ -89,11 +89,11 @@ show_table(x$missingness)
 show_table(x$distributions)
 ```
 
-# Redaktionelle Entscheidungen und Itembeziehungen
+# Editorial decisions and item lineage
 
-Diese strukturierten Angaben zeigen den Stand zum Exportzeitpunkt. Sie sind nicht
-rückwirkend Bestandteil des eingefrorenen Antwortsnapshots. Qualitative Originale,
-redaktionelle Freitextbegründungen und Kontozuordnungen sind nicht enthalten.
+These structured records reflect the state at export time. They do not become
+part of the earlier frozen response snapshot. Qualitative originals, free-text
+editorial rationales and account mappings are excluded.
 
 ```{r}
 #| results: asis
@@ -101,35 +101,35 @@ show_table(x$decisions)
 show_table(x$lineage)
 ```
 
-# Noch notwendige Autorenangaben
+# Author information still required
 
-Die Software ergänzt keine fachliche Interpretation, Finanzierung, Interessenkonflikte
-oder fehlende Freigaben. Die folgende Übersicht ist keine ACCORD-/CREDES-Zertifizierung.
+The software does not invent scientific interpretation, funding, conflicts of
+interest or missing approvals. The following table is not ACCORD/CREDES certification.
 
 ```{r}
 #| results: asis
 show_table(x$author_fields)
 ```
 
-# Datenwörterbuch
+# Data dictionary
 
 ```{r}
 #| results: asis
 show_table(x$dictionary)
 ```
 
-# Reproduktion und Grenzen
+# Reproduction and limitations
 
-Die wissenschaftlichen Hashes verbinden Snapshot, Regeln und Analyse. Der
-Berichtszeitpunkt kann sich bei einem erneuten Export unterscheiden. HTML-Bytes
-sind kein Ersatz für den Vergleich kanonischer Analyseergebnisse.
+Scientific hashes link the snapshot, rules and analysis. The report timestamp
+may change on re-export. HTML bytes do not replace comparison of canonical
+analysis results.
 
 ```{r}
 #| results: asis
 show_json(x$provenance)
-cat("<p>Berichtsdaten-Hash: <code>", escape(x$content_hash), "</code></p>")
+cat("<p>Report data hash: <code>", escape(x$content_hash), "</code></p>")
 ```
 
-Das Forschungsexportprofil enthält keine Kontakte oder Zugangstokens. Pseudonyme
-sind nicht anonym. Berichtsfreigabe, methodische Bewertung und weitergehende
-Offenlegung bleiben menschliche Entscheidungen.
+The research export profile contains no contacts or access tokens. Pseudonyms
+are not anonymous. Report release, methodological assessment and further
+disclosure remain human decisions.

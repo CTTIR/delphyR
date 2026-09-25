@@ -8,8 +8,8 @@ panel_ui <- function(id) {
       condition = sprintf("output['%s'] === 'yes'", ns("visible")),
       shiny::tags$section(
         id = ns("workspace"), class = "del-sheet", shiny::uiOutput(ns("heading")),
-        shiny::selectInput(ns("enrollment"), "Runde", character()),
-        shiny::actionButton(ns("load"), "Runde laden"), status_ui(ns("status")),
+        shiny::selectInput(ns("enrollment"), "Round", character()),
+        shiny::actionButton(ns("load"), "Load round"), status_ui(ns("status")),
         shiny::uiOutput(ns("questionnaire")), shiny::uiOutput(ns("withdrawal"))
       )
     )
@@ -51,7 +51,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
       }, error = function(e) status(safe_error(e, lang())))
     })
     output$heading <- shiny::renderUI(shiny::tags$h2(tr(lang(), "Meine Teilnahme", "My participation")))
-    output$status <- shiny::renderText(status())
+    output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     shiny::observeEvent(list(study(), lang()), {
       tryCatch(
@@ -116,6 +116,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
         if (isTRUE(z$consent$accepted)) shiny::tags$p(tr(l, "Einwilligung liegt vor.", "Consent is recorded.")),
         if (nrow(z$receipt)) shiny::tags$p(paste(tr(l, "Abgabebeleg:", "Submission receipt:"), z$receipt$id, z$receipt$submitted_at)),
         shiny::tags$p(class = "del-note", shiny::textOutput(ns("save_note"))),
+        shiny::tags$p(class = "del-note", shiny::textOutput(ns("content_note"))),
         lapply(z$module_ids, function(x) rating_ui(ns(x))),
         shiny::tags$div(class = "del-progress", shiny::uiOutput(ns("progress"))),
         shiny::checkboxInput(ns("confirm"), tr(l, "Ich habe meine Antworten gepr\u00fcft. Die Abgabe beendet die Bearbeitung.", "I reviewed my answers. Submission ends editing."), FALSE),
@@ -127,6 +128,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
       shiny::req(q())
       paste(tr(lang(), "Runde", "Round"), q()$round$number)
     })
+    output$content_note <- shiny::renderText(tr(lang(), "Studientexte, Skalenanker und Einwilligung bleiben in ihrer genehmigten Sprache.", "Study text, scale anchors and consent remain in their approved language."))
     output$information_label <- shiny::renderText(tr(lang(), "Studieninformation", "Study information"))
     output$save_note <- shiny::renderText(tr(lang(), "Jedes Bewertungsfeld einzeln speichern. Keine automatische Speicherung.", "Save each response field explicitly. Saving is not automatic."))
     output$deadline <- shiny::renderText({
@@ -197,7 +199,7 @@ rating_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tags$section(
     class = "del-item", shiny::uiOutput(ns("title")), shiny::uiOutput(ns("prior")), shiny::tableOutput(ns("feedback")), shiny::uiOutput(ns("form")),
-    shiny::actionButton(ns("save"), "Antwort speichern / Save response", class = "btn-primary"), shiny::uiOutput(ns("save_status"))
+    shiny::actionButton(ns("save"), "Save response", class = "btn-primary"), shiny::uiOutput(ns("save_status"))
   )
 }
 rating_server <- function(id, q, item, lang, call) {
@@ -218,8 +220,17 @@ rating_server <- function(id, q, item, lang, call) {
     output$title <- shiny::renderUI({
       texts <- jsonlite::fromJSON(item$texts)
       text <- texts[[lang()]]
-      if (is.null(text)) text <- texts[[1]]
-      shiny::tags$h3(text, shiny::tags$small(paste0(" (", if (item$required) tr(lang(), "erforderlich", "required") else tr(lang(), "optional", "optional"), ")")))
+      fallback <- is.null(text)
+      content_language <- lang()
+      if (fallback) {
+        preferred <- q$protocol$study$default_language
+        content_language <- if (!is.null(preferred) && preferred %in% names(texts)) preferred else names(texts)[1]
+        text <- texts[[content_language]]
+      }
+      shiny::tagList(
+        shiny::tags$h3(shiny::tags$span(lang = content_language, text), shiny::tags$small(paste0(" (", if (item$required) tr(lang(), "erforderlich", "required") else tr(lang(), "optional", "optional"), ")"))),
+        if (fallback) shiny::tags$p(class = "del-note", paste(tr(lang(), "Keine genehmigte \u00dcbersetzung verf\u00fcgbar; angezeigte Sprache:", "No approved translation is available; displayed language:"), content_language))
+      )
     })
     output$prior <- shiny::renderUI({
       f <- q$feedback
@@ -274,7 +285,7 @@ rating_server <- function(id, q, item, lang, call) {
       shiny::tags$div(class = paste("del-status", paste0("del-status--", tone)),
         role = "status", `aria-live` = "polite", shiny::textOutput(session$ns("status")))
     })
-    output$status <- shiny::renderText(if (dirty()) paste(tr(lang(), "Ungespeicherte \u00c4nderung.", "Unsaved change."), if (save_failed()) message() else "") else if (nzchar(message())) message() else if (revision() > 0) tr(lang(), "Gespeicherter Stand", "Saved response") else tr(lang(), "Noch nicht gespeichert", "Not yet saved"))
+    output$status <- shiny::renderText(if (dirty()) paste(tr(lang(), "Ungespeicherte \u00c4nderung.", "Unsaved change."), if (save_failed()) localize_status(message(), lang()) else "") else if (nzchar(message())) localize_status(message(), lang()) else if (revision() > 0) tr(lang(), "Gespeicherter Stand", "Saved response") else tr(lang(), "Noch nicht gespeichert", "Not yet saved"))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     shiny::observeEvent(input$save, {
       a <- current()
@@ -301,6 +312,6 @@ rating_server <- function(id, q, item, lang, call) {
 response_choices <- function(scale, lang) {
   opts <- stats::setNames(c("answered", "not_answered"), c(tr(lang, "Antwort geben", "Give a response"), tr(lang, "Unbeantwortet", "Unanswered")))
   missing <- unlist(scale$missing_options)
-  labels <- if (identical(lang, "en")) c(unable_to_judge = "Unable to judge", abstained = "Abstain", not_applicable = "Not applicable") else c(unable_to_judge = "Kann ich nicht beurteilen", abstained = "Enthaltung", not_applicable = "Nicht zutreffend")
+  labels <- tr(lang, c(unable_to_judge = "Kann ich nicht beurteilen", abstained = "Enthaltung", not_applicable = "Nicht zutreffend"), c(unable_to_judge = "Unable to judge", abstained = "Abstain", not_applicable = "Not applicable"))
   c(opts, stats::setNames(missing, labels[missing]))
 }

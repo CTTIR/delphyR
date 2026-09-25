@@ -4,6 +4,10 @@ management_ui <- function(id) {
 }
 management_server <- function(id, study, lang, call, services) {
   shiny::moduleServer(id, function(input, output, session) {
+    field <- function(name, default = "") {
+      value <- shiny::isolate(input[[name]])
+      if (is.null(value)) default else value
+    }
     rounds <- shiny::reactiveVal(data.frame())
     allowed <- shiny::reactiveVal(FALSE)
     timezone <- shiny::reactiveVal("UTC")
@@ -28,7 +32,7 @@ management_server <- function(id, study, lang, call, services) {
       )
     }
     shiny::observeEvent(study(), refresh())
-    output$status <- shiny::renderText(status())
+    output$status <- shiny::renderText(localize_status(status(), lang()))
     output$body <- shiny::renderUI({
       shiny::req(allowed())
       r <- rounds()
@@ -40,9 +44,9 @@ management_server <- function(id, study, lang, call, services) {
           "Review the round state and record a reason for every transition. Permissions and state are checked again when the action runs."
         )),
         shiny::tableOutput(ns("rounds")),
-        shiny::selectInput(ns("round"), tr(lang(), "Runde", "Round"), stats::setNames(r$id, paste(tr(lang(), "Runde", "Round"), r$number, state_label(r$state, lang())))),
-        shiny::selectInput(ns("target"), tr(lang(), "Neuer Status", "New state"), stats::setNames(c("review", "approved", "open", "closed", "finalized"), state_label(c("review", "approved", "open", "closed", "finalized"), lang()))),
-        shiny::textAreaInput(ns("reason"), tr(lang(), "Begr\u00fcndung", "Reason"), width = "100%"),
+        shiny::selectInput(ns("round"), tr(lang(), "Runde", "Round"), stats::setNames(r$id, paste(tr(lang(), "Runde", "Round"), r$number, state_label(r$state, lang()))), selected = field("round", if (nrow(r)) r$id[1] else NULL)),
+        shiny::selectInput(ns("target"), tr(lang(), "Neuer Status", "New state"), stats::setNames(c("review", "approved", "open", "closed", "finalized"), state_label(c("review", "approved", "open", "closed", "finalized"), lang())), selected = field("target", "review")),
+        shiny::textAreaInput(ns("reason"), tr(lang(), "Begr\u00fcndung", "Reason"), value = field("reason"), width = "100%"),
         shiny::checkboxInput(ns("confirm"), tr(lang(), "Ich habe die ausgew\u00e4hlte Runde und den Zielstatus gepr\u00fcft", "I reviewed the round and target state"), FALSE),
         shiny::actionButton(ns("transition"), tr(lang(), "Status \u00e4ndern", "Change state"), class = "btn-primary"),
         if ("complete_study" %in% names(services)) shiny::actionButton(ns("complete"), tr(lang(), "Studie abschlie\u00dfen", "Complete study"))

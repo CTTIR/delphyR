@@ -1,48 +1,48 @@
-# Anforderungsmatrix
+# Requirements matrix
 
-Stand: 2026-09-25. `implemented_tested` bezeichnet den belegten synthetischen technischen Teil; keine institutionelle Studienfreigabe.
+As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical component, not institutional study approval. Historical browser language evidence is DE/EN; the en/fr/de expansion requires its own current-source checks.
 
-| ID | Status | Nachweis / Grenze |
+| ID | Status | Evidence / boundary |
 |---|---|---|
-| STU-01 | implemented_tested | Immutable Historie, Hashfreigabe, Gruppen-/Skalenidentität; Protokollupload/-diff/-freigabe im echten Browser. |
-| STU-02 | in_progress | Teilfunktion vorhanden; vollständiges P1-Gate offen. |
-| STU-03 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| PAN-01 | implemented_tested | CSV-Schema, Zeilenfehler, Dubletten, genaue Dateifreigabe und atomarer Import; echter Browser und Rollbacktest. |
-| PAN-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| PAN-03 | in_progress | Synthetischer Rückzug stoppt neue Aktivität; Save/Withdraw-Rennen geprüft. Produktive Datenpolicy/Löschung offen. |
-| PAN-04 | implemented_tested | Ereignisgebundene Gruppenänderung gilt nur für neue Runden; alte Enrollmentgruppen unverändert. |
-| ITM-01 | in_progress | Teilfunktion vorhanden; vollständiges P1-Gate offen. |
-| ITM-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| ITM-03 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| ITM-04 | in_progress | Teilfunktion vorhanden; vollständiges P1-Gate offen. |
-| RND-01 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| RND-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| RND-03 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| RSP-01 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| RSP-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| RSP-03 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| RSP-04 | in_progress | Realer Browser: Verbindungsverlust bleibt unbestätigt, Reload stellt letzte Revision her; Autosave offen. |
-| ANA-01 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| ANA-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| ANA-03 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| ANA-04 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| ANA-05 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| FDB-01 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| FDB-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| FDB-03 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| QUA-01 | in_progress | Services und echte PostgreSQL-Browserredaktion samt unabhängiger Freigabe geprüft. |
-| QUA-02 | in_progress | Mehrfachverknüpfungen geprüft; vollständiger explorativer UI-Pfad offen. |
-| COM-01 | in_progress | Exakte Freigabe/Outbox im Sink geprüft; Provider/Kontakte offen. |
-| COM-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| EXP-01 | in_progress | Numerisches P0-Profil ohne Kontakte; weitere Profile/Freitext offen. |
-| EXP-02 | in_progress | Quarto, Instrument-/Nenner-/Missingness-Tabellen und Manifest geprüft; Autorenangaben fehlen bewusst. |
-| SEC-01 | in_progress | Direkter Shiny-Gatewaypfad besteht zwölf reale Checks; Stock OSS verwirft Header und bleibt offen. |
-| SEC-02 | in_progress | Minimale Fehler/Auditdaten; vollständige Canarymatrix offen. |
-| SEC-03 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| AUD-01 | in_progress | Teilfunktion vorhanden; vollständiges P1-Gate offen. |
-| OPS-01 | in_progress | DB und ausgewählter Studienartefaktrestore samt Offline-Reproduktion bestanden; Produktivrestore offen. |
-| OPS-02 | implemented_tested | Reale Service-/DB- oder unabhängige Methodiktests; siehe Validierungsbericht. |
-| UX-01 | in_progress | 390px ohne Overflow, ausgewählter Tastatur-/Abgabepfad bestanden; vollständige Tab-/Assistenztechnikmatrix offen. |
-| UX-02 | in_progress | DE/EN, erhaltene Entwürfe, Rechte-Navigation und Zeitzone geprüft; vollständige Managementmatrix offen. |
-| RTD-01 | out_of_scope | P2 gemäß Spezifikation. |
-| RNK-01 | out_of_scope | P2 gemäß Spezifikation. |
+| STU-01 | implemented_tested | Immutable history, hash approval, group/scale identity; actual browser protocol upload/diff/approval. |
+| STU-02 | in_progress | Partial functionality; complete P1 gate remains open. |
+| STU-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| PAN-01 | implemented_tested | CSV schema, row errors, duplicates, exact file approval and atomic import; actual browser and rollback test. |
+| PAN-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| PAN-03 | in_progress | Synthetic withdrawal stops new activity; save/withdraw race tested. Production data/deletion policy remains open. |
+| PAN-04 | implemented_tested | Recorded group changes apply only to new rounds; previous enrollment groups unchanged. |
+| ITM-01 | in_progress | Partial functionality; complete P1 gate remains open. |
+| ITM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| ITM-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| ITM-04 | in_progress | Partial functionality; complete P1 gate remains open. |
+| RND-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| RND-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| RND-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| RSP-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| RSP-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| RSP-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| RSP-04 | in_progress | Actual browser: network-loss save remains unconfirmed; reload restores last revision. Autosave remains open. |
+| ANA-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| ANA-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| ANA-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| ANA-04 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| ANA-05 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| FDB-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| FDB-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| FDB-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| QUA-01 | in_progress | Services and actual PostgreSQL editorial browser path with independent approval tested. |
+| QUA-02 | in_progress | Multiple links tested; complete exploratory UI path remains open. |
+| COM-01 | in_progress | Exact approval/outbox tested in local sink; provider/contact integration remains open. |
+| COM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| EXP-01 | in_progress | Numeric P0 profile excludes contacts; further profiles/free text remain open. |
+| EXP-02 | in_progress | Quarto, instrument/denominator/missingness tables and manifest tested; author information explicitly missing. |
+| SEC-01 | in_progress | Direct Shiny gateway passed twelve real checks; stock OSS drops headers and remains unqualified. |
+| SEC-02 | in_progress | Minimal errors/audit data; complete canary matrix remains open. |
+| SEC-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| AUD-01 | in_progress | Partial functionality; complete P1 gate remains open. |
+| OPS-01 | in_progress | Database and selected study artifact restore with offline reproduction passed; production recovery remains open. |
+| OPS-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
+| UX-01 | in_progress | 390px without overflow and selected keyboard/submission path passed; complete tab/assistive-technology matrix remains open. |
+| UX-02 | in_progress | Historical DE/EN, preserved drafts, rights navigation and timezone tested; en/fr/de expansion and full management matrix require current evidence. |
+| RTD-01 | out_of_scope | P2 under the specification. |
+| RNK-01 | out_of_scope | P2 under the specification. |

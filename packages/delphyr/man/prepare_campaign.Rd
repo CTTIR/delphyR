@@ -12,7 +12,7 @@ prepare_campaign(
   kind,
   subject,
   body,
-  locale = "de",
+  locale = "en",
   template_version = 1L,
   command_id
 )
@@ -30,7 +30,7 @@ prepare_campaign(
 
 \item{subject, body}{Final plain text without unresolved template placeholders.}
 
-\item{locale}{de or en.}
+\item{locale}{en, fr or de.}
 
 \item{template_version}{Positive immutable template version.}
 

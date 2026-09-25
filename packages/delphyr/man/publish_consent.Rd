@@ -15,7 +15,7 @@ publish_consent(repo, actor, study_id, text, locale, command_id)
 
 \item{text}{Displayed information, explicitly synthetic in development.}
 
-\item{locale}{de or en.}
+\item{locale}{en, fr or de.}
 
 \item{command_id}{Idempotency key.}
 }

@@ -1,28 +1,33 @@
-# ADR-018: Entwicklungspfad und Qualifikationsgrenzen
+# ADR-018: Development path and qualification boundaries
 
-Status: accepted. Datum: 2026-09-25.
+Status: accepted. Date: 2026-09-25.
 
-Die erste ausführbare Umgebung verwendet ausschließlich synthetische Identitäten
-und PostgreSQL auf Loopback. Das Schema trennt Identität, Forschung und Betrieb;
-Migrationen und Fixtures nutzen eine Ownerverbindung; App und Worker den
-begrenzten delphyr_runtime-Zugang. Dies
-qualifiziert weder produktive DB-Rollen noch institutionelle Authentifizierung.
-Der App-Service verlangt serverseitig erzeugte Actorobjekte. Browserparameter
-sind keine Identitätsquelle. Die nächste geschützte Aktion prüft aktuelle Rechte;
-bereits vor einem Widerruf zugelassene Transaktionen dürfen abschließen.
+The initial runnable environment uses synthetic identities and loopback PostgreSQL.
+The schema separates identity, research and operations. Migrations and fixtures use
+an owner connection; the app and worker use restricted `delphyr_runtime` access.
+This does not qualify production database roles or institutional authentication.
+Services require server-created actors; browser parameters are not identities.
+The next protected action checks current rights. Transactions admitted before a
+revocation may finish.
 
-Antworten sperren Runde gemeinsam und Enrollment exklusiv; Close sperrt die Runde
-exklusiv. Fristen werden nach Wartezeiten mit Datenbankzeit geprüft. Jede fachliche
-Mutation ist transaktional und an einen inhaltsgebundenen Retrykey gebunden.
-Angewandte Migrationsdateien sind checksummiert und unveränderlich.
+Responses lock the round in shared mode and the enrollment exclusively; closing
+locks the round exclusively. Deadlines are checked after waits using database time.
+Mutations are transactional and use content-bound retries. Applied migration files
+are checksummed and immutable.
 
-Der Vorabstand 0.0.1 erhält strukturell getaggte wissenschaftliche Hashes. Dies
-korrigiert Kollisionen leerer Tabellen und benannter Vektoren im übernommenen
-Entwicklungsstand. Frühere lokale Demonstrationshashes sind damit nicht gleich;
-es gibt keine veröffentlichte stabile Exportversion oder produktive Migration.
+Prerelease 0.0.1 uses structurally tagged scientific hashes. This corrects empty
+table and named-vector collisions in the inherited development state. Earlier
+local demo hashes therefore differ; there is no published stable export version
+or production migration to preserve.
 
-Export v1 unterstützt numerische Studien ohne Freitextantworten. Unverändertes
-JSON ist maßgeblich; CSV neutralisiert Formelpräfixe. HTML wird aus demselben
-Analysestand escaped erzeugt. Ein vollständiger Quarto-Studienbericht bleibt offen.
-Die Shiny-Demo verwendet ausdrückliches Speichern; Autosave ist noch nicht abgenommen.
-Keine dieser Grenzen wird als erfüllte P1-Anforderung gewertet.
+Numeric export v1 excludes free-text responses. Unmodified JSON is authoritative;
+CSV neutralizes formula prefixes. HTML escapes content from the same analysis.
+At the initial decision, a full Quarto report was still open. Later local evidence
+covers the packaged numeric Quarto report and its supplements; institutional
+author fields and broader release profiles remain open. See the implementation
+status rather than treating the initial limitation as current functionality.
+
+The Shiny demo uses explicit saves; autosave is not accepted. Interface-language
+changes never rewrite approved content or historical snapshots. English public
+documentation and en/fr/de interface policy supersede the earlier bilingual scope
+under ADR-017. None of these decisions alone establishes full P1 acceptance.

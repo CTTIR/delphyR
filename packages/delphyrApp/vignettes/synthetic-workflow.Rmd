@@ -1,8 +1,8 @@
 ---
-title: "Synthetische Studie in der Shiny-Oberfläche"
+title: "Running and reviewing a synthetic Delphi study"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Synthetische Studie in der Shiny-Oberfläche}
+  %\VignetteIndexEntry{Running and reviewing a synthetic Delphi study}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,30 +11,30 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-`delphyrApp` trennt die Oberfläche von den transaktionalen Diensten in `delphyr`.
-Diese Vignette erläutert den synthetischen Entwicklungsworkflow. Produktive
-Authentifizierung und Deployment sind nicht qualifiziert. Die Oberflächensprache
-kann Deutsch oder Englisch sein; die Dokumentation beschreibt keine automatische
-Übersetzung wissenschaftlicher Inhalte.
+`delphyrApp` separates the study interface from the transactional services in
+`delphyr`. This guide covers synthetic development workflows. Production
+identity infrastructure and deployment remain separate acceptance gates.
+Interface languages are English, German, and French; English is the initial
+default. Stored study and instrument texts keep their explicitly authored
+language and are not automatically translated.
 
-## Mit einer vertrauenswürdigen Identität starten
+## Start a trusted local session
 
-Für eine lokale Instanz mit einer festen synthetischen Identität:
+For a local instance with one fixed synthetic identity:
 
 ```{r launch, eval=FALSE}
-# repo und actor stammen aus der vertrauenswürdigen serverseitigen Demoeinrichtung.
-app <- delphyrApp::run_app(repo, actor, language = "de")
+# repo and actor come from trusted server-side demonstration setup.
+app <- delphyrApp::run_app(repo, actor, language = "en")
 shiny::runApp(app, host = "127.0.0.1")
 ```
 
-Der aufrufende Host verwaltet die Lebensdauer einer direkt übergebenen Verbindung.
-Alle Sitzungen dieser Instanz verwenden denselben festen Actor; dies ist kein
-Mehrbenutzer-Login. Rolle oder Identität dürfen nicht aus einem Browserfeld oder
-URL-Parameter stammen.
+The caller owns the lifetime of a directly supplied connection. All sessions of
+this instance use the same fixed actor; this is not a multi-user login. Never
+resolve identity or roles from browser fields or URL parameters.
 
-Für eine eigene Verbindung und Identitätsauflösung je Sitzung stehen Factories
-zur Verfügung. Das folgende Gerüst zeigt die Schnittstelle; die Verifikation
-muss der vertrauenswürdige Host implementieren:
+A trusted host can instead supply a connection and identity resolver for each
+session. This example shows the contract; its deliberate error marks the
+host-specific identity adapter that still needs to be supplied:
 
 ```{r session-factories, eval=FALSE}
 make_repository <- function() {
@@ -44,92 +44,110 @@ make_repository <- function() {
   )
 }
 resolve_actor <- function(session, repo) {
-  # Hier ist eine überprüfte serverseitige Identitätsbindung erforderlich.
-  stop("Identitätsadapter noch nicht konfiguriert")
+  stop("Configure a verified server-side identity adapter before use")
 }
 app <- delphyrApp::run_app(
   repo_factory = make_repository,
   actor_factory = resolve_actor,
-  language = "de"
+  language = "en"
 )
 ```
 
-Eine Factory-Verbindung wird beim Sitzungsende geschlossen. Schlägt die
-Identitätsauflösung fehl, wird die Sitzung beendet. Die Factory-Schnittstelle
-allein liefert weder einen geprüften OIDC-Gateway noch eine produktive Anmeldung.
+Factory-created connections close when their session ends. Failed identity
+resolution ends the session before service access. The factory contract does
+not by itself qualify an OIDC gateway. Local gateway evidence and the remaining
+stock Shiny Server OSS transport limitations are documented separately.
 
-## Lesen, bewerten und verbindlich abgeben
+## Read, respond, and submit
 
-Studie und zugewiesene Runde auswählen, Fragebogen laden und die gespeicherte
-Studieninformation lesen. Einwilligung ausdrücklich festhalten. Bewertungsfelder
-beginnen ohne vorausgewählten Mittelwert. Statt einer Bewertung können die in der
-Skala erlaubten Sonderantworten gewählt werden.
+Choose a study and an assigned round, load the questionnaire, and read the
+stored study information. Record consent explicitly. Ratings have no
+preselected midpoint. A field can instead use a special response category
+permitted by its scale.
 
-Jedes Antwortfeld ausdrücklich speichern. **Gespeichert** erscheint erst nach einer
-bestätigten Revision und Serverzeit. Fehlgeschlagene Speicherungen lassen den
-Eingabewert bestehen. Bei einem Konflikt den maßgeblichen Serverstand neu laden und
-prüfen; ein automatisches Überschreiben wird nicht angeboten.
+Save each response explicitly. **Saved** appears only after a committed revision
+and server timestamp return. A failed save preserves the pending form value.
+For a revision conflict, reload and review the authoritative server state;
+automatic overwriting is not offered.
 
-Der Fortschrittszähler zählt bestätigte Antwortfelder. Ausstehende Änderungen vor
-der Abgabe speichern und die Abschlussbestätigung bewusst setzen. Der Service
-prüft Einwilligung, Eigentümerschaft, Rechte, Frist, Pflichtfelder und den exakten
-Revisionssatz erneut. Eine erfolgreiche Abgabe liefert eine dauerhafte Quittung;
-danach ist die Bearbeitung dieser Runde abgeschlossen.
+The progress count means confirmed response fields. Save pending changes before
+confirming final submission. The service checks consent, ownership, rights,
+deadline, required fields, and the exact revision set again. A successful
+submission returns a durable receipt and ends editing for that round.
 
-## Runden, Feedback und Berichte steuern
+During connection loss, the interface must not imply that changes are saved.
+The tested disconnect/reload path restores the last committed value. It does
+not provide an offline editor or preserve unsaved text in browser storage.
 
-Berechtigte Studienleitungen prüfen Instrument und Rundenstatus. Zustandswechsel
-brauchen eine Begründung und Bestätigung; der Service prüft Instrument-Hash und
-Rechte. Nach Schließen kann die Runde eingefroren werden. Analyse und Export werden
-als Aufträge an einen separaten Worker übergeben. Den Auftragsstatus erneut prüfen,
-um Ergebnisse abzurufen.
+## Review rounds, feedback, and reports
 
-Die konkrete Feedbackfassung vor der Freigabe ansehen und bestätigen. Freigegebenes
-Feedback kann einer ungeöffneten Folgerunde zugeordnet werden. Es wird dort mit den
-eigenen Vorantworten und gegebenenfalls einem Hinweis auf geänderten Wortlaut gezeigt.
-Zweisprachige CSV-Instrumente werden vor der Rundenvorbereitung validiert und in einer
-Vorschau geprüft.
+Managers inspect the instrument and round state. A transition needs a reason
+and confirmation; the service rechecks the instrument hash and authority.
+Freeze a closed round before queuing analysis. A separate worker processes
+analysis and export jobs. Use **Check operation** to refresh their status.
 
-Der Exportdownload prüft Berechtigung und Integrität erneut. Das numerische Profil
-enthält Snapshot, Protokoll, Ergebnisse, Provenienz, Datenwörterbuch, Instrumenttexte
-und einen HTML-Bericht. Der Worker verwendet bei vorhandener Runtime ein festes
-Quarto-Template. Ohne optionale Runtime ist der einfache HTML-Fallback ausdrücklich
-gekennzeichnet; ein tatsächlicher Renderfehler bleibt ein fehlgeschlagener Auftrag.
-Qualitative Originale und individuelle Freitextantworten sind in diesem Profil
-nicht freigegeben. Fehlende Autorenangaben werden nicht erfunden.
+Preview the exact feedback candidate before approving release. Released
+feedback can be assigned to an unopened next round. The panel sees approved
+aggregates and its own prior answers, with changed-wording notices where
+applicable. Bilingual instrument CSVs are validated and previewed before round
+preparation; interface language support does not create missing translations.
 
-## Redaktion und unabhängige Prüfung
+Managers can also inspect immutable protocol versions, upload a complete
+replacement JSON protocol, review field changes, and explicitly approve an
+amendment for future rounds. Existing rounds retain their original protocol.
+This is technical versioning, not an institutional or ethical approval.
 
-Redakteure bewahren synthetische Originalquellen und speichern getrennte redigierte
-Fassungen oder Zusammenfassungen mit Begründung. Eine Zusammenfassung ist als solche
-markiert und kein Zitat. Eine andere berechtigte Person prüft die genaue Fassung
-vor Freigabe.
+Downloads recheck authority and integrity. The numeric research profile
+contains the snapshot, protocol, results, provenance, dictionary, instrument
+texts, and an HTML report. The worker uses a trusted Quarto template when its
+optional runtime is available. Otherwise a basic HTML fallback is labelled;
+a real render failure remains a failed job. Qualitative originals and individual
+free-text answers are excluded. Missing author information is not invented.
 
-Themenversionen, Einschluss-/Ausschlusscodierungen, Quellenbezüge und Itemteilungen
-oder -zusammenführungen dokumentieren ihre Herkunft. Ein Quellenbezug importiert
-noch kein Instrumentitem. Verborgene UI-Bereiche sind kein Ersatz für die erneute
-serverseitige Rechteprüfung.
+## Preserve sources and review editorial work
 
-## Synthetische Kampagnen
+Editors keep synthetic originals and create separate redactions or summaries
+with a reason. Summaries are labelled as summaries, not quotations. Another
+authorized person reviews the exact version before release.
 
-Koordinatoren wählen exakte Studienpseudonyme und fertigen Nachrichtentext.
-Die daraus erzeugte Vorschau bindet Text und Empfängermenge. Eine Änderung verlangt
-eine neue Vorschau; Freigabe braucht eine ausdrückliche Bestätigung und Begründung.
+Theme versions, inclusion/exclusion coding, source links, and item splits or
+merges preserve their provenance. Linking a source does not import an instrument
+item. Hidden interface sections never replace service-level authorization.
 
-Ein separater Worker schreibt ausschließlich lokale Testquittungen. Er prüft
-Teilnahme, Rechte, Rückzug und bei Erinnerungen eine inzwischen erfolgte Abgabe erneut.
-Die Oberfläche verschickt keine E-Mail. Storno verhindert verbleibende Verarbeitung,
-löscht aber keine bestehenden Quittungen. Eine abgelaufene laufende Lease wird als
-`delivery_unknown` sichtbar und nicht blind erneut verarbeitet.
+## Import contacts without granting access
 
-## Gestaltung und verbleibende Abnahme
+Coordinators can preview synthetic UTF-8 contact CSVs and inspect blocking
+row/column issues. Duplicate references, duplicate addresses, and ambiguous
+local-part case variants require correction and a new preview. Normal trailing
+LF or CRLF file terminators are supported without changing the uploaded hash.
 
-Die Oberfläche verwendet Systemschriften, sichtbare Formularbeschriftungen,
-Tastaturfokus, responsive Formulare und Live-Statusmeldungen. Deutsch und Englisch
-sind verfügbar; ein Sprachwechsel darf keine ausstehenden Eingaben löschen.
-Farbe allein vermittelt keine Rückmeldung.
+Explicit approval imports the whole reviewed file atomically and returns a
+receipt for unbound invitation drafts. It creates no account, consent, response
+link, or round enrollment. Separate invitation services require approval of an
+existing stable issuer/subject identity; the complete invitation browser journey
+is not established by this CSV workflow.
 
-Dies ist kein Nachweis formaler Barrierefreiheit. Assistive Technologien,
-vollständige plattformübergreifende Browserabnahme, Autosave, produktive Anmeldung,
-externer Nachrichtenversand und Betriebsfreigabe bleiben eigene Abnahmebereiche.
-Die Service-Injektion ermöglicht gezielte Modultests ohne laufende Datenbank.
+## Approve synthetic campaigns
+
+Coordinators choose exact study pseudonyms and final message text. The resulting
+preview binds both content and recipients. A change requires a new preview;
+release needs explicit confirmation and a reason.
+
+A separate worker writes only local test receipts. It rechecks participation,
+rights, withdrawal, and—for reminders—whether submission already occurred.
+The interface sends no email. Cancellation stops remaining processing without
+deleting existing receipts. An expired in-flight lease becomes
+`delivery_unknown` and is not blindly retried.
+
+## Design and remaining qualification
+
+The interface uses system fonts, visible labels, keyboard focus, responsive
+forms, and live status regions. Language changes must preserve pending values;
+color alone does not communicate status. Permission-filtered navigation retains
+open forms when moving between study sections.
+
+These are design choices and specific local checks, not formal accessibility
+certification. Assistive technologies, the complete cross-browser matrix,
+autosave, production login, external mail, and operational approval remain
+separate gates. Service injection supports focused module tests without a
+database; those tests do not replace actual PostgreSQL and browser evidence.

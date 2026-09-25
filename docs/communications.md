@@ -1,96 +1,84 @@
-# Synthetische Kampagnen und lokale Outbox
+# Synthetic campaigns and local outbox
 
-Die P0-Kommunikationsdienste schreiben ausschließlich in einen PostgreSQL-Mail-Sink.
-Sie enthalten keinen SMTP-Client, keinen externen Provideradapter und keine
-Empfängeradressen. `sink_recorded` bedeutet eine lokale Testquittung; es belegt weder
-Versand noch Zustellung oder Lesen einer Nachricht.
+Communication services write only to a PostgreSQL mail sink. They have no SMTP
+client, external provider adapter or recipient addresses. `sink_recorded` means a
+local test receipt, not dispatch, delivery or a read receipt.
 
-## Exakte Vorschau und ausdrückliche Freigabe
+## Exact preview and explicit approval
 
-`prepare_campaign()` erhält eine Runde, eine ausdrückliche Liste ihrer Enrollment-IDs,
-einen Anlass, Sprache, Templateversion sowie fertigen Betreff und Nachrichtentext.
-Erlaubte Anlässe sind `invitation`, `round_start`, `reminder`, `deadline_change` und
-`completion`. Nicht ersetzte `{{...}}`-Platzhalter werden abgewiesen. Es gibt keine
-Adressfelder und keine automatische Erweiterung der freigegebenen Zielgruppe.
+`prepare_campaign()` accepts a round, an explicit list of its enrollment IDs,
+kind, locale, template version and final plain-text subject/body. Supported kinds
+are `invitation`, `round_start`, `reminder`, `deadline_change` and `completion`.
+Unresolved `{{...}}` placeholders are rejected. There are no address fields or
+automatic additions to the approved audience. Locales are `en`, `fr` and `de`;
+English is the default. Content is supplied by the authorized author, not translated
+automatically when the interface language changes.
 
-`preview_campaign()` zeigt exakt diesen Text, den Hash und Studienpseudonyme der
-Empfänger. Kontaktdaten, Principal-IDs und individuelle Antworten werden nicht
-zurückgegeben. Kampagnenzugriffe benötigen die aktuelle Capability `coordinate`;
-der synthetische Manager verfügt standardmäßig darüber.
+`preview_campaign()` returns the exact text, hash and recipient study pseudonyms,
+without contacts, principal IDs or individual answers. Current `coordinate`
+capability is required; the synthetic manager has it by default.
 
 ```r
-# repo, manager, round_id und enrollment_ids stammen aus einer synthetischen Studie.
 campaign <- delphyr::prepare_campaign(
   repo, manager, round_id, enrollment_ids,
-  kind = "reminder", subject = "Synthetische Erinnerung",
-  body = "Lokaler Funktionstest. Es erfolgt kein externer Versand.",
-  locale = "de", template_version = 1L, command_id = "campaign-01"
+  kind = "reminder", subject = "Synthetic reminder",
+  body = "Local functional test. No external message is sent.",
+  locale = "en", template_version = 1L, command_id = "campaign-01"
 )
 delphyr::preview_campaign(repo, manager, campaign$id)
 
-# Erst nach menschlicher Prüfung der konkreten Vorschau ausführen.
+# Execute only after reviewing this exact preview.
 delphyr::release_campaign(
   repo, manager, campaign$id, expected_hash = campaign$hash,
-  reason = "Synthetischen Text und exakte Zielgruppe geprüft",
+  reason = "Synthetic content and exact audience reviewed",
   command_id = "campaign-01-release"
 )
 ```
 
-Der Hash bindet Text, Anlass, Sprache, Templateversion, Runde und die sortierte
-Empfängerliste. Freigabeereignis und deduplizierte Outboxeinträge entstehen in einer
-Transaktion. Identische Wiederholungen mit gleichem Command-Key liefern die frühere
-Quittung; derselbe Key mit geändertem Inhalt wird zurückgewiesen. Kampagne,
-Freigaben, Empfänger und Outboxhüllen sind unveränderlich. Änderungen benötigen
-somit eine neue geprüfte Kampagne.
+The hash binds text, kind, locale, version, round and sorted recipient list.
+Approval and deduplicated outbox entries commit together. Identical retries return
+the earlier receipt; changed content under the same command key is rejected.
+Campaigns, approvals, recipients and outbox envelopes are immutable. Changes need
+a new reviewed campaign.
 
-`cancel_campaign(repo, manager, campaign$id, reason, command_id)` stoppt noch nicht
-verarbeitete Nachrichten. Bereits protokollierte Sinkquittungen bleiben erhalten.
+`cancel_campaign(repo, manager, campaign$id, reason, command_id)` stops outstanding
+messages. Existing sink receipts remain.
 
-## Getrennter Sink-Worker
+## Separate sink worker
 
-Vertrauenswürdiger Worker-Code ruft `process_campaign_sink(repo, study_id)` auf.
-Die Funktion benötigt keinen Browser-Actor und gehört daher nicht in einen
-unautorisierten UI-Handler. Sie beansprucht höchstens eine Nachricht mit einer
-dauerhaften Lease und verarbeitet sie in einer zweiten kurzen Transaktion.
+Trusted worker code calls `process_campaign_sink(repo, study_id)`. It does not
+require a browser actor and must never be exposed as an unauthorized UI handler.
+It claims at most one message with a durable lease and processes it in a second,
+short transaction. Immediately before recording the sink receipt it rechecks:
 
-Unmittelbar vor dem Sinkeintrag werden erneut geprüft:
+- Campaign not cancelled; approving actor still has coordination rights.
+- Active principal, membership and panel participation; panel right not revoked.
+- No withdrawal or latest negative consent event.
+- Required consent present; invitations and round-start notices may request it
+  if no withdrawal exists.
+- Reminders do not target an already submitted enrollment.
+- Round-start, reminder and deadline-change notices require an open, unexpired round.
 
-- Kampagne nicht storniert und freigebende Person weiterhin koordinationsberechtigt;
-- Principal, Studienmitgliedschaft und Panelteilnahme aktiv, Panelrecht nicht entzogen;
-- kein Rückzug oder negatives jüngstes Einwilligungsereignis;
-- erforderliche Einwilligung vorhanden; Einladung und Rundenstart dürfen zur
-  Einwilligung auffordern, sofern kein Rückzug vorliegt;
-- bei Erinnerung keine bereits erfolgte Abgabe;
-- für Rundenstart, Erinnerung und Friständerung Runde offen und Frist nicht abgelaufen.
+These checks can only reduce the approved audience. Ineligible messages become
+`suppressed` with a code. Round → enrollment locking matches save/submit/close;
+a completed submission prevents a subsequently admitted reminder.
 
-Die Prüfung kann die freigegebene Menge nur reduzieren. Veraltete oder gesperrte
-Nachrichten erhalten `suppressed` mit einem technischen Grund. Die Sperrfolge
-Runde → Enrollment entspricht Save/Submit/Close; ein bereits abgeschlossener Submit
-verhindert damit eine nachfolgend zugelassene Erinnerung.
+A successful transaction writes one immutable `ops.message_sink` receipt and
+`sink_recorded` together. Processing outcomes also appear in audit; message text
+and response content are not audit object references.
 
-Erfolgreiche lokale Verarbeitung schreibt eine eindeutige, unveränderliche
-`ops.message_sink`-Quittung und `sink_recorded` atomar. Verarbeitungsergebnisse
-erscheinen zusätzlich im Auditprotokoll. Nachrichtentext und Antworten werden
-nicht als Audit-Objektreferenz verwendet.
+## Crashes and uncertain delivery
 
-## Absturz und unklare Zustellung
+An expired `running` claim conservatively becomes `delivery_unknown`. It is not
+automatically resent or reclaimed. An expired lease holder cannot record success.
+The sink is unique per message ID; that does not establish exactly-once delivery
+for a future external provider.
 
-Ein abgelaufener `running`-Claim wird konservativ zu `delivery_unknown`. Er wird
-nicht automatisch neu versendet oder erneut beansprucht. Ein alter Leaseinhaber
-kann nach Ablauf keinen Erfolg mehr verbuchen. Der Sink ist pro Nachrichten-ID
-eindeutig, doch daraus folgt keine Exactly-once-Zusage für einen zukünftigen
-externen Provider.
+Manual resolution of unknown delivery, provider acknowledgments, bounces, contact
+management, quiet hours and automatic reminder schedules remain unimplemented.
+They require separate adapter contracts, approvals and tests.
 
-Das P0-System implementiert keine manuelle Auflösung von `delivery_unknown`, keine
-Providerbestätigung, Bounceverarbeitung, Kontaktverwaltung, Ruhezeiten oder
-automatischen Reminderpläne. Dafür sind ein gesonderter Adaptervertrag, explizite
-Freigaben und weitere Tests erforderlich. Der aktuelle Sink liefert lediglich den
-nachprüfbaren lokalen Kampagnen-/Outboxpfad.
-
-## Tests
-
-`test-communications.R` benötigt die ausdrückliche Umgebungsvariable
-`DELPHYR_TEST_DB=true` und die lokale synthetische PostgreSQL-Datenbank. Es prüft
-Freigabe-Hash, Deduplizierung, Studiengrenzen, Rollenentzug, nachträgliche Abgabe,
-Rückzug, Storno, unveränderliche Daten und abgelaufene Leases. Kein Test sendet eine
-externe Nachricht.
+`test-communications.R` requires `DELPHYR_TEST_DB=true` and the synthetic database.
+It covers approval hashes, deduplication, study boundaries, revocation, subsequent
+submission, withdrawal, cancellation, immutability and expired leases. No test
+sends an external message.

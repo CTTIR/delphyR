@@ -35,7 +35,6 @@ footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 @media(max-width:600px) {.del-wrap{padding:16px 12px}.del-sheet{padding:16px}.shiny-input-container{max-width:100%}h1{font-size:1.7rem}}
 @media(prefers-reduced-motion:reduce) {*{animation:none!important;transition:none!important}}
 '
-tr <- function(lang, de, en) if (identical(lang, "en")) en else de
 status_ui <- function(id) shiny::tags$div(class = "del-status", role = "status", `aria-live` = "polite", shiny::textOutput(id))
 command_id <- function() uuid::UUIDgenerate()
 safe_error <- function(e, lang) {
@@ -50,7 +49,9 @@ safe_error <- function(e, lang) {
 state_label <- function(state, lang) {
   en <- c(draft = "Draft", review = "In review", approved = "Approved", open = "Open", closed = "Closed", frozen = "Frozen", analysed = "Analysed", released = "Feedback released", finalized = "Finalized", eligible = "Eligible", in_progress = "In progress", submitted = "Submitted")
   de <- c(draft = "Entwurf", review = "In Pr\u00fcfung", approved = "Freigegeben", open = "Offen", closed = "Geschlossen", frozen = "Eingefroren", analysed = "Ausgewertet", released = "Feedback freigegeben", finalized = "Abgeschlossen", eligible = "Teilnahme m\u00f6glich", in_progress = "In Bearbeitung", submitted = "Abgegeben")
-  labels <- if (identical(lang, "en")) en else de
+  en <- c(en, pending = "Pending", running = "Running", succeeded = "Succeeded", failed = "Failed", cancelled = "Cancelled")
+  de <- c(de, pending = "Ausstehend", running = "In Bearbeitung", succeeded = "Erfolgreich", failed = "Fehlgeschlagen", cancelled = "Abgebrochen")
+  labels <- tr(lang, de, en)
   unname(ifelse(state %in% names(labels), labels[state], state))
 }
 
@@ -73,19 +74,22 @@ round_display <- function(rounds, language, timezone = "UTC") {
 }
 
 connection_script <- function(banner_id, workspace_id) {
+  messages <- lapply(c("en", "fr", "de"), function(lang) list(
+    restored = tr(lang, "Verbindung wiederhergestellt. Pr\u00fcfen Sie vor dem Fortsetzen den zuletzt gespeicherten Stand. Offene \u00c4nderungen sind nicht als gespeichert best\u00e4tigt.", "Connection restored. Review the last saved responses before continuing. Pending edits have not been confirmed saved."),
+    lost = tr(lang, "Verbindung unterbrochen. \u00c4nderungen werden nicht gespeichert. Sichern Sie offene Texte vor dem Neuladen; danach sind nur best\u00e4tigte Antworten wiederhergestellt.", "Connection lost. Changes are not being saved. Keep a copy of pending text before reloading; a reload restores only confirmed responses.")
+  ))
+  names(messages) <- c("en", "fr", "de")
   sprintf(
     "(function(){
       var lost=false, restored=false;
-      var boxId=%s, workspaceId=%s;
+      var boxId=%s, workspaceId=%s, messages=%s;
       function show(){
         var box=document.getElementById(boxId);
         if(!box || !lost) return;
         var language=document.getElementById('language');
-        var en=language && language.value==='en';
+        var lang=language && language.value || 'en';
         box.hidden=false;
-        box.textContent=restored ?
-          (en ? 'Connection restored. Review the last saved responses before continuing. Pending edits have not been confirmed saved.' : 'Verbindung wiederhergestellt. Pruefen Sie vor dem Fortsetzen den zuletzt gespeicherten Stand. Offene Aenderungen sind nicht als gespeichert bestaetigt.') :
-          (en ? 'Connection lost. Changes are not being saved. Keep a copy of pending text before reloading; a reload restores only confirmed responses.' : 'Verbindung unterbrochen. Aenderungen werden nicht gespeichert. Sichern Sie offene Texte vor dem Neuladen; danach sind nur bestaetigte Antworten wiederhergestellt.');
+        box.textContent=messages[lang][restored ? 'restored' : 'lost'];
         var workspace=document.getElementById(workspaceId);
         if(workspace) workspace.querySelectorAll('.del-status, .del-progress').forEach(function(x){x.hidden=!restored;});
       }
@@ -95,13 +99,14 @@ connection_script <- function(banner_id, workspace_id) {
       window.addEventListener('offline',function(){lost=true;restored=false;show();});
     })();",
     jsonlite::toJSON(banner_id, auto_unbox = TRUE),
-    jsonlite::toJSON(workspace_id, auto_unbox = TRUE)
+    jsonlite::toJSON(workspace_id, auto_unbox = TRUE),
+    jsonlite::toJSON(messages, auto_unbox = TRUE)
   )
 }
 
 workspace_sections <- function(capabilities, lang) {
   ids <- c("section-panel", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-communications")
-  labels <- if (identical(lang, "en")) c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Communications") else c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Kommunikation")
+  labels <- tr(lang, c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Kommunikation"), c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Communications"))
   show <- c("panel" %in% capabilities, "manage" %in% capabilities, "manage" %in% capabilities, any(c("edit", "manage") %in% capabilities), "coordinate" %in% capabilities, "coordinate" %in% capabilities)
   data.frame(id = ids[show], label = labels[show], stringsAsFactors = FALSE)
 }

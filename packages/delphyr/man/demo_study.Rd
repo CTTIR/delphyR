@@ -16,7 +16,7 @@ demo_study(
 
 \item{n}{Number of synthetic panel accounts.}
 
-\item{item_count}{Number of bilingual rating items.}
+\item{item_count}{Number of trilingual rating items.}
 
 \item{code}{Unique study code.}
 }

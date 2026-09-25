@@ -1,47 +1,53 @@
-# ADR-017: CTTIR-Konventionen für Dokumentation und Oberfläche
+# ADR-017: CTTIR documentation and interface conventions
 
-Status: accepted. Datum: 2026-09-25.
+Status: accepted; language decision revised 2026-09-25.
 
-## Kontext
+## Context and superseding language decision
 
-Die aktuelle Nutzerentscheidung benennt das Repository `CTTIR/delphyR` und fordert
-Konsistenz mit der CTTIR-Suite. Die technischen Packagenamen bleiben `delphyr` und
-`delphyrApp`. Diese Namensentscheidung ersetzt die frühere Repositoryschreibweise
-in ADR-016; die archivierte Spezifikation bleibt unverändert.
+The user selected the repository name `CTTIR/delphyR` and requested consistency
+with the CTTIR suite. Technical package names remain `delphyr` and `delphyrApp`.
+This naming decision supersedes the earlier spelling in ADR-016.
 
-Als konkrete lokale Referenzen wurden die READMEs von `brainwritR` und `cellspecR`
-geprüft: kurzer Produktzweck, ehrlicher Entwicklungsstand, unmittelbar ausführbare
-Installation und Einstieg, anschließend Fähigkeiten, Reproduzierbarkeit und Lizenz.
-Die Dokumentationssprache für delphyR bleibt gemäß Spezifikation Deutsch.
+The current explicit user decision is **English public documentation and an
+English, French and German application interface**, with English as the default.
+It supersedes this ADR's earlier German-documentation and bilingual-interface
+requirements. The original German specification in `docs/spec/` is a verbatim
+historical source archive, not the current public-documentation language policy.
 
-## Entscheidung
+The local `brainwritR` and `cellspecR` READMEs informed the structure: short purpose,
+honest development status, runnable installation and entry point, then features,
+reproducibility and license.
 
-Die README verwendet den Markennamen delphyR, erklärt die abweichende technische
-Schreibweise und berücksichtigt die Monorepository-Unterverzeichnisse in der
-Installation. Status- und CI-Badges dürfen nur vorhandene, belegte Zustände abbilden.
-Ein vorhandenes fremdes Logo wird nicht als delphyR-Logo übernommen.
+## Decision
 
-Die Offlinevignette ist ausführbar und benötigt keine externen Dienste. Sie erläutert
-Nenner, Gruppenregel, Missingness, Rundennummer, Vergleichbarkeit und Provenienz.
-Zahlenbeispiele bleiben synthetisch und werden nicht als wissenschaftliche Empfehlung
-beschrieben. README, Anleitung und Vignette verweisen auf den zentralen
-Implementierungsstatus, ohne abgeschlossene Releasegates zu erfinden.
+The README uses delphyR branding, explains technical package names and accounts
+for monorepository installation paths. Badges must describe evidenced states.
+Brand assets must belong to this project.
 
-Für die Shiny-Oberfläche gelten ruhige, klare Seiten mit lesbarer Typografie,
-ausreichendem Kontrast, ausdrücklich beschrifteten Formularfeldern und einer klaren
-Hauptaktion je Arbeitsschritt. Deutsch und Englisch müssen bei Navigation, Aktionen,
-Validierung und Status konsistent sein; Sprachwechsel dürfen Eingaben nicht löschen.
-Tastaturbedienung, sichtbarer Fokus, mobile Formulare und verständliche Rückmeldungen
-sind Pflichtkriterien. Farbe allein vermittelt weder Status noch Fehler.
+The offline vignette runs without external services. It explains denominators,
+group rules, missingness, round numbers, comparability and provenance. Synthetic
+examples are not methodological recommendations. Public documentation points to
+the central implementation status without inventing completed release gates.
 
-Eine Oberfläche bestätigt nur tatsächlich abgeschlossene Serviceaktionen. Ein
-synthetischer Demomodus bleibt sichtbar. Produktive Authentifizierung, Ergebnisse,
-Speicherbestätigungen und Feedbackfreigaben dürfen nicht durch rein visuelle
-Platzhalter simuliert werden. Fortschritt, Antwortentwurf und Abgabe sind getrennte
-Zustände; sensible Antworten werden nicht in globalen UI-Objekten gehalten.
+The interface uses clear pages, readable typography, adequate contrast, explicit
+field labels and a clear main action for each step. Navigation, actions,
+validation and status must cover all three interface languages. Changing language
+must preserve entered values. Keyboard operation, visible focus, mobile forms and
+understandable feedback are required; color alone never conveys state or errors.
 
-## Nachweise und Grenzen
+Interface language and approved study content are distinct. A round references
+one approved consent version; changing language never translates or substitutes
+that record. Instrument translations must be explicitly authored and validated
+against declared protocol languages. Missing content translations must be visible
+rather than implying that a fallback is an approved translation.
 
-Diese ADR legt überprüfbare Konventionen fest; sie bescheinigt keine bestandene
-Barrierefreiheits-, Browser-, Sicherheits- oder Produktionsabnahme. Die jeweiligen
-Tests und offenen Punkte gehören in `docs/IMPLEMENTATION_STATUS.md`.
+The interface confirms only completed service actions and visibly labels synthetic
+demonstrations. Authentication, results, saved responses and feedback releases
+must not be simulated by visual placeholders. Progress, draft and final submission
+are separate states; sensitive responses are not stored in global UI objects.
+
+## Evidence and limits
+
+This ADR defines testable conventions; it does not certify accessibility,
+browser, security or production acceptance. Actual evidence and remaining gates
+belong in `docs/IMPLEMENTATION_STATUS.md`.

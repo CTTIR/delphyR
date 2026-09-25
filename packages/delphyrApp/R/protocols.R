@@ -2,6 +2,10 @@ protocols_ui <- function(id) shiny::uiOutput(shiny::NS(id)("body"))
 
 protocols_server <- function(id, study, lang, call, services) {
   shiny::moduleServer(id, function(input, output, session) {
+    field <- function(name, default = "") {
+      value <- shiny::isolate(input[[name]])
+      if (is.null(value)) default else value
+    }
     allowed <- shiny::reactiveVal(FALSE)
     versions <- shiny::reactiveVal(data.frame())
     candidate <- shiny::reactiveVal(NULL)
@@ -31,19 +35,19 @@ protocols_server <- function(id, study, lang, call, services) {
         shiny::tableOutput(ns("history")),
         shiny::uiOutput(ns("version_selector")),
         shiny::tags$details(shiny::tags$summary(tr(l, "Gespeicherte Fassung ansehen", "Inspect saved version")), shiny::verbatimTextOutput(ns("saved"))),
-        shiny::fileInput(ns("file"), tr(l, "Vollst\u00e4ndiges neues Protokoll (JSON, h\u00f6chstens 1 MB)", "Complete new protocol (JSON, maximum 1 MB)"), accept = ".json"),
+        shiny::fileInput(ns("file"), tr(l, "Vollst\u00e4ndiges neues Protokoll (JSON, h\u00f6chstens 1 MB)", "Complete new protocol (JSON, maximum 1 MB)"), accept = ".json", buttonLabel = tr(lang(), "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(lang(), "Keine Datei ausgew\u00e4hlt", "No file selected")),
         shiny::actionButton(ns("validate"), tr(l, "Validieren und genaue Vorschau erstellen", "Validate and preview exact protocol")),
         shiny::uiOutput(ns("preview_heading")),
         shiny::tableOutput(ns("changes")),
         shiny::tags$details(shiny::tags$summary(tr(l, "Vollst\u00e4ndige Vorschau", "Complete preview")), shiny::verbatimTextOutput(ns("preview"))),
-        shiny::textAreaInput(ns("reason"), tr(l, "Begr\u00fcndung der Protokoll\u00e4nderung", "Protocol amendment rationale"), width = "100%"),
+        shiny::textAreaInput(ns("reason"), tr(l, "Begr\u00fcndung der Protokoll\u00e4nderung", "Protocol amendment rationale"), value = field("reason"), width = "100%"),
         shiny::checkboxInput(ns("confirm"), tr(l, "Ich habe diese genaue Fassung und ihre Geltung nur f\u00fcr zuk\u00fcnftige Runden gepr\u00fcft.", "I reviewed this exact version and its application only to future rounds."), FALSE),
         shiny::actionButton(ns("approve"), tr(l, "Neue Protokollversion freigeben", "Approve new protocol version")),
         status_ui(ns("status"))
       )
     })
     shiny::outputOptions(output, "body", suspendWhenHidden = FALSE)
-    output$status <- shiny::renderText(status())
+    output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     output$version_selector <- shiny::renderUI({
       v <- versions()

@@ -1,91 +1,102 @@
 # delphyrApp <img src="inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR dolphin hex logo" />
 
-A focused, bilingual Shiny workspace for **synthetic Delphi studies** in the
-CTTIR suite. Panel members save their own responses and receive a durable
-submission receipt. Study managers review and advance rounds through checked
-state transitions, queue analysis and exports, review and release exact feedback
-candidates, and prepare subsequent rounds from validated bilingual CSV imports.
+**A focused workspace for synthetic Delphi studies.**
+
+`delphyrApp` brings panel responses, round management, editorial review, and
+coordination into the CTTIR suite. Participants explicitly save their own
+responses and receive a durable submission receipt. Managers review instruments,
+advance rounds, prepare feedback, and request private research exports.
+
+The interface offers **English, German, and French**, with English as the default.
+Scientific text stays in its stored authored language; selecting an interface
+language does not translate a protocol or manufacture an instrument translation.
+This is development software, not a production release.
 
 ![Synthetic panel workspace](inst/figures/panel-desktop.png)
 
-## Run locally
+## Install and start
 
-Install `delphyr` first, then `delphyrApp`. Resolve the repository and actor on
-the server; the interface never accepts a browser-supplied identity or role.
+Install the core package first, then the application package:
 
 ```r
-# repo and actor are supplied by your trusted server-side setup.
+# install.packages("remotes")
+remotes::install_github("CTTIR/delphyR", subdir = "packages/delphyr")
+remotes::install_github("CTTIR/delphyR", subdir = "packages/delphyrApp",
+                        build_vignettes = TRUE)
+```
+
+The [repository guide](../../README.md#run-the-local-application) provisions the
+synthetic PostgreSQL fixture and starts a separate worker. With a repository
+and actor already resolved by trusted server code:
+
+```r
 app <- delphyrApp::run_app(repo, actor, language = "en")
 shiny::runApp(app, host = "127.0.0.1", port = 3838)
 ```
 
-This is a synthetic development application. It does not implement production
-login, real email delivery, or deployment approval. Keep it bound to localhost.
+A fixed actor is shared by every session of that demo instance. A trusted host
+can instead use `actor_factory(session, repo)` and `repo_factory()` for separate
+session identities and connections. Factory connections close at session end;
+a directly supplied repository remains the caller's responsibility. Factory
+errors or missing identities close the session before service access. Browser
+fields and URL parameters never establish identity or authority.
 
-## Response workflow
+Local OIDC evidence is documented separately. The stock Shiny Server OSS
+identity-header path and production deployment remain unqualified. No external
+mail transport is enabled.
+
+## Participant workflow
 
 1. Choose a study and load an assigned round.
-2. Read the displayed study information and explicitly record consent.
-3. Select a response type and rating or text. Save each field explicitly.
-4. Check the count of confirmed response fields, confirm review, and submit.
+2. Read the stored study information and explicitly record consent.
+3. Select a response or allowed special category; save each field explicitly.
+4. Review the confirmed field count and submit deliberately.
 
-A failed save leaves the typed value visible and does not advance its confirmed
-revision. Submission is blocked while any field has pending changes. The core
-service independently checks consent, ownership, permissions, deadline, required
-responses, and the exact revision set. Submitted responses cannot be edited.
-There is no default midpoint rating and no live current-round panel result.
+A failed save keeps the typed value and does not advance its confirmed revision.
+Submission is blocked while fields have pending changes. Services independently
+check consent, ownership, rights, deadline, required fields, and revision sets.
+Submitted responses cannot be edited. Ratings have no default midpoint and the
+panel does not see live current-round results.
 
-## Design and accessibility
+On connection loss, the interface does not claim that pending changes are saved.
+The tested reload path restores committed values; it is not an offline editor.
+Released feedback includes approved aggregates and only the person's own prior
+answers, with a changed-wording notice where applicable.
 
-Teal, slate, system fonts, restrained surfaces, and 44-pixel buttons follow the
-CTTIR `brainwritR` family. Every input has a visible label; status messages use a
-polite live region and do not rely on color. Forms fit narrow viewports, tables
-can scroll, focus is visible, and reduced motion is respected. German and
-English interface text is provided; stored instrument translations are used
-without automatically translating scientific content. Panel labels follow the selected language; updates preserve unsaved controls.
-Deadlines show the protocol time zone and explicit UTC offset.
+## Study team workflows
 
-Formal assistive-technology, cross-browser, and mobile acceptance remains open.
-This version deliberately uses explicit saves. Debounced autosave, offline
-recovery and full instrument editing remain acceptance work. Managers can
-inspect immutable protocol versions, validate a complete JSON amendment, review
-its field changes, and approve it explicitly for future rounds only.
-Editorial modules preserve originals, save separate redactions or summaries,
-require another person to review exact versions, and record theme coding and
-item provenance. Communication campaigns preview exact pseudonyms and plain
-text before approval for local test receipts; no email transport is enabled. Released feedback is displayed beside
-relevant items, with own prior responses and a changed-wording notice.
+Permission-filtered navigation preserves forms while moving between sections.
+Managers review round transitions and exact feedback releases, queue analysis
+and exports, validate instrument imports, and approve future-round protocol
+amendments after reviewing field changes. Existing rounds retain their protocol.
 
-## Architecture and verification
+Editors preserve originals and record separate redactions or summaries. Another
+person reviews exact versions. Theme coding and item-source/split/merge records
+remain traceable. Coordinators review contact CSVs and blocking duplicates before
+creating unbound invitation drafts; importing an address grants no account access.
+Campaign previews bind exact pseudonyms and text before local sink processing.
 
-Namespaced Shiny modules call injected services; they contain no SQL and no
-consensus formulas. `golem` is not required: a small package with explicit
-service injection and `testServer()` provides the needed P0 separation without
-an additional framework. A fixed `repo` connection belongs to the calling host. For multiple users,
-`actor_factory(session, repo)` resolves the trusted identity once per session,
-and `repo_factory()` can create a separate repository connection for each
-session; the application closes these factory-created connections when the
-session ends. A single shared demo actor is not multi-user authentication.
-Factory errors or missing identities close the session before service access.
+Analysis, report rendering, exports, and sink processing belong to a separate
+worker. **Check operation** refreshes queued work. Downloads recheck authorization
+and artifact integrity. A hidden control is never the authorization boundary.
+
+## Design and verification
+
+System fonts, teal and slate accents, visible labels, focus states, responsive
+forms, and restrained surfaces follow the CTTIR `brainwritR` family. Status
+messages use a polite live region and do not depend on color. Tables can scroll;
+reduced-motion preferences are respected. Deadlines include the study time zone
+and UTC offset.
+
+Namespaced modules call injected services and contain no SQL or consensus rules.
+Read the [workflow vignette](vignettes/synthetic-workflow.Rmd) and
+[qualification evidence](inst/qa/README.md) for reproducible local checks.
 
 ```r
 testthat::test_local("packages/delphyrApp")
 ```
 
-Tests exercise failed-save preservation, revision advancement only after service
-success, and the absence of the trusted principal from delivered HTML.
-
-Analysis and export operations are processed by a separate trusted worker.
-Use **Check operation** to refresh queue status. Downloads recheck artifact
-permissions before packaging the authorized export directory. Feedback release
-requires a preview and confirmation of the exact candidate hash.
-
-Editorial access requires the edit capability; independent review requires
-manage. Communication controls require coordinate. These interface rules are
-rechecked in the core services. See [qualification evidence](inst/qa/README.md)
-for local PostgreSQL browser paths and remaining verification boundaries.
-
-The navigation links reflect the selected study's permissions and preserve
-open forms when moving between sections. Coordinators can preview synthetic
-contact CSVs, resolve blocking duplicates, and approve an exact file to create
-unbound invitation drafts. This import creates no accounts or response links.
+Specific Chromium/PostgreSQL checks do not certify every browser, assistive
+technology, or mobile device. Formal accessibility, complete cross-browser
+acceptance, autosave, the complete invitation browser journey, real mail, and
+production operations remain distinct gates. Licensed under [MIT](LICENSE).

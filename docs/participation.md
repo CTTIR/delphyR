@@ -1,26 +1,23 @@
-# Teilnahme und Stakeholderhistorie
+# Participation and stakeholder history
 
-`withdraw_participation()` beendet die eigene weitere Teilnahme. Der Aufruf
-verlangt ausdrücklich die synthetische Policy `synthetic_retain_prior_data`:
-Bisher bestätigte Forschungsdaten und Abgaben bleiben bestehen. Weitere Saves
-und Abgaben werden abgewiesen; die Person ist für neue Rundenzuweisungen und
-Nachrichten im lokalen Sink nicht mehr zugelassen. Bereits vor dem Rückzug
-abgeschlossene Zustellungen werden dadurch nicht rückgängig gemacht.
+`withdraw_participation()` ends the current account's further participation.
+It requires the explicit synthetic policy `synthetic_retain_prior_data`: previously
+confirmed research data and submissions remain. Further saves and submissions
+are rejected, and the participant is no longer eligible for new round assignments
+or local-sink messages. Previously completed deliveries are not undone.
 
-Die Paneloberfläche erklärt diesen Datenverbleib und verlangt eine bewusste
-Bestätigung. Sie zeigt anschließend den dauerhaften Rückzugsbeleg. Der Service
-leitet die Person aus der aktuellen Serveridentität ab; eine beliebige fremde
-Personen-ID ist kein Eingabeparameter. Wiederholungen liefern denselben Beleg.
-Die Migration `009_participation.sql` schützt Ereignisse vor nachträglicher
-Änderung. Bestätigte Saves und Rückzug serialisieren am Enrollment; neue
-Runden werden über dieselbe Studiensperre mit dem Rückzug koordiniert.
+The panel interface explains retention and requires explicit confirmation before
+showing a durable withdrawal receipt. The service derives the participant from
+the current server identity; it accepts no arbitrary participant ID. Identical
+retries return the same receipt. Migration `009_participation.sql` protects events
+from later changes. Saves and withdrawal serialize on the enrollment; preparation
+of new rounds and withdrawal coordinate through the study lock.
 
-`set_panel_group()` erfasst eine begründete neue Stakeholderzuordnung durch die
-Studienleitung. Sie gilt nur für künftig vorbereitete Runden. Bestehende
-Enrollments und deren eingefrorene Analysen behalten ihre alte Gruppenzuordnung.
-Vorgänger, neue Gruppe, Akteur und Zeitpunkt bleiben in einem Ereignis erhalten.
+`set_panel_group()` records a reasoned stakeholder-group change by a study manager.
+It applies only to subsequently prepared rounds. Existing enrollments and frozen
+analyses keep their previous group assignment. The previous group, new group,
+actor and timestamp remain in an event.
 
-Die geprüfte synthetische Policy ist **keine produktive Lösch- oder
-Aufbewahrungsregel**. Reale Anträge, institutionelle Fristen, Freigaben und eine
-zulässige Datenlöschung benötigen den separaten Governanceprozess aus der
-Spezifikation. Dieser Service nimmt keine automatische Löschung vor.
+This tested synthetic policy is **not a production deletion or retention rule**.
+Real requests, institutional deadlines, approvals and permitted deletion require
+the separate governance process. This service performs no automatic deletion.

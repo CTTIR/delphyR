@@ -4,6 +4,10 @@ operations_ui <- function(id) {
 }
 operations_server <- function(id, study, round, lang, call, services, refresh, allowed) {
   shiny::moduleServer(id, function(input, output, session) {
+    field <- function(name, default = "") {
+      value <- shiny::isolate(input[[name]])
+      if (is.null(value)) default else value
+    }
     operation <- shiny::reactiveVal(NULL)
     job_type <- shiny::reactiveVal(NULL)
     artifact <- shiny::reactiveVal(NULL)
@@ -44,15 +48,15 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
         shiny::tags$details(
           shiny::tags$summary(tr(lang(), "Neue Runde vorbereiten", "Prepare a new round")),
           shiny::tags$p("CSV: item_code, item_version, locale, text, dimension_code, scale_code, source_ref, required, display_order. UTF-8; required: TRUE/FALSE."),
-          shiny::fileInput(ns("csv"), "Instrument (CSV, DE/EN)", accept = ".csv"), shiny::actionButton(ns("validate"), tr(lang(), "Import pr\u00fcfen", "Validate import")),
+          shiny::fileInput(ns("csv"), tr(lang(), "Instrument (CSV, Protokollsprachen)", "Instrument (CSV, protocol languages)"), accept = ".csv", buttonLabel = tr(lang(), "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(lang(), "Keine Datei ausgew\u00e4hlt", "No file selected")), shiny::actionButton(ns("validate"), tr(lang(), "Import pr\u00fcfen", "Validate import")),
           shiny::tableOutput(ns("items")), shiny::uiOutput(ns("consents")),
-          shiny::textInput(ns("deadline"), tr(lang(), "Frist mit Zeitzone", "Deadline with timezone"), placeholder = "2026-12-01T18:00:00+01:00"),
+          shiny::textInput(ns("deadline"), tr(lang(), "Frist mit Zeitzone", "Deadline with timezone"), value = field("deadline"), placeholder = "2026-12-01T18:00:00+01:00"),
           shiny::actionButton(ns("prepare"), tr(lang(), "Runde vorbereiten", "Prepare round"))
         ),
         shiny::tags$div(class = "del-actions", shiny::actionButton(ns("export"), tr(lang(), "Export beauftragen", "Request export")), shiny::downloadButton(ns("download"), tr(lang(), "Export herunterladen", "Download export"))), status_ui(ns("status"))
       )
     })
-    output$status <- shiny::renderText(status())
+    output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "body", suspendWhenHidden = FALSE)
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     selected <- function() {
@@ -87,7 +91,7 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
     shiny::observeEvent(input$poll, attempt(function() {
       shiny::req(operation())
       r <- call("get_operation", operation())
-      status(paste(tr(lang(), "Auftrag:", "Operation:"), r$state))
+      status(paste(tr(lang(), "Auftrag:", "Operation:"), state_label(r$state, lang())))
       if (identical(r$state, "succeeded")) {
         if (job_type() == "export") artifact(r$result_ref) else analysis(call("get_analysis", r$result_ref))
         refresh()

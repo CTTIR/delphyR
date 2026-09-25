@@ -1,8 +1,8 @@
 ---
-title: "Zwei Delphi-Runden offline auswerten"
+title: "Analysing two Delphi rounds offline"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Zwei Delphi-Runden offline auswerten}
+  %\VignetteIndexEntry{Analysing two Delphi rounds offline}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,13 +11,12 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Diese Vignette zeigt einen vollständigen **Offlineanalysepfad** mit synthetischen
-Bewertungen. Sie benötigt weder Shiny noch PostgreSQL. Sie demonstriert keine
-Rekrutierung, Datenerhebung oder produktive Studienfreigabe. Die verwendeten
-Konsensschwellen sind Beispiele und müssen für eine reale Studie fachlich begründet
-und vorab festgelegt werden.
+This guide executes an **offline analysis workflow** with synthetic ratings.
+It needs neither Shiny nor PostgreSQL. It does not demonstrate recruitment,
+data collection, or production approval. The consensus thresholds are examples;
+a real study must justify and specify its rules in advance.
 
-## Protokoll und Rundensatz prüfen
+## Validate the protocol and snapshot
 
 ```{r protocol}
 library(delphyr)
@@ -28,10 +27,10 @@ protocol <- new_protocol(config)
 protocol$analysis$consensus$group_policy
 ```
 
-Das Standardprotokoll verlangt Ergebnisse in allen vorgesehenen Panelgruppen
-(`all_required_groups`). Die kompakte Snapshotdemo verwendet dagegen ausdrücklich
-`pooled`: Ihre zehn Bewertungen stammen aus einer Gruppe. Diese Entscheidung ist
-Teil des eingefrorenen Protokolls und keine nachträgliche automatische Anpassung.
+The default protocol requires adequate results in every designated panel group
+(`all_required_groups`). The compact snapshot example instead explicitly uses
+`pooled`: all ten ratings come from one group. That choice is frozen in its
+protocol; the analysis does not silently adjust the rule after seeing results.
 
 ```{r snapshot}
 first <- demo_snapshot()
@@ -39,12 +38,12 @@ first$protocol$analysis$consensus$group_policy
 first$items
 ```
 
-`new_snapshot()` nimmt Antworten, Panelzuordnungen, das Instrument und ein
-validiertes Protokoll entgegen. Der Inhalts-Hash bindet diese Daten an die
-Rundennummer. Änderungen erfolgen durch einen neuen Snapshot; manipulierte Inhalte
-werden bei der Analyse anhand des Hashes erkannt.
+`new_snapshot()` accepts responses, assignments, an instrument, and a validated
+protocol. Its content hash binds those inputs to the round number. Construct a
+new snapshot to change inputs; the analysis rejects content that no longer
+matches its recorded hash.
 
-## Ergebnisse mit Nennern lesen
+## Read results with their denominators
 
 ```{r analysis}
 analysis <- analyse_round(first)
@@ -53,21 +52,20 @@ analysis$results[, c("stratum", "n_assigned", "n_submitted", "n_valid",
                      "n_agree", "n_disagree", "p_agree", "classification")]
 ```
 
-Die zehn gültigen Bewertungen enthalten sieben Werte in 7–9, einen Wert in 1–3
-und zwei mittlere Werte. Damit betragen die ungerundeten Anteile 0,7 und 0,1.
-Unter der Demoregel ergibt dies `consensus_in`. Die leere Gruppe
-`public_contributors` bleibt als `insufficient_data` sichtbar. Ein gepooltes
-Gesamtergebnis belegt keinen Konsens in jeder Gruppe.
+The ten valid ratings contain seven values in 7–9, one in 1–3, and two in the
+middle range. Their unrounded proportions are 0.7 and 0.1, producing
+`consensus_in` under this example rule. The empty `public_contributors` group
+remains visible as `insufficient_data`. Pooled consensus does not demonstrate
+consensus within every group.
 
 ```{r required-groups}
 required_groups <- protocol$analysis$consensus
 analyse_round(first, rules = required_groups)$decisions
 ```
 
-Die explizite alternative Regel liefert hier `insufficient_data`. Sie wird im
-Analyseobjekt mit einem eigenen Regel-Hash dokumentiert und ändert den ursprünglichen
-Snapshot nicht. Für eine vorab festgelegte Hauptanalyse gilt dessen eingefrorenes
-Protokoll.
+The explicitly supplied alternative rule returns `insufficient_data`. Its own
+rule hash is recorded in the analysis; it does not alter the source snapshot.
+A prespecified primary analysis should use the frozen study protocol.
 
 ```{r missingness}
 with_missing <- analyse_round(demo_snapshot(c(NA, 4, 6, 7, 7, 8, 8, 9, 9, 9)))
@@ -76,17 +74,16 @@ with_missing$missingness
 with_missing$decisions
 ```
 
-`NA` wird in dieser Demofunktion als `not_answered` materialisiert. Neun gültige
-Bewertungen unterschreiten das beispielhafte Mindest-n von zehn. Zugewiesene Personen,
-Abgaben und Sonderantworten werden separat gezählt; Missingness wird nicht als null
-im Skalenwert ersetzt. Median und Quartile beziehen sich auf gültige Bewertungen,
-Quartile verwenden Typ 7.
+In this helper, `NA` becomes an explicit `not_answered` status. Nine valid
+ratings fall below the example minimum of ten. Assigned people, submissions,
+and special response categories are counted separately; missingness does not
+become a zero rating. Median and quartiles use valid ratings, with type 7 quantiles.
 
-## Zweite Runde konstruieren und vergleichen
+## Construct and compare a second round
 
-Die Demofunktion erstellt standardmäßig Runde 1. Für eine echte zweite Runde wird
-ein neuer Snapshot mit `round_number = 2L` konstruiert. Die Personen-IDs und die
-Itembedeutung bleiben in diesem Beispiel gleich.
+The demo helper creates round 1. For the second round, construct a new snapshot
+with `round_number = 2L`. Participant identifiers and item meaning stay the same
+in this example.
 
 ```{r second-round}
 second_demo <- demo_snapshot(c(2, 4, 7, 7, 7, 8, 8, 9, 9, 9))
@@ -107,27 +104,26 @@ comparison[, c("status", "n_paired", "n_lost", "n_new",
                 "median_absolute_change", "proportion_unchanged")]
 ```
 
-Zehn Personen sind gepaart; acht Bewertungen bleiben unverändert. Deskriptive
-Veränderung ist keine automatische Entscheidung über Stabilität oder Studienende.
-Auch stabiler Dissens ist möglich. Ungepaarte Rundenmittelwerte dürfen nicht als
-individuelle Veränderung interpretiert werden.
+Ten people are paired and eight ratings remain unchanged. Descriptive change
+does not automatically establish stability or end a study; stable disagreement
+is possible. Unpaired round means must not be interpreted as individual change.
 
-Ändert sich die Bedeutung eines Items, wird der direkte Vergleich ausgeschlossen.
-Ein explizites Mapping dokumentiert die redaktionelle Entscheidung:
+When an item's meaning changes, exclude it from direct comparison. An explicit
+mapping can document that review decision even when version numbers match:
 
 ```{r comparability}
 mapping <- data.frame(
   item_code = "I001", dimension_code = "relevance",
   previous_version = 1L, current_version = 1L,
-  comparable = FALSE, reason = "Vergleich fachlich ausgeschlossen"
+  comparable = FALSE, reason = "Comparison excluded after methodological review"
 )
 compare_rounds(first, second, mapping)[, c("status", "reason", "n_paired")]
 ```
 
-Neue Itemversionen sind ohne ausdrückliches geeignetes Mapping standardmäßig nicht
-vergleichbar. Das Mapping ersetzt keine fachliche Prüfung.
+New item versions are not comparable by default without an appropriate explicit
+mapping. A mapping records a methodological decision; it does not replace review.
 
-## Feedback als Entwurf vorbereiten
+## Prepare a feedback draft
 
 ```{r feedback}
 feedback <- prepare_feedback(analysis)
@@ -135,10 +131,10 @@ validate_feedback(feedback)
 feedback$results[, c("stratum", "n_valid", "classification", "suppressed")]
 ```
 
-Standardmäßig enthält der Entwurf nur das Gesamtergebnis. Kleine Gruppen dürfen
-nicht über Differenzen zum Gesamtergebnis rekonstruiert werden. Bei aktivierten
-Gruppenstatistiken unterdrückt die aktuelle Implementierung konservativ sämtliche
-Ergebnisse eines Items, sobald ein ausgewiesenes Stratum unter dem Mindest-n liegt:
+By default, the draft contains only the overall result. Small groups must not
+be reconstructed by subtracting subgroup results from the total. When group
+statistics are enabled, the current conservative policy suppresses every result
+for an item if any displayed stratum falls below the minimum:
 
 ```{r suppression}
 group_feedback <- prepare_feedback(analysis, policy = list(
@@ -149,11 +145,11 @@ group_feedback <- prepare_feedback(analysis, policy = list(
 group_feedback$results[, c("stratum", "n_valid", "classification", "suppressed")]
 ```
 
-Diese Zellregel ist kein allgemeiner Anonymitätsnachweis. Qualitative Zusammenfassungen
-müssen geprüft sein und einen Quellenverweis tragen. Ein Feedbackentwurf ist noch
-kein veröffentlichtes, unveränderliches Feedbackrelease.
+This cell rule is not a general anonymity guarantee. Qualitative summaries need
+review and a source reference. A draft is not yet an approved, immutable
+participant feedback release.
 
-## Reproduktion und Provenienz
+## Check reproducibility and provenance
 
 ```{r reproducibility}
 identical(analysis, analyse_round(first))
@@ -161,31 +157,31 @@ analysis$provenance[c("software_version", "quantile_type", "snapshot_hash",
                       "rules_hash", "result_hash")]
 ```
 
-Die gleiche eingefrorene Eingabe und Regel erzeugt in derselben Softwareumgebung
-dasselbe Ergebnis. Hashes weisen Änderungen nach; sie ersetzen weder Zugriffsschutz
-noch die fachliche Prüfung der Eingaben. Für eine Weitergabe müssen Datenfreigabe,
-Datenschutz und der tatsächliche Exportvertrag zusätzlich erfüllt sein.
+The same frozen inputs and rules produce the same result in the same software
+environment. Hashes detect changes; they do not replace access control or
+methodological review. Sharing results also requires the relevant data approval
+and export profile.
 
-## Vom Offlineergebnis zum Forschungsbericht
+## Reproduce a private research export
 
-Der private Datenbankexport verwendet dieselbe `analyse_round()`-Logik. Sein
-Manifest erfasst unter anderem `snapshot.json`, Ergebnisse, Datenwörterbuch,
-eingefrorene Instrumenttexte und den HTML-Bericht. Nach Entpacken eines solchen
-Exports prüft `reproduce_export()` die Dateiprüfsummen und berechnet die Analyse
-neu; dafür wird weder die App noch Quarto benötigt:
+The database export uses the same `analyse_round()` logic. Its manifest includes
+`snapshot.json`, analysis tables, a dictionary, frozen instrument texts, and the
+HTML report. After extracting an authorized export, `reproduce_export()` checks
+its file hashes and recomputes the analysis without the application or Quarto:
 
 ```{r exported-study, eval=FALSE}
-# Ein bereits autorisiert bezogener Export, kein Demo-Download aus dem Internet.
-reproduced <- reproduce_export("/pfad/zum/entpackten-export")
+# A previously authorized local export, not an example downloaded from a public URL.
+reproduced <- reproduce_export("/path/to/extracted-export")
 reproduced$provenance$result_hash
 ```
 
-Berichtsdienste benötigen eine berechtigte Datenbankverbindung. Sie gehören nicht
-zum oben ausgeführten Offlinepfad. Der Bericht trennt eingefrorene Forschungsdaten
-von zum Exportzeitpunkt beobachteten redaktionellen Angaben. Fehlende Autorenangaben
-bleiben als „nicht dokumentiert“ markiert. Qualitative Originale und individuelle
-Freitextantworten sind im numerischen Exportprofil ausgeschlossen. Ein solcher
-Forschungsexport ist keine Freigabe zur öffentlichen Veröffentlichung.
+Report services require an authorized database connection and are separate from
+the executable offline example above. Reports distinguish frozen research data
+from editorial records observed at export time. Missing author information stays
+explicitly undocumented. Qualitative originals and individual free-text answers
+are excluded from the numeric profile. A research export is not a public-release
+approval. Stored protocol and instrument wording retain their authored language;
+the documentation does not automatically translate scientific content.
 
 ```{r session}
 sessionInfo()

@@ -1,86 +1,119 @@
-# Implementierungsstatus
+# Implementation status
 
-Stand: 2026-09-25. Version 0.0.1, ausschließlich synthetische Entwicklung.
-Die vollständige P1-Plattform ist **noch nicht abgenommen**.
+As of 2026-09-25: version 0.0.1, synthetic development only.
+The complete P1 platform is **not yet accepted**.
 
-## Implementiert und lokal geprüft
+The current user decision is English public documentation and an en/fr/de interface
+with English as default. This supersedes the earlier German/bilingual convention
+([ADR-017](adr/017-suite-conventions.md)). The original German specification remains
+a verbatim archive. Earlier measurements below describe their recorded source
+checkpoint; they do not automatically qualify the subsequent language changes.
 
-- brainwritR-Farbgebung: Petrolgrün `#0e6e78`, Warnrot `#b3372b`,
-  Schiefertext und grauer Hintergrund; Delfin-Hexlogo in App und READMEs.
-  Bestätigte Saves erscheinen grün, ungespeicherte/fehlgeschlagene Saves rot,
-  jeweils zusätzlich mit Textstatus. Chromium: 1280 px und 390 px ohne
-  horizontales Überlaufen, Logo geladen und keine Shiny-Ausgabefehler.
+## Implemented and locally exercised
 
-- Deterministische Offlineanalytik: Skalen, Missingness, Nenner, Gruppenregeln,
-  Versionen, Stabilität und kontrollierte Feedbackunterdrückung.
-- Elf checksummierte PostgreSQL-Migrationen, Unveränderlichkeit, aktuelle Rechte,
-  Studien-/Personenisolierung und inhaltsgebundene Retryreceipts.
-- Einwilligung, bestätigte Revisionen und atomare Abgabe/Schließung; reale
-  Konkurrenzprüfungen einschließlich Teilnahmerückzug gegen laufende Saves.
-- Protokollamendments mit Vorgänger, Begründung, Versionshash und Prüfung belegter
-  Gruppen sowie unveränderter Skalenidentität; bestehende Runden bleiben unverändert.
-- Rundenzustände, eingefrorene Snapshots, Analyse, genaue Feedbackfreigabe,
-  persönliche Vorantworten und menschliche Entscheidungen.
-- Qualitative Originale, separate Redaktion/Zusammenfassung, unabhängige Freigabe,
-  Themen, Codierung, Quellenzuordnung und Split-/Merge-Historie.
-- Synthetische Kampagnen mit exakter Empfängervorschau, Freigabe, Outbox, Leases,
-  Unterdrückung und ausschließlich lokalem Datenbank-Sink.
-- Panelimport mit Zeilenfehlern, konservativer Normalisierung, blockierenden
-  Dublettenreviews, genauer Dateifreigabe und atomarem Receipt; Kontakte getrennt.
-- Einmaltoken-Services: kryptographische Zufallswerte, ausschließlich Tokenhashes
-  gespeichert, Ablauf, Revokation, explizit vorab genehmigte Issuer-/Subject-Bindung,
-  bestätigte Annahme und echte Konkurrenzprüfung. Keine Kontozuordnung per E-Mail.
-- Synthetischer Teilnahmerückzug mit ausdrücklich erklärtem Datenverbleib;
-  künftige Stakeholderänderungen verändern keine früheren Rundenzuordnungen.
-- Durable Analyse-/Exportjobs, private numerische Exporte, Quarto-Berichte,
-  Datendictionary, Instrument-/Nenner-/Missingness-/Entscheidungs-/Herkunftstabellen,
-  Manifest und unabhängige Offline-Reproduktion.
-- DE/EN-Shiny mit bestätigten Saves, Fehler-/Konfliktzuständen, Verbindungswarnung,
-  ausdrücklicher Abgabe und Rückzug; rollenabhängige Navigation, Protokollreview,
-  Management, Redaktion, Panelimport und Kampagnenfreigabe.
-- README und ausführbare Vignetten nach den geprüften CTTIR-Konventionen;
-  mobile Ansichten, Live-Status und reproduzierbare Browserprüfungen.
+- brainwritR colors: teal `#0e6e78`, warning red `#b3372b`, slate text and gray
+  background; dolphin hex logo in app and READMEs. Confirmed saves are green;
+  unsaved/failed saves are red, always with text. Historical Chromium checks at
+  1280px and 390px found no overflow, missing logo or Shiny output errors.
+- Deterministic offline analytics: scales, missingness, denominators, group rules,
+  versions, stability and controlled feedback suppression.
+- Checksummed PostgreSQL migrations, immutable records, current rights,
+  study/participant isolation and content-bound retry receipts.
+- Consent, confirmed revisions and atomic submission/closing; real concurrency
+  checks including withdrawal against in-flight saves.
+- Protocol amendments with predecessor, reason, hash, occupied-group validation
+  and stable scale semantics; existing rounds remain unchanged.
+- Round states, frozen snapshots, analysis, exact feedback approval, personal
+  previous responses and human decisions.
+- Qualitative originals, separate edits/summaries, independent approval, themes,
+  coding, source links and split/merge history.
+- Synthetic campaigns with exact recipient preview, approval, outbox, leases,
+  suppression and an exclusively local database sink.
+- Panel import with row errors, conservative normalization, blocking duplicate
+  review, exact file approval, atomic receipts and separated contacts.
+- Single-use invitation services: cryptographic randomness, hash-only storage,
+  expiry, revocation, explicitly preapproved issuer/subject binding, confirmed
+  acceptance and actual concurrency tests. No email-based account binding.
+- Synthetic withdrawal with explained retention; stakeholder changes apply to
+  future rounds without rewriting earlier assignments.
+- Durable analysis/export jobs, private numeric exports, Quarto reports, dictionary,
+  instrument/denominator/missingness/decision/lineage tables, manifests and
+  independent offline reproduction.
+- Shiny with confirmed saves, conflict/error states, connection warnings, explicit
+  submission/withdrawal, rights-based navigation, protocol review, management,
+  editorial workflows, panel import and campaign approval.
+- CTTIR-style README and executable vignettes, mobile layouts, live status and
+  reproducible browser checks.
+- French core content validation and migration `012_content_languages.sql`:
+  consent, instrument translations, imported contacts and campaign locale.
+  The focused PostgreSQL language suite passed 12 assertions; broader current
+  evidence is recorded below.
 
-## Ausgeführte Prüfungen
+Interface language does not rewrite approved content. Each round still references
+one explicitly approved consent version; multilingual content must be authored,
+not inferred from a language selector.
 
-| Prüfung | Ergebnis | Abgrenzung |
+## Current language re-audit
+
+- English maintained READMEs, vignettes, public guides and report templates;
+  original source specifications remain explicitly archived.
+- 274 registered UI strings have explicit French translations. English is the
+  default; English, French and German navigation, forms and status messages work.
+- 81 offline assertions passed (48 database cases excluded from that run),
+  145 app assertions passed, and 350 PostgreSQL assertions passed with no
+  errors, warnings or skips in the database run.
+- Both packages passed `R CMD check --as-cran --no-manual` with `Status: OK`
+  (incoming remote checks disabled). Both vignettes built during checks and
+  were separately rendered and visually inspected in Chromium.
+- Twelve migrations applied to an empty database and reran idempotently.
+- The two-round scenario confirmed 720 responses from 30 synthetic people over
+  12 trilingual items, feedback, export and independent reproduction.
+- Real PostgreSQL browser checks covered EN/FR/DE switching with an unsaved
+  rating, unchanged approved consent, a confirmed French save and submission,
+  and 390px/1280px layouts. Manager headings, upload labels and retained text
+  drafts passed all three languages without Shiny output errors.
+- Repository description and eight search topics now describe the Delphi,
+  R/Shiny, PostgreSQL and reproducible-research scope.
+
+## Historical verified checkpoint before the language expansion
+
+| Check | Recorded result | Boundary |
 |---|---|---|
-| Offline-Testlauf | 77 Assertions | 47 DB-Testfälle dort bewusst übersprungen |
-| PostgreSQL-Integration | 338 Assertions, keine Fehler/Warnungen/Skips | Aufteilung im Validierungsbericht |
-| Shiny-Module | 117 Assertions | Service-/Session-/Navigationstests |
-| Reale Chromium-Pfade | bestanden | Panel, Netzabbruch, Tastaturpfad, Redaktion, Kampagne, Protokoll, Import, Navigation |
-| Reale OIDC-Integration | 12 Prüfungen bestanden | Direkter Shiny-Backendpfad, lokal synthetisch |
-| Stock Shiny Server OSS | nicht qualifiziert | Header gehen im WebSocket-Transport verloren; Sitzung wird korrekt abgewiesen |
-| Zweirundiger Servicepfad | bestanden | 30 Personen, 12 bilinguale Items, 720 Antworten, Feedback, Exportreproduktion |
-| Leere Migration | bestanden | Elf Migrationen, identischer Wiederholungslauf, Servicefixture |
-| Packagechecks | beide Status OK im abschließenden lokalen Lauf | Vignetten gebaut; Incomingprüfung deaktiviert |
-| DB-/Artefaktrestore | bestanden | Konsistenter DB-Snapshot und ausgewählter Studienexport; keine Produktions-RPO/RTO |
-| Lokaler Servicelasttest | 360 Saves bestätigt und neu gelesen | 30 Prozesse, p95 0,083 s; Browser/Internet nicht enthalten |
+| Offline tests | 77 assertions | 47 database cases intentionally skipped there |
+| PostgreSQL integration | 338 assertions, no errors/warnings/skips | Breakdown in validation report |
+| Shiny modules | 117 assertions | Service/session/navigation tests |
+| Actual Chromium paths | Passed | Panel, network loss, keyboard, editorial, campaign, protocol, import, navigation |
+| Actual OIDC integration | 12 checks passed | Local synthetic direct Shiny backend |
+| Stock Shiny Server OSS | Not qualified | Websocket drops identity headers; session correctly rejected |
+| Two-round service path | Passed | 30 people, 12 bilingual items, 720 responses, feedback, export reproduction |
+| Empty migration | Passed | Eleven migrations, identical retry, service fixture |
+| Package checks | Both Status OK | Built vignettes; incoming checks disabled |
+| Database/artifact restore | Passed | Consistent database snapshot and selected study export; no production RPO/RTO |
+| Local service load | 360 saves confirmed and reloaded | 30 processes, p95 0.083 s; no browser/internet latency |
 
-Details: [Validierung](validation/2026-09-25.md), [Browser-QA](../packages/delphyrApp/inst/qa/README.md),
-[Authentifizierung](authentication.md), [Reporting](reporting.md),
-[Panelimport](panel-import.md), [Einladungen](invitations.md),
-[Teilnahme](participation.md), [Protokolländerungen](protocol-amendments.md).
-Keine CRAN-Einreichung oder wissenschaftliche/klinische Validierung behauptet.
-Hosted CI wird pro tatsächlichem Commit separat geprüft.
+Details: [validation](validation/2026-09-25.md), [browser QA](../packages/delphyrApp/inst/qa/README.md),
+[authentication](authentication.md), [reporting](reporting.md),
+[panel import](panel-import.md), [invitations](invitations.md),
+[participation](participation.md), [protocol amendments](protocol-amendments.md).
+No CRAN submission or scientific/clinical validation is claimed. Hosted CI is
+verified separately for each actual commit.
 
-## Verbleibende P1-Arbeit und externe Gates
+## Remaining P1 work and external gates
 
-- Produktive institutionelle Governance, Einwilligungs-/Aufbewahrungs-/Löschregeln,
-  Betreiberverantwortung und genehmigter Umgang mit Forschungsdaten.
-- Stock-OSS-Hostingentscheidung oder gesonderte Qualifikation des direkten
-  Backends mit produktivem TLS, Geheimnisverwaltung und getrennten Betriebsrollen.
-- Browserworkflow für Einladungsausgabe/-annahme und vollständige Kontoeinrichtung;
-  bestehende vorab provisionierte Konten sind Voraussetzung der geprüften Services.
-- Vollständige qualitative Herkunft im Teilnehmerfeedback, freigegebene
-  Freitext-/Audit-/Publikationsprofile und wissenschaftliche Autorenangaben.
-- Produktiver Provideradapter, Reminderpläne, Ruhezeiten und kontrollierte
-  Auflösung unklarer Zustellungen. Kein externer Versand freigegeben.
-- Autosave, vollständiger Management-End-to-End-Browserpfad, systematische
-  Tab-Reihenfolge/Assistenztechnik-/Cross-Browser-Abnahme und End-to-End-Lasttest.
-- Genehmigte Aufbewahrung/Bereinigung, vollständiger Produktivrestore, Pilot-/Releaseabnahme.
+- Institutional governance, consent/retention/deletion policies, operator
+  responsibility and approved research-data handling.
+- Stock-OSS hosting decision or separate direct-backend production qualification
+  with TLS, secret management and separated operational roles.
+- Browser invitation issuance/acceptance and full account onboarding; tested
+  services require existing provisioned accounts.
+- Full qualitative provenance in participant feedback, approved free-text/audit/
+  publication profiles and scientific author information.
+- Production provider adapter, reminder schedules, quiet hours and controlled
+  resolution of uncertain delivery. No external dispatch is approved.
+- Autosave, complete management browser workflow, systematic tab-order/assistive-
+  technology/cross-browser acceptance and end-to-end load tests.
+- Approved retention/cleanup, full production recovery, pilot and release acceptance.
 
-Diese Punkte werden nicht durch synthetische Beispiele oder grüne lokale Tests
-als erledigt dargestellt. `admin/`, Daten, Backups und lokale Bibliotheken bleiben
-ignoriert. Einstieg und reproduzierbare Befehle: [README](../README.md),
-[Betrieb](operations.md), [HANDOVER](../HANDOVER.md).
+Synthetic examples and green local tests do not close these gates. `admin/`, data,
+backups and local libraries remain ignored. Entry points: [README](../README.md),
+[operations](operations.md), [HANDOVER](../HANDOVER.md).

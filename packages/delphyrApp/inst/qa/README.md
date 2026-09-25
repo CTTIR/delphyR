@@ -1,4 +1,12 @@
-# Browser qualification evidence, 2026-09-25
+# Browser qualification evidence
+
+These records describe specific synthetic checks performed on 25 September 2026.
+They are not a claim that every current screen, language, browser, or production
+component has been qualified. Current interface languages are English, German,
+and French, with English as the default; historical EN/DE checks below retain
+their actual scope. Scientific study text is not automatically translated.
+
+## Deterministic panel fixture
 
 Run `preview.R` in one terminal after installing delphyrApp, then
 `browser-smoke.R` in another with the optional chromote package and Chromium.
@@ -17,7 +25,7 @@ Verified in Chromium on Linux:
 
 The screenshots in `inst/figures` show this fixture. They do not certify other
 browsers, assistive technologies, production login, or live database behavior.
-Management queue and feedback release paths are exercised by testServer with
+Management queue and feedback release paths are exercised by `testServer()` with
 injected services; a complete real-database management browser journey remains open.
 
 The application uses a separate worker for jobs. There is no browser control
@@ -250,3 +258,16 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-navigation-post
 
 This checks section navigation and preservation of a draft field. It is not a
 formal accessibility audit or a substitute for the full browser matrix.
+
+## Trilingual re-audit
+
+`browser-languages.R` runs against a fresh `preview-postgres.R` fixture. It passed
+against PostgreSQL on 25 September 2026: English default; EN/FR/DE switching with
+rating 7 retained; approved consent unchanged; French save and final submission
+receipts; status translation after switching back to English; and no horizontal
+overflow at 1280px or 390px. This uses the restricted runtime database role.
+
+The manager workspace was separately checked in all three languages: navigation,
+section headings, file control labels, retained rationale text, no Shiny output
+errors, and French desktop/mobile rendering. These checks do not constitute a
+complete translated management transaction journey or human linguistic review.

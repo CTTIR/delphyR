@@ -1,0 +1,274 @@
+A reason and confirmation are required.
+A valid synthetic .invalid email is required
+Abstain
+Action failed. Check your entries, permissions and round state. No success was confirmed.
+Amendments apply only to future rounds. Existing rounds and frozen data retain their original protocol. This technical approval does not replace institutional or ethics approval.
+Analysed
+Analysis and subsequent round
+Analysis queued. Check the operation.
+Approval or cancellation rationale
+Approve local test receipts
+Approve new protocol version
+Approved
+Approved for local test receipts
+Approved. No email will be sent.
+Assess evidence together
+Assign to selected subsequent round
+Browse…
+Cancel pending test receipts
+Cancelled
+Change state
+Check operation
+Choose a rating
+Choose a study to see your available work areas.
+Closed
+Coding decision
+Column
+Columns do not match the selected schema
+Comma
+Communications
+Complete message text
+Complete new protocol (JSON, maximum 1 MB)
+Complete preview
+Complete study
+Confirm end of participation
+Conflict: reload and review the saved version. Your input remains visible.
+Connection lost. Changes are not being saved. Keep a copy of pending text before reloading; a reload restores only confirmed responses.
+Connection restored. Review the last saved responses before continuing. Pending edits have not been confirmed saved.
+Consent is recorded.
+Consent saved. Receipt:
+contacts imported;
+Create a separate version
+Create exact preview
+Create feedback
+CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.
+CSV could not be parsed
+Deadline
+Deadline change
+Deadline with timezone
+Decision rationale
+Definition and coding rule
+Delimiter
+Derivation rationale
+Display name
+Download export
+Draft
+Duplicate in this file; resolve explicitly
+Edited text
+Editorial review
+Eligible
+Email already exists
+Email case variants require explicit review
+End participation
+Exact recipient selection (pseudonyms)
+exactly selected recipients
+Exclude
+Existing email case variant requires review
+Explicitly confirm withdrawal first.
+Export queued. Check the operation.
+Failed
+Feedback assigned.
+Feedback created for review.
+Feedback released
+Feedback released.
+Field
+File
+File schema
+Finalized
+Freeze round
+Frozen
+Give a response
+I confirm the displayed relationship.
+I consent to the displayed study information.
+I independently reviewed this exact version.
+I reviewed my answers. Submission ends editing.
+I reviewed the round and target state
+I reviewed the text and exact recipient list.
+I reviewed this exact file and every displayed contact.
+I reviewed this exact version and its application only to future rounds.
+I reviewed this feedback
+I want to end participation and understand the stated data retention.
+Import blocked. Correct every issue and preview a new file.
+Import confirmed. Invitation drafts remain unbound; no email was sent.
+Import rationale
+Import receipt
+Import reviewed invitation drafts
+Import validated. No round created yet.
+In progress
+In review
+Include
+Independent review
+Initial version
+Inspect saved version
+Instrument (CSV, protocol languages)
+Invalid display name
+Invalid source reference
+Invitation
+Issue
+Item code
+Item version
+Language
+Language is not supported by this study
+Link an item to its source
+Load round
+Local receipt recorded
+Local test receipts only. This application sends no email. Recipients are represented only by study pseudonyms.
+Manage the protocol, rounds and independent reviews. Choose a study section to prepare the next step.
+Merge
+Message language
+Message type
+My participation
+New
+New items: one code,version per line
+New state
+New version confirmed:
+No accessible study. Contact the study team.
+No approved translation is available; displayed language:
+No assigned round.
+No contact rows
+No file selected
+No panel view is available for this study.
+No partial import: the entire file remains blocked.
+Normalized email
+Not applicable
+Not yet saved
+Open
+Operation:
+optional
+Original text (synthetic only)
+Originals are preserved. Redactions and summaries are stored separately; another person must release the exact version.
+Outcome unknown
+Panel file (CSV, maximum 1 MiB)
+Panel import
+Parent
+Parent items: one code,version per line
+Participation ended. Saved data are retained. Receipt:
+Pending
+Pending receipts cancelled. Existing receipts are preserved.
+Prepare a new round
+Prepare round
+Preserve original
+Preserve original sources and document separate editorial versions, coding decisions and item provenance.
+Preview based on version
+Preview created. Approval is still required.
+Preview exact version
+Preview passed validation. Nothing has been imported yet.
+Previous
+Processing
+Proposed
+Protocol
+Protocol amendment rationale
+Protocol validated. No new version has been saved.
+Protocol versions
+Pseudonym
+Qualitative editorial work
+Queued
+Rating
+Rationale
+Rationale or dissent
+Reason
+Reason for changes
+Receipt state
+Receipt:
+Record an item split or merge
+Record an original source
+Redacted version
+Redaction
+Refresh editorial records
+Refresh receipt status
+Relationship
+Release feedback
+Release version
+Released previous-round feedback:
+Reminder
+Request analysis
+Request export
+required
+response fields confirmed saved.
+Response text
+Response type
+Restricted contact preview
+Review and release feedback
+Review rationale including dissent
+Review relationship
+Review synthetic contacts and exact recipient lists before approving imports or local test receipts.
+Review the round state and record a reason for every transition. Permissions and state are checked again when the action runs.
+Round
+Round draft created. Review and approve before opening.
+Round opening
+Rounds and analysis
+Row
+rows in the file.
+Running
+Save all changes and confirm submission first.
+Save coding decision
+Save consent
+Save each response and review the confirmed answers before explicitly submitting your round.
+Save each response field explicitly. Saving is not automatic.
+Save relationship
+Save response
+Save source linkage
+Save theme version
+Save version
+Save your changes first. The current round stays open.
+Saved response
+Saved version
+Saved:
+Saved. Original history is preserved.
+Saving …
+Select consent explicitly first.
+Semicolon
+Snapshot confirmed.
+Source for redaction, coding and item linkage
+Source reference
+Source reference already exists
+Split
+Stakeholder group
+Stakeholder group is not in the protocol
+State
+State change confirmed.
+Study
+Study completed.
+Study completion
+Study information
+Study management
+Study sections
+Study text, scale anchors and consent remain in their approved language.
+Subject
+Submission confirmed:
+Submission receipt:
+Submit by:
+Submit final responses
+Submitted
+Submitted. Further editing is unavailable.
+Succeeded
+Summary (not a quotation)
+Suppressed
+Synthetic communications
+Synthetic contacts with .invalid addresses only. Import creates unbound invitation drafts. It does not create accounts, associate responses, or send email.
+Synthetic development environment. Do not enter real participant data. No email is sent.
+Synthetic panel import
+Template version
+The round is closed or its deadline has passed. Saving is unavailable.
+The wording changed. Ratings are not directly comparable.
+Theme code
+Theme for the selected source
+Theme label
+Theme version
+Themes and coding
+These actions use the round selected above. Analysis and exports are prepared in the background; use Check operation to see their progress.
+This does not import or approve an instrument item.
+This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.
+Unable to judge
+Unanswered
+unbound invitation drafts.
+Unsaved change.
+Validate and preview exact protocol
+Validate file and create preview
+Validate import
+Version
+Version to review
+Version type
+View analysis
+View restricted original text
+Your previous response:

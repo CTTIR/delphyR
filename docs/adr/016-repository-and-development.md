@@ -1,17 +1,19 @@
-# ADR-016: Repository, Lizenz und Entwicklung
+# ADR-016: Repository, license and development
 
-Status: accepted. Datum: 2026-09-24.
+Status: accepted. Date: 2026-09-24; naming update: 2026-09-25.
 
-Der Nutzer hat das öffentliche Repository CTTIR/delpyR und MIT ausdrücklich gewählt.
-Am 25.09.2026 wurde das Repository auf ausdrücklichen Nutzerwunsch in CTTIR/delphyR umbenannt. Die technischen Packages folgen der Spezifikation:
-delphyr und delphyrApp. Copyrightinhaber entsprechend bestehender CTTIR-Packages:
-Raban Heller. Die private Originalablage admin/ bleibt ignoriert; eine unveränderte
-Spezifikationskopie unter docs/spec/ macht den Arbeitsvertrag nachvollziehbar.
+The user explicitly selected the public repository `CTTIR/delpyR` and MIT license.
+On 2026-09-25, the repository was renamed `CTTIR/delphyR` at the user's request.
+Technical package names follow the specification: `delphyr` and `delphyrApp`.
+The copyright holder is Raban Heller, consistent with existing CTTIR packages.
+The private original directory `admin/` remains ignored; the unchanged historical
+specification copy under `docs/spec/` preserves the source requirements.
 
-Die Umsetzung erfolgt sequentiell in überprüfbaren Schritten. Lokales PostgreSQL
-läuft isoliert mit synthetischen Daten. Produktionsfreigabe bleibt gesondert.
-Für den ersten Build werden vorhandene R-Abhängigkeiten benutzt und tatsächliche
-Versionen protokolliert. Keine Behauptung eines bestandenen Releasegates ohne Test.
+Implementation proceeds through verifiable steps. Independent work may run in
+parallel when explicitly authorized. Local PostgreSQL uses isolated synthetic
+data. Production approval is separate. Initial builds use available R dependencies
+and record actual versions. No release gate is claimed without evidence.
 
-Reihenfolge: reine Domain/Analytik; PostgreSQL und Autorisierung;
-zweirundiger Servicepfad; Shiny; Management, Jobs, Exporte und Betriebsnachweise.
+Initial sequence: pure domain and analytics; PostgreSQL and authorization;
+two-round service path; Shiny; management, jobs, exports and operational evidence.
+Current documentation and interface language policy is defined by ADR-017.

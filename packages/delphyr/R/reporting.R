@@ -24,7 +24,7 @@ prepare_report_data <- function(repo, actor, snapshot_id) {
       field = c("n_assigned", "n_submitted", "n_valid", "n_agree", "n_disagree", "p_agree", "classification", "stratum", "item_version", "snapshot_hash", "rules_hash", "result_hash"),
       definition = c("Assigned panel members in the frozen round", "Submitted response sets", "Valid numeric ratings; denominator of agreement and disagreement", "Ratings in the protocol agreement categories", "Ratings in the protocol disagreement categories", "Unrounded n_agree / n_valid", "Rule outcome, separate from human item decisions", "Overall or protocol-defined stakeholder group", "Frozen instrument item version", "Canonical frozen snapshot content hash", "Canonical analysis rule hash", "Canonical result content hash"), stringsAsFactors = FALSE
     )
-    missing <- data.frame(topic = c("Autoren und Verantwortlichkeiten", "Finanzierung", "Interessenkonflikte", "Institutionelle Freigabe", "Methodische Interpretation", "Protokollabweichungen", "ACCORD-/CREDES-Pr\u00fcfung"), status = rep("nicht dokumentiert", 7), stringsAsFactors = FALSE)
+    missing <- data.frame(topic = c("Authors and responsibilities", "Funding", "Conflicts of interest", "Institutional approval", "Methodological interpretation", "Protocol deviations", "ACCORD/CREDES review"), status = rep("not documented", 7), stringsAsFactors = FALSE)
     data <- list(
       schema_version = "1.0", profile = "numeric_research_supplement",
       metadata = list(

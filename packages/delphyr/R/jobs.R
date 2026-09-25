@@ -103,7 +103,7 @@ write_export <- function(repo, actor, snapshot_id) {
       gsub(">", "&gt;", x, fixed = TRUE)
     }
     rows <- apply(a$results[, c("item_code", "dimension_code", "stratum", "n_valid", "classification")], 1, function(v) paste0("<tr>", paste0("<td>", esc(v), "</td>", collapse = ""), "</tr>"))
-    writeLines(c('<!doctype html><html lang="de"><meta charset="utf-8"><title>delphyR \u2013 synthetischer Bericht</title><main><h1>Synthetischer Studienbericht</h1><p>Einfacher HTML-Fallback: optionale Quarto-Laufzeit nicht verf\u00fcgbar. Entwicklungsnachweis. Fachliche Interpretation und institutionelle Angaben: nicht dokumentiert.</p><table><caption>Unver\u00e4nderlicher Analysestand</caption><thead><tr><th>Item</th><th>Dimension</th><th>Gruppe</th><th>G\u00fcltiges n</th><th>Klassifikation</th></tr></thead><tbody>', rows, "</tbody></table></main></html>"), file.path(staging, "report.html"))
+    writeLines(c('<!doctype html><html lang="en"><meta charset="utf-8"><title>delphyR - synthetic report</title><main><h1>Synthetic study report</h1><p>Basic HTML fallback: optional Quarto runtime unavailable. Development evidence only. Scientific interpretation and institutional information: not documented.</p><table><caption>Immutable analysis results</caption><thead><tr><th>Item</th><th>Dimension</th><th>Group</th><th>Valid n</th><th>Classification</th></tr></thead><tbody>', rows, "</tbody></table></main></html>"), file.path(staging, "report.html"))
   }
   files <- list.files(staging, full.names = TRUE)
   manifest <- list(

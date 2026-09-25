@@ -1,137 +1,132 @@
-# delphyR: Nutzungsanleitung
+# Using delphyR
 
-## Einstieg
+`delphyr` provides independent analysis and transactional study services;
+`delphyrApp` provides the study interface. Start with the
+[repository installation and demo instructions](../README.md). The
+[implementation status](IMPLEMENTATION_STATUS.md) distinguishes implemented
+features, executed checks, and remaining acceptance gates.
 
-Das Kernpackage `delphyr` dient zur unabhängigen Auswertung eingefrorener
-Delphi-Rundendaten. `delphyrApp` ist das begleitende Oberflächenpackage.
-Aktuelle Funktions- und Testnachweise stehen im
-[Implementierungsstatus](IMPLEMENTATION_STATUS.md); die Spezifikation beschreibt
-zusätzlich Funktionen, deren Umsetzung noch offen sein kann.
+The interface supports English, German, and French, initially English. Protocols,
+study information, and instrument wording retain their authored language. No
+interface language change automatically translates scientific content.
 
-Installationsbefehle enthält die [README](../README.md#installation). Für das
-Kernpackage ist bei Offlineanalysen keine laufende Datenbank erforderlich.
+## Analyse a frozen round offline
 
-## Offlineworkflow
+1. Check the complete configuration with `validate_protocol(config)` and construct
+   it with `new_protocol(config)`. Invalid input reports `DEL_VALIDATION` and a field path.
+2. Combine submitted responses, panel assignments, and the instrument with
+   `new_snapshot()`. Set the round number explicitly; `demo_snapshot()` creates round 1.
+3. Run `analyse_round(snapshot)`. Read `results` with `denominators` and `missingness`;
+   `decisions` applies the configured group policy.
+4. Use `compare_rounds(previous, current)` for descriptive paired comparisons.
+   Changed item versions require a justified comparability mapping.
+5. Prepare a draft with `prepare_feedback(analysis)` and check it with
+   `validate_feedback()`. Editorial review and release remain separate steps.
 
-1. Mit `validate_protocol(config)` das vollständige Studienprotokoll prüfen und
-   mit `new_protocol(config)` konstruieren. Ungültige Werte erzeugen
-   `DEL_VALIDATION`; der Validierungsbericht nennt den betroffenen Pfad.
-2. Antworten und Zuordnungen mit `new_snapshot()` zusammenführen. Antworten müssen
-   abgegebenen Personen und dem Instrument zugeordnet sein. Die Rundennummer wird
-   ausdrücklich mitgegeben; `demo_snapshot()` erstellt immer Runde 1.
-3. `analyse_round(snapshot)` ausführen. `results` enthält die Strata,
-   `decisions` die Klassifikation unter der Gruppenregel. `denominators` und
-   `missingness` gehören zur Interpretation jeder Analyse.
-4. Vergleichbare Runden mit `compare_rounds(previous, current)` beschreibend
-   vergleichen. Für geänderte Itemversionen ist ein begründetes Mapping nötig.
-5. Mit `prepare_feedback(analysis)` einen kontrollierten Entwurf erstellen und
-   `validate_feedback()` prüfen. Redaktion und Veröffentlichung sind eigene Schritte.
+The [offline vignette](../packages/delphyr/vignettes/offline.Rmd) runs this workflow
+with synthetic examples. After installing built vignettes, open it with
+`vignette("offline", package = "delphyr")`. No database is required.
 
-Die [Offlinevignette](../packages/delphyr/vignettes/offline.Rmd) führt diese Schritte
-mit ausführbarem Code aus. Nach Installation mit gebauten Vignetten öffnet
-`vignette("offline", package = "delphyr")` die gerenderte Fassung.
+## Interpret the counts
 
-## Ergebnisse richtig lesen
+`n_valid` is the denominator for agreement and disagreement. Abstention, missing
+responses, and inability to judge are not zero ratings. `insufficient_data`
+means the prespecified minimum was not reached; `no_consensus` is a legitimate
+study result.
 
-`n_valid` ist der Nenner der Zustimmungs- und Ablehnungsanteile. Eine Enthaltung,
-fehlende Antwort oder fehlende Beurteilbarkeit zählt nicht als Skalenwert null.
-`insufficient_data` bedeutet, dass die festgelegte Mindestzahl nicht erreicht ist;
-`no_consensus` ist ein mögliches reguläres Studienergebnis.
+The default protocol requires adequate results in every designated group. The
+small snapshot helper explicitly uses a pooled rule, so its overall consensus
+can coexist with an empty group. Consensus does not automatically establish
+individual stability, retain an item, or end a study. Example thresholds are
+not methodological recommendations.
 
-Das Standardprotokoll verlangt ausreichende Ergebnisse in allen vorgesehenen
-Gruppen. Die kleine Snapshotdemo nutzt ausdrücklich eine gepoolte Regel. Daher kann
-ein Gesamtkonsens gleichzeitig mit einer leeren, unzureichenden Gruppe auftreten.
+## Participate in a round
 
-Ein Konsensergebnis beantwortet keine Frage nach individueller Stabilität und
-entscheidet nicht automatisch über Itemaufnahme oder Studienabschluss. Die
-Schwellen in den Beispielen sind keine methodische Empfehlung.
+Use the [local setup guide](operations.md) to start separate synthetic manager
+and panel sessions. In the panel view, choose a study and assigned round, read
+the stored information, and record consent explicitly. Ratings start without
+a preselected value. Choose allowed special responses separately.
 
-## Oberfläche: Panel und Studienleitung
+Save each field explicitly. Only a returned revision and server timestamp
+establish a confirmed save. Errors retain the pending value; a revision conflict
+requires reloading and reviewing the server state. Save pending changes before
+final submission. Successful submission returns a durable receipt and ends
+editing for that round.
 
-Die [lokale Startanleitung](operations.md) zeigt Manager- und Panelsitzungen. In der
-Panelansicht zuerst Studie und zugewiesene Runde auswählen, die Studieninformation
-lesen und die Einwilligung ausdrücklich festhalten. Bewertungen beginnen ohne
-vorausgewählten Skalenwert. Zulässige Sonderantworten werden separat gewählt.
+A disconnected browser must not imply successful saving. The tested reload
+path restores the last committed value; unsaved text is not an offline backup.
+The core withdrawal service stops future collection and message eligibility
+while retaining prior synthetic research data under its explicit test policy.
+This is not an institutional deletion policy.
 
-Jedes Feld wird ausdrücklich gespeichert. Erst eine bestätigte Revision mit
-Serverzeitpunkt zählt als gespeichert. Bei einem Fehler bleibt die Eingabe zur
-Korrektur sichtbar; ein Versionskonflikt verlangt einen erneuten Abgleich mit dem
-Server. Ausstehende Änderungen vor der abschließenden Abgabe speichern. Die
-Abgabe liefert eine dauerhafte Quittung und beendet die Bearbeitung dieser Runde.
+## Manage rounds and protocols
 
-Die Studienleitung prüft das Instrument und bestätigt Zustandswechsel mit einer
-Begründung. Eine geschlossene Runde wird eingefroren. Analyse und Export werden als
-Aufträge an den getrennten Worker gegeben; den Auftragsstatus anschließend erneut
-prüfen. Feedback zuerst als konkrete Fassung ansehen und danach ausdrücklich
-freigeben. Es kann einer noch nicht geöffneten Folgerunde zugeordnet werden.
+Review instruments and confirm lifecycle changes with a reason. Freeze a closed
+round before queuing analysis or export for the separate worker. Refresh the
+operation state to obtain completed results. Preview the exact feedback candidate
+before release, then assign released feedback to an unopened next round.
 
-Deutsch und Englisch sind Oberflächensprachen. Studien- und Instrumenttexte stammen
-aus den gespeicherten Fassungen; die Oberfläche übersetzt keine wissenschaftlichen
-Inhalte automatisch. Ein sichtbarer oder versteckter Button ersetzt keine
-serverseitige Rechteprüfung.
+Protocol amendments need a complete validated configuration, an exact comparison
+with the previous version, and explicit approval. They apply to future rounds;
+existing instruments and snapshots retain their frozen protocol. Interface
+visibility never substitutes for service-level authority checks.
 
-## Redaktion und Quellenbezug
+## Review sources and item provenance
 
-Berechtigte Redakteure sichern synthetische Originalquellen und erstellen getrennte
-redigierte Fassungen oder ausdrücklich als solche markierte Zusammenfassungen.
-Die Änderung braucht eine Begründung. Eine andere berechtigte Person prüft die
-genaue Fassung vor Freigabe; die eigene Fassung kann nicht selbst freigegeben werden.
+Editors preserve synthetic originals and create separate redactions or summaries
+with a reason. Summaries are labelled, not represented as quotations. Another
+authorized person reviews the exact version before release.
 
-Themenversionen und Einschluss-/Ausschlusscodierungen dokumentieren auch Dissens.
-Quellenbezüge verbinden Itemversionen mit ihrer Herkunft. Split-/Merge-Beziehungen
-werden vor dem Speichern geprüft. Ein gespeicherter Quellenbezug importiert noch
-kein Item in das Instrument und erteilt keine Studienfreigabe.
+Versioned themes and inclusion/exclusion coding can document dissent. Source links
+connect item versions with their origin; split/merge decisions record new item
+identities. A source link does not itself import an instrument item or approve a study.
 
-## Kampagnen ohne externen Versand
+## Import contacts and approve campaigns
 
-Die Koordination wählt Runde, Anlass und exakte Studienpseudonyme. Betreff und
-Nachrichtentext werden fertig formuliert, dann als unveränderliche Vorschau
-angelegt. Erst die bestätigte Prüfung dieser Vorschau und eine Begründung erlauben
-die Freigabe. Geänderter Text oder eine andere Empfängermenge benötigen eine neue
-Vorschau.
+Coordinators preview synthetic UTF-8 contact files and resolve blocking row/column
+issues before approval. The whole reviewed file is imported atomically, creating
+contacts and unbound drafts only. It does not create an account or assign a round.
+[Invitation services](invitations.md) use a separate, explicit approval of an
+existing verified issuer/subject identity. The full invitation browser journey
+remains an integration gate.
 
-Der getrennte Worker schreibt ausschließlich lokale Sinkquittungen. Er unterdrückt
-unter anderem überholte Erinnerungen nach einer Abgabe, Rückzüge und stornierte
-Kampagnen. `sink_recorded` ist keine echte Zustellbestätigung. `delivery_unknown`
-markiert einen abgelaufenen laufenden Claim und löst keinen automatischen Neuversand
-aus. Details stehen unter [Synthetische Kommunikation](communications.md).
+Campaigns select a round, purpose, exact study pseudonyms, and final text. Approval
+requires review of that frozen preview and a reason. Changed text or recipients
+need a new preview. The worker writes only local database sink receipts and
+suppresses obsolete reminders, withdrawals, and cancelled campaigns.
+`sink_recorded` is not an external delivery confirmation; `delivery_unknown` is
+not automatically retried. See [communications](communications.md).
 
-## Berichte herunterladen und reproduzieren
+## Download and reproduce research exports
 
-Nach erfolgreichem Exportauftrag kann die berechtigte anfragende Person das private
-Artefakt herunterladen. Der Download prüft erneut Rechte, Ablauf und Prüfsummen.
-Der Export enthält den numerischen Datensatz mit Provenienz, Instrumenttexten und
-Bericht; qualitative Originaltexte und Kontozuordnungen werden nicht übernommen.
-Ein heruntergeladenes Artefakt unterliegt anschließend der Verantwortung der
-empfangenden Person und wird durch einen späteren Rechteentzug nicht zurückgerufen.
+The authorized requester can download a completed private export. Downloads
+recheck authority, expiry, and checksums. Numeric exports include frozen data,
+provenance, instrument texts, and a report; qualitative originals and account
+mappings are excluded. Pseudonyms remain potentially identifying. Revoking
+server access cannot recall an already downloaded copy.
 
 ```sh
-Rscript reproduce.R /pfad/zum/entpackten-export
+Rscript reproduce.R /path/to/extracted-export
 ```
 
-Für die Reproduktion muss das dokumentierte Kernpackage verfügbar sein. Quarto ist
-für das Neuberechnen der Analyse nicht erforderlich. Der Renderer des vorhandenen
-Berichts steht im Manifest. Details und Profilgrenzen enthält die
-[Berichtsanleitung](reporting.md).
+The documented core package is needed to reproduce the analysis; Quarto is not.
+The manifest identifies the existing report's renderer. Read the
+[reporting guide](reporting.md) for profile and rendering limits.
 
-## Identitäten und Betrieb
+## Keep identities and operations separate
 
-`run_app(repo, actor)` ist für eine feste, vertrauenswürdige synthetische Identität
-pro lokaler Appinstanz geeignet. Für getrennte Identitäten bietet `run_app()` eine
-serverseitige `actor_factory(session, repo)`; eine `repo_factory()` kann zusätzlich
-je Sitzung eine eigene Verbindung erstellen, die beim Sitzungsende geschlossen wird.
-Bei direkt übergebenem `repo` bleibt dessen Lebensdauer beim aufrufenden Host.
-Identität oder Rolle dürfen nicht aus Browserfeldern oder URL-Parametern abgeleitet
-werden. Das Demo-Startskript ist kein Mehrbenutzer-Login.
+`run_app(repo, actor)` uses one trusted synthetic identity for a local app instance.
+`actor_factory(session, repo)` resolves session-specific identities;
+`repo_factory()` can create connections that close at session end. The caller
+owns directly supplied connections. Identity must never come from unverified
+browser fields, URLs, or headers.
 
-Lokale Demos verwenden ausschließlich synthetische Daten. Produktive Identitätsprüfung,
-Studienfreigaben, Nachrichtenversand und Deployment benötigen die jeweiligen
-nachgewiesenen Abnahmegates. Maßgeblich sind
-[Abnahme und Release](spec/26_ACCEPTANCE_AND_RELEASE.md) sowie der aktuelle
-[Implementierungsstatus](IMPLEMENTATION_STATUS.md).
+Use only synthetic data in the demonstration. Local gateway checks do not qualify
+the stock Shiny Server OSS transport or production operations. Institutional
+approvals and real messages are separate from software tests.
 
-## Fehler melden
+## Report a reproducible problem
 
-Für reproduzierbare Fehler bitte Packageversion, betroffene Funktion, Fehlercode und
-ein synthetisches Minimalbeispiel angeben. Keine Tokens, Zugangsdaten, echten
-Antworten oder Personenkennungen in Issues oder Logs übernehmen.
+Include package version, function or screen, error code, and a synthetic minimal
+example. Do not include credentials, tokens, real answers, or participant
+identifiers in issues or logs.

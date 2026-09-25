@@ -1,35 +1,51 @@
-# delphyR — Spezifikationspaket v1.0
+# delphyR specification archive, version 1.0
 
-Vollständiger Implementierungsentwurf für eine Delphi-Studienplattform mit R-Package, Shiny-App und selbst betriebenem Shiny Server.
+This directory preserves the original implementation specification for the
+Delphi study platform. The archived documents are mostly German; API, code,
+and database identifiers are English. This English index is maintained for
+current readers. It does not rewrite the historical requirements.
 
-**Start:** [Lesereihenfolge und Übersicht](00_START_HERE.md)
+## Start here
 
-**Coding-Agent starten:** [Vollständiger Orchestrator-Prompt](27_ORCHESTRATOR_PROMPT.md)
+- [Reading order and document map](00_START_HERE.md).
+- [Complete implementation brief](27_ORCHESTRATOR_PROMPT.md).
+- [Study protocol template](24_STUDY_PROTOCOL_TEMPLATE.md).
+- [Roadmap](22_IMPLEMENTATION_ROADMAP.md), [work packages](28_WORK_PACKETS.md),
+  and [acceptance criteria](26_ACCEPTANCE_AND_RELEASE.md).
+- [Original structural validation report](VALIDATION_REPORT.md) and
+  [sources and comparators](30_SOURCES_AND_COMPARATORS.md).
 
-**Studie vorbereiten:** [Ausfüllbares Protokoll und Konfigurationsbeispiel](24_STUDY_PROTOCOL_TEMPLATE.md)
+There are 33 numbered requirements and working documents, plus the archive's
+validation report and checksum records. All text is UTF-8. Mermaid diagrams
+remain readable as source when a viewer does not render them.
 
-**Entwicklung steuern:** [Roadmap](22_IMPLEMENTATION_ROADMAP.md), [Arbeitspakete](28_WORK_PACKETS.md), [Abnahme](26_ACCEPTANCE_AND_RELEASE.md)
+## Distinguish requirements from implementation
 
-**Qualität und Herkunft:** [Prüfbericht](VALIDATION_REPORT.md), [Quellenregister](30_SOURCES_AND_COMPARATORS.md)
+The specification was drafted on 24 September 2026. Its proposed APIs,
+configurations, and directory structures are requirements or examples, not
+proof that a feature exists or passed qualification. Read the current
+[repository guide](../../README.md) and
+[implementation status](../IMPLEMENTATION_STATUS.md) for actual behavior and
+remaining gates.
 
-## Inhalt
+The current repository is `CTTIR/delphyR`; the packages are `delphyr` and
+`delphyrApp`, licensed under MIT. Older passages may retain an earlier repository
+spelling or describe licensing as undecided. Those historical passages have
+not been silently rewritten. Example data and thresholds are synthetic, not
+methodological recommendations.
 
-33 nummerierte Fach- und Arbeitsdokumente; diese README; ein Prüfbericht; ein JSON-Manifest und SHA-256-Prüfsummen. Alle Dokumente sind in UTF-8 gespeichert und ohne besondere Anwendung lesbar. Mermaid-Diagramme werden von geeigneten Markdown-Viewern gerendert; ihr Quelltext bleibt auch in einfachen Editoren lesbar.
+## Scope and authorization
 
-Die Dokumente sind überwiegend deutsch, Code- und Schnittstellenbezeichner englisch. Beispiele sind synthetisch. Methodische Beispielschwellen sind keine universellen Empfehlungen.
+Providing this specification does not authorize real participant messages,
+public deployment, or changes to a production server. Development fixtures use
+synthetic data, test identities, and local message sinks. Institutional and
+scientific approvals must come from the responsible people.
 
-## Status
+## Archive checksums
 
-Dies ist eine detaillierte **Spezifikation**, keine fertig implementierte oder produktiv getestete Software. Enthaltene APIs, Konfigurationen und Strukturen sind geplante Verträge. Eine Implementierung muss die beschriebenen Tests und institutionellen Freigaben durchlaufen.
-
-Stand: 24.09.2026. Marke: delphyR; Kernpackage: delphyr; UI-Package: delphyrApp. Namens-/Markenverfügbarkeit und endgültige Softwarelizenz sind offen.
-
-## Nutzung
-
-Archiv entpacken, Ordner nach `docs/spec/` des Zielrepositorys kopieren und den Orchestrator-Prompt mit dem tatsächlichen Repositorypfad an den Coding-Agenten übergeben. Für einen ersten eigenen Überblick mit `00_START_HERE.md` beginnen.
-
-Produktivkonfiguration, reale Nachrichten und Deployment werden nicht durch das Übergeben dieser Spezifikation automatisch autorisiert. Entwicklung und Tests können mit synthetischen Daten, Testauthentifizierung und Mail-Sink beginnen.
-
-## Prüfsummen
-
-`MANIFEST.json` führt die Markdown-Dateien mit Größe und SHA-256 auf. `CHECKSUMS.sha256` umfasst diese Dateien und das Manifest. Aus dem entpackten Ordner kann auf Linux `sha256sum -c CHECKSUMS.sha256` verwendet werden.
+`MANIFEST.json` and `CHECKSUMS.sha256` describe the original supplied archive.
+This README is now a maintained English index, so its original checksum no
+longer describes this file. The other archived specification files remain
+unchanged by this documentation update. Keep the original checksum records as
+historical provenance; do not treat an archive check as a software test or a
+production acceptance result.

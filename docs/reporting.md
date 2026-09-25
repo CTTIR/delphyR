@@ -1,92 +1,93 @@
-# Berichte und numerische Exportergänzungen
+# Reports and numeric export supplements
 
-`prepare_report_data(repo, actor, snapshot_id)` erzeugt Berichtsdaten für einen
-unveränderlichen numerischen Snapshot. Der Dienst prüft das aktuelle Exportrecht
-in der zugehörigen Studie. Ein zusätzliches Analyserecht ist nicht erforderlich;
-Teilnehmende und fremde Studienrollen erhalten darüber keinen Zugang.
+`prepare_report_data(repo, actor, snapshot_id)` builds report data for an immutable
+numeric snapshot. It checks current export authority in the owning study;
+a separate analysis capability is not required. Panel members and users from
+another study cannot obtain these data through this service.
 
-## Inhalt und Grenzen
+## Included data and boundaries
 
-Die Berichtsdaten enthalten Protokoll, Konsensregeln, wissenschaftliche Provenienz,
-Ergebnisse, Nenner, Missingness, Verteilungen und die mehrsprachigen eingefrorenen
-Instrumenttexte. Das Datenwörterbuch erläutert zentrale Felder und Hashes.
+Reports contain the protocol, consensus rules, scientific provenance, results,
+denominators, missingness, distributions, and frozen multilingual instrument
+texts. A dictionary explains key fields and hashes. Instrument text is authored
+study content, not an individual response or an automatic translation.
 
-Menschliche Itementscheidungen werden ausschließlich als Item, Disposition und
-zugehöriger Analyse-Hash übernommen. Itembeziehungen enthalten Itemcodes, Versionen
-und den Beziehungstyp. Nur Beziehungen zu einer exakt im Snapshot enthaltenen
-Itemcode-/Versionskombination werden aufgenommen. Diese redaktionellen Angaben zeigen den Stand zum
-Exportzeitpunkt; sie werden nicht als Bestandteil des früheren Antwortsnapshots
-ausgegeben. Freitextbegründungen, qualitative Originale, individuelle Freitextantworten,
-Kontaktdaten und Principal-/Actor-IDs werden nicht in diese Ergänzung übernommen.
-Ein Snapshot mit einer Freitextskala wird für dieses Profil zurückgewiesen.
+Human item decisions are limited to item code, disposition, and the corresponding
+analysis hash. Lineage includes codes, versions, and relationship types, filtered
+to exact item/version combinations in the snapshot. These editorial records
+reflect export time; they are not retroactively part of the frozen responses.
 
-Autoren, Finanzierung, Interessenkonflikte, institutionelle Freigaben, fachliche
-Interpretation, Protokollabweichungen und ACCORD-/CREDES-Prüfung erscheinen ausdrücklich
-als **nicht dokumentiert**. Diese Kennzeichnung besagt, dass der Berichtsdienst
-keinen freigegebenen strukturierten Eintrag dafür verwendet. Sie ist keine Aussage,
-dass eine reale Studie diese Angaben grundsätzlich nicht besitzt.
+Unreviewed reasons, qualitative originals, individual free-text responses, contacts,
+and principal/actor identifiers are excluded from this supplement. Snapshots
+containing a free-text scale are rejected for this profile. The profile is for
+restricted research use, not public release or general anonymization.
 
-## Private Artefakte schreiben
+Authors, funding, conflicts of interest, institutional approval, methodological
+interpretation, deviations, and ACCORD/CREDES review remain explicitly
+undocumented where the report service has no approved structured entry. This
+means the report lacks a supported value, not that a real study necessarily
+lacks the information. The report does not invent those statements.
+
+## Write private supplements
 
 ```r
 data <- delphyr::prepare_report_data(repo, actor, snapshot_id)
-# staging ist ein neu angelegtes privates Verzeichnis des Exportworkers.
+# staging is a new private directory controlled by the export worker.
 files <- delphyr::write_report_data(data, staging)
 ```
 
-Geschrieben werden `report-data.json`, `data_dictionary.csv`, `round_items.csv`,
+The writer produces `report-data.json`, `data_dictionary.csv`, `round_items.csv`,
 `item_decisions.csv`, `item_lineage.csv`, `missingness.csv`, `denominators.csv`,
-`distributions.csv` und `author_fields.csv`. Die CSV-Dateien verwenden dieselbe
-Formelmaskierung wie der numerische Forschungsexport. Bereits vorhandene gleichnamige
-Dateien werden nicht überschrieben.
+`distributions.csv`, and `author_fields.csv`. CSV text uses the research export's
+spreadsheet-formula masking. Existing files with these names are not overwritten.
 
-Der Exportworker erzeugt diese Dateien und den fertig gerenderten Bericht **vor**
-Berechnung des endgültigen Manifests. Alle tatsächlich ausgelieferten Dateien
-werden mit Bytezahl und SHA-256 ins Manifest aufgenommen. Berichtsdaten
-haben zusätzlich einen eigenen kanonischen Inhalts-Hash. Dieser umfasst den
-Exportzeitpunkt und ist vom wissenschaftlichen Ergebnis-Hash zu unterscheiden.
+The export worker creates the supplements and rendered report **before** generating
+the final manifest. Every delivered file is listed with size and SHA-256. Report
+data also have a canonical content hash, including the export timestamp; this
+is distinct from the scientific result hash.
 
-## Vertrauenswürdiges Quarto-Template
+## Render the packaged Quarto template
 
 ```r
 path <- delphyr::render_study_report(data, staging, timeout = 60L)
 ```
 
-Das installierte Template `inst/reports/study.qmd` ist der einzige ausführbare
-Berichtsquelltext. Die API nimmt keinen Templatepfad und keine frei übergebenen
-Renderargumente entgegen. Sie kopiert das Pakettemplate und die JSON-Daten in ein
-neues temporäres Verzeichnis. Studieninhalte werden ausschließlich als Daten geladen
-und HTML-maskiert; sie werden weder in R-Chunks noch in YAML eingesetzt.
+The installed `inst/reports/study.qmd` template is the only executable report
+source. The API accepts neither arbitrary template paths nor custom render
+arguments. It copies that template and JSON data into a fresh temporary directory.
+Study content stays data, is escaped for HTML, and never becomes R code or YAML.
 
-Der Renderaufruf verwendet `system2()` mit festen beziehungsweise shell-maskierten
-Argumenten, einem Zeitlimit von höchstens 300 Sekunden und privaten temporären
-Dateien. Der Bericht ist eine HTML-Datei mit eingebetteten Ressourcen. Temporäre
-Daten und Renderlogs werden entfernt; Fehler liefern einen sicheren Code
-`DEL_RENDER` ohne rohe Studiendaten im Fehlertext. Das ist ein begrenzter vertrauenswürdiger
-Workerprozess, keine allgemeine Sandbox für fremde Templates.
+The renderer uses `system2()` with fixed or shell-quoted arguments, a timeout of
+at most 300 seconds, and private temporary files. The resulting HTML embeds its
+resources. Temporary inputs and logs are removed; failures return `DEL_RENDER`
+without raw study text in the error. This is a bounded trusted worker process,
+not a general sandbox for untrusted templates.
 
-Quarto, `knitr` und `rmarkdown` sind optionale Laufzeitvoraussetzungen. Fehlen sie,
-meldet die Funktion `DEL_DEPENDENCY`. Ausschließlich dann verwendet der Exportworker
-den einfachen, ausdrücklich gekennzeichneten HTML-Fallback. Das Manifest nennt
-`quarto_html` oder `basic_html_missing_quarto_runtime` als Renderer und bindet den
-Berichtsdaten-Hash. Ein echter Renderfehler oder ein fehlendes Pakettemplate führt
-zum Fehlerzustand des Exportauftrags; es wird kein unvollständiges Artefakt registriert.
-PDF und DOCX sind durch diesen Pfad nicht implementiert.
+Quarto, `knitr`, and `rmarkdown` are optional runtime dependencies. Their absence
+returns `DEL_DEPENDENCY`; only that condition selects the explicitly labelled
+basic HTML fallback. The manifest identifies `quarto_html` or
+`basic_html_missing_quarto_runtime` and records the report-data hash. An actual
+render failure or missing package template fails the export job and does not
+register a partial artifact. This path does not implement PDF or DOCX output.
 
-## Nachweise
+Interface language and report-template language are separate contracts. Changing
+the app language does not translate frozen scientific wording or turn an existing
+report into another language.
 
-`test-reporting.R` prüft Studiengrenzen, Rechteentzug, Exportrecht ohne Analyserecht,
-Ausschluss redaktioneller Freitextbegründungen, Dateiallowlist und Inhalts-Hash.
-Bei vorhandener Quarto-Runtime wird der reale HTML-Render ausgeführt. Eingeschleuste
-HTML-Skripte, Inline-R und Include-Text bleiben dabei Daten; ein angegebener
-Ausführungsmarker wird nicht erstellt. Der integrierte Workerpfad prüft zusätzlich
-das endgültige Manifest, die spätere Prüfsummenprüfung beim Download, den
-Dependency-Fallback und den Abbruch ohne Artefakt bei `DEL_RENDER`.
+## Verification
 
-Der lokale Integrationslauf am 25.09.2026 bestand 45 Berichtstest-Assertions und
-17 bestehende Jobtest-Assertions, einschließlich realem Quarto-Render. Diese Zahlen
-beschreiben diesen Prüflauf; der zentrale Implementierungsstatus dokumentiert den
-aktuellen Gesamtstand.
+`test-reporting.R` checks study boundaries, revocation, export access without
+analysis access, exclusion of editorial reasons, allowed files, and content
+hashes. With Quarto installed, it performs actual rendering. Injected HTML,
+inline R, and include text remain inert data; a requested execution marker is
+not created.
 
-Die Tests benötigen `DELPHYR_TEST_DB=true` für die synthetische lokale Datenbank.
-Die Standardprüfung ohne diesen Opt-in greift nicht auf PostgreSQL zu.
+The integrated worker test checks the final manifest, download-time checksums,
+the dependency fallback, and failure without an artifact on `DEL_RENDER`. A
+regression also excludes a later item-version split from an older snapshot's
+lineage. The local run on 25 September 2026 passed 45 reporting assertions and
+17 existing job assertions, including actual Quarto rendering. Those numbers
+identify that run; the central implementation status tracks subsequent checks.
+
+Database tests require `DELPHYR_TEST_DB=true` and the local synthetic PostgreSQL
+instance. The standard run without opt-in does not access that database.

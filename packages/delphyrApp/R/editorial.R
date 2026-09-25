@@ -106,7 +106,7 @@ editorial_server <- function(id, study, lang, call, services) {
         status_ui(ns("status"))
       )
     })
-    output$status <- shiny::renderText(status())
+    output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     shiny::outputOptions(output, "body", suspendWhenHidden = FALSE)
     output$original_preview <- shiny::renderText({

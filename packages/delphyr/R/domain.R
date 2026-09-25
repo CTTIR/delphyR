@@ -125,9 +125,9 @@ demo_protocol <- function() {
   b <- function(op, p) list(operator = op, proportion = p)
   list(
     schema_version = "1.0", study = list(
-      code = "DEMO-001", title = "Synthetische Delphi-Studie",
-      environment = "demo", timezone = "Europe/Berlin", languages = c("de", "en"), default_language = "de",
-      design = "modified_round_based_delphi", rationale = "Synthetische Demonstration"
+      code = "DEMO-001", title = "Synthetic Delphi study",
+      environment = "demo", timezone = "Europe/Berlin", languages = c("de", "en"), default_language = "en",
+      design = "modified_round_based_delphi", rationale = "Synthetic demonstration"
     ),
     panel = list(
       eligibility_policy = "invited_only", late_entry = FALSE, return_after_missed_round = FALSE,
@@ -137,7 +137,7 @@ demo_protocol <- function() {
       dimensions = list(list(code = "relevance", scale = "relevance_9")),
       scales = list(relevance_9 = list(
         type = "ordinal_integer", values = 1:9,
-        anchors = list(low = "nicht relevant", high = "aeusserst relevant"), missing_options = c("unable_to_judge", "abstained")
+        anchors = list(low = "not relevant", high = "extremely relevant"), missing_options = c("unable_to_judge", "abstained")
       )),
       randomize_items = FALSE, require_explicit_answer = TRUE, editing_after_submission = FALSE
     ),
@@ -177,7 +177,7 @@ check_protocol <- function(p) {
   # Production approval deliberately requires a separately implemented governance contract.
   ensure(p$study$environment == "demo", "production_governance_not_approved")
   ensure(p$study$timezone %in% OlsonNames(), "study.timezone")
-  ensure(all(unlist(p$study$languages) %in% c("de", "en")) &&
+  ensure(all(unlist(p$study$languages) %in% c("en", "fr", "de")) &&
     p$study$default_language %in% unlist(p$study$languages), "study.languages")
   ensure(p$study$design %in% c("modified_round_based_delphi", "exploratory_round_based_delphi"), "study.design")
   ensure(p$panel$eligibility_policy == "invited_only", "panel.eligibility_policy")

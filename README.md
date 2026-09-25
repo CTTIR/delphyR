@@ -1,118 +1,139 @@
 # delphyR <img src="packages/delphyrApp/inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR dolphin hex logo" />
 
-**Rundenbasierte Delphi-Studien nachvollziehbar auswerten.**
+**A traceable workflow for round-based Delphi studies.**
 
-delphyR verbindet ein eigenständig nutzbares R-Kernpackage `delphyr` mit einer
-Shiny-Oberfläche `delphyrApp` und PostgreSQL als transaktionalem Studienbackend.
-Das Kernpackage validiert Studienprotokolle und Antworten, analysiert eingefrorene
-Rundendaten und trennt Konsens, deskriptive Veränderung und redaktionelle Entscheidungen.
+delphyR combines the independent R package `delphyr`, the multilingual Shiny
+workspace `delphyrApp`, and transactional PostgreSQL services. Study teams can
+review instruments, collect explicitly submitted ratings, freeze rounds, prepare
+feedback, and reproduce the resulting analysis outside the application.
+Consensus classification, descriptive change, and human item decisions remain
+separate. The interface supports English, German, and French, with English as the default;
+package guides are English. Scientific wording retains its authored language.
 
-**Entwicklungsstand:** synthetische Entwicklung und lokale Prüfung. Eine
-Produktionsfreigabe oder wissenschaftliche Validierung ist damit nicht verbunden.
-Den belegten Funktionsumfang, ausgeführte Prüfungen und offene Abnahmegates enthält
-[Implementierungsstatus](docs/IMPLEMENTATION_STATUS.md).
+**Development software, using synthetic data only.** Local checks are not a
+production release or scientific validation. The current evidence and remaining
+gates are recorded in [implementation status](docs/IMPLEMENTATION_STATUS.md).
+This is not a CRAN release.
 
-## Installation
+## Install and analyse
 
-Das Repository enthält mehrere Packages. Für die Offlineanalyse genügt `delphyr`;
-es benötigt weder eine laufende Shiny-App noch einen PostgreSQL-Server.
+The repository contains two packages. Install the core package for offline
+analysis; it needs neither a running Shiny application nor a PostgreSQL server.
 
 ```r
 # install.packages("remotes")
 remotes::install_github("CTTIR/delphyR", subdir = "packages/delphyr",
                         build_vignettes = TRUE)
+
+library(delphyr)
+snapshot <- demo_snapshot()
+analysis <- analyse_round(snapshot)
+analysis$decisions
+analysis$denominators
+analysis$missingness
+
+feedback <- prepare_feedback(analysis)
+validate_feedback(feedback)
 ```
 
-Aus einem lokalen Checkout, im Repositoryverzeichnis:
+The example has ten valid ratings: seven in the agreement range, one in the
+disagreement range, and two between them. The empty second panel group remains
+visible as `insufficient_data`. `demo_snapshot()` explicitly uses a pooled rule;
+`demo_protocol()` instead requires adequate results in every designated group.
+The demonstration thresholds are examples, not methodological recommendations.
+
+From a local checkout:
 
 ```sh
 Rscript -e 'remotes::install_deps("packages/delphyr", dependencies = TRUE)'
 R CMD INSTALL packages/delphyr
 ```
 
-Die GitHub-Adresse heißt `CTTIR/delphyR`; in R wird das Kernpackage als
-`delphyr` geladen. Die lokale Installation allein erstellt keine HTML-Vignette;
-deren Quelltext liegt unter [packages/delphyr/vignettes](packages/delphyr/vignettes).
+The repository is named `delphyR`; the R package is loaded as `delphyr`. Open the
+worked guide with `vignette("offline", package = "delphyr")` after installing
+with built vignettes. A direct `R CMD INSTALL` of the source directory does not
+build its HTML vignette.
 
-## Erste Auswertung
+## Run the local application
 
-```r
-library(delphyr)
-
-snapshot <- demo_snapshot()
-analysis <- analyse_round(snapshot)
-
-# Gesamtergebnis unter der ausdrücklich gepoolten Demoregel
-analysis$decisions
-
-# Nenner und fehlende Antworten getrennt berichten
-analysis$denominators
-analysis$missingness
-
-# Kontrollierter Feedbackentwurf; noch keine Veröffentlichung
-feedback <- prepare_feedback(analysis)
-validate_feedback(feedback)
-```
-
-Alle Demodaten sind synthetisch. Die Beispielschwellen sind keine methodische
-Empfehlung. Die Demo enthält zehn gültige Bewertungen: sieben Zustimmungen,
-eine Ablehnung und zwei mittlere Bewertungen. Die zweite, leere Panelgruppe bleibt
-mit `insufficient_data` sichtbar. `demo_snapshot()` verwendet ausdrücklich die
-gepoolte Gruppenregel; `demo_protocol()` fordert standardmäßig ausreichende
-Ergebnisse in allen vorgesehenen Gruppen.
-
-## Analyse und Nachvollziehbarkeit
-
-- `new_protocol()` prüft das deklarative Protokoll; `new_scale()` und
-  `validate_response()` prüfen Skalen und Antworten.
-- `new_snapshot()` bildet einen prüfbaren Rundensatz mit Inhalts-Hash;
-  `analyse_round()` liefert Ergebnisse, Nenner, Missingness und Provenienz.
-- `compare_rounds()` berichtet gepaarte deskriptive Veränderungen und Ausfälle.
-  Neue Itemversionen benötigen eine ausdrückliche Vergleichbarkeitsentscheidung.
-- `prepare_feedback()` erstellt einen Entwurf mit Zellunterdrückung.
-  Ein solcher Entwurf ersetzt keine redaktionelle Prüfung oder Freigabe.
-
-Gültige Bewertungen bilden den Nenner der Zustimmungsquote. Nicht abgegebene
-Antworten, Enthaltungen und fehlende Beurteilbarkeit sind keine Nullbewertungen.
-Quartile verwenden Typ 7; Konsensgrenzen werden auf ungerundete Anteile angewendet.
-
-## Lokale Shiny-Demo
-
-Die Demo startet ausschließlich auf Loopback und verwendet synthetische Konten.
-Docker, R und die in `renv.lock` dokumentierten Abhängigkeiten werden benötigt.
+The application demonstration uses synthetic accounts and loopback addresses.
+It requires Docker, R, and the dependencies documented in `renv.lock`.
+Run these commands from the repository root:
 
 ```sh
 Rscript scripts/bootstrap.R
 docker compose -f deploy/compose.dev.yaml up -d
 Rscript scripts/configure-dev-role.R
 Rscript scripts/worker.R
-# In einem weiteren Terminal:
+```
+
+In separate terminals, start the manager and a synthetic panel session:
+
+```sh
 Rscript scripts/start-demo.R manager
-# Optional eine getrennte synthetische Panelsitzung:
 Rscript scripts/start-demo.R 1 3850
 ```
 
-Studienleitung: <http://127.0.0.1:3849>; erste Panelperson:
-<http://127.0.0.1:3850>. Die Studienleitung prüft und öffnet die vorbereitete Runde.
-Die Panelperson stimmt der angezeigten Demoinformation zu, speichert Antworten
-und gibt sie ausdrücklich ab. Eine geschlossene Runde wird eingefroren; die separate Workerinstanz bearbeitet
-anschließend Analyse und Export sowie freigegebene lokale Nachrichtenquittungen.
+Open <http://127.0.0.1:3849> for the manager and
+<http://127.0.0.1:3850> for the first panel account. Review and open the prepared
+round as manager. The panel account records consent, saves each response, and
+explicitly submits. Close and freeze the round before requesting analysis.
+The separate worker processes analysis, exports, and approved local message receipts.
 
-Berechtigte Redakteure bewahren Originaltexte und getrennte redigierte Fassungen,
-Zusammenfassungen, Codierungen und Itembeziehungen. Eine andere berechtigte Person
-prüft die genaue Fassung vor Freigabe. Koordinatoren wählen Studienpseudonyme und
-prüfen Nachrichtentext und Empfängermenge ausdrücklich; es erfolgt kein E-Mailversand.
+Each demo instance uses one fixed server identity. Session-specific repository
+and identity factories are available for trusted hosts; they do not themselves
+implement a login system. A local OIDC gateway has separate qualification
+[evidence and limits](docs/authentication.md). The stock Shiny Server OSS
+identity-header path and production deployment remain unqualified.
 
-`run_app(repo, actor)` verwendet eine feste synthetische Identität für alle Sitzungen
-dieser lokalen Instanz. Für getrennte Sitzungen stehen `repo_factory()` und
-`actor_factory(session, repo)` zur Verfügung; der Host muss die Identität
-serverseitig auflösen. Diese Schnittstellen sind noch kein geprüfter OIDC-Adapter.
+## Study workflows
 
-Die UI ist im [App-Package](packages/delphyrApp/README.md) mit geprüften Ansichten
-dokumentiert. [Betriebsanleitung](docs/operations.md) erläutert den isolierten
-Datenbankstart, Wiederherstellung und Grenzen der Entwicklungsumgebung.
+- **Panel:** no preselected rating, explicit saves, revision conflict checks,
+  deliberate submission, and a durable receipt. Released feedback includes only
+  the participant's own previous responses alongside approved aggregates.
+- **Management:** exact instrument review, round transitions, future-round
+  protocol amendments, queued analysis and exports, and reviewed feedback releases.
+- **Editorial review:** preserved originals, separate redactions or summaries,
+  independent review, theme coding, and version-specific item lineage.
+- **Coordination:** contact CSV previews with blocking duplicate review and
+  unbound invitation drafts; exact campaign previews with local database sink
+  receipts. No external email is sent.
 
-Ein vollständiger zweirundiger **Servicepfad** ist unabhängig von der UI ausführbar:
+Invitation acceptance is a separate service contract using an explicitly
+approved, already provisioned issuer/subject identity. Importing an address does
+not create an account or grant study access. The full invitation browser journey
+remains a separate integration gate.
+
+## Data and reproducibility
+
+Valid ratings form the agreement denominator. Missing responses, abstention, and
+inability to judge are reported separately. Quartiles use type 7; consensus rules
+use unrounded proportions. Changed item meanings require an explicit
+comparability decision.
+
+Private numeric exports contain the frozen snapshot, protocol, analysis,
+dictionary, instrument texts, missingness, structured item decisions, and lineage.
+They exclude qualitative originals, unreviewed editorial reasons, and account
+mappings. Pseudonyms are not anonymous identifiers.
+
+When Quarto is installed, the worker renders a fixed package template. Missing
+author information stays explicitly undocumented. An absent optional runtime
+selects a labelled basic HTML fallback; an actual render failure fails the job.
+The manifest records the renderer and checksums every delivered file.
+
+## Guides and verification
+
+- [Core package](packages/delphyr/README.md) and [offline vignette](packages/delphyr/vignettes/offline.Rmd).
+- [Application guide](packages/delphyrApp/README.md) and [browser evidence](packages/delphyrApp/inst/qa/README.md).
+- [User guide](docs/user-guide.md), [operations](docs/operations.md), and [reporting](docs/reporting.md).
+- [Protocol amendments](docs/protocol-amendments.md), [panel import](docs/panel-import.md),
+  [participation](docs/participation.md), and [synthetic communications](docs/communications.md).
+- [Authentication](docs/authentication.md), [invitations](docs/invitations.md), and
+  the [historical specification index](docs/spec/README.md).
+
+Some detailed implementation documents and the historical specification remain
+in German. Current code and verified status take precedence over historical
+examples of planned interfaces.
 
 ```sh
 Rscript scripts/demo-e2e.R
@@ -120,40 +141,14 @@ DELPHYR_TEST_DB=true Rscript scripts/integration.R
 Rscript scripts/check-packages.R
 ```
 
-## Private Forschungsberichte
+The two-round service demonstration is independent of the interface. Database
+tests require explicit opt-in and create only synthetic fixtures. Formal
+accessibility, the complete browser matrix, institutional approvals, and
+production operations remain distinct gates.
 
-Der numerische Export enthält den reproduzierbaren Snapshot, Protokoll und
-Analyseergebnisse sowie ein Datenwörterbuch, eingefrorene Instrumenttexte,
-Missingness, strukturierte Itementscheidungen und Itembeziehungen. Qualitative
-Originale, redaktionelle Freitextbegründungen und Kontozuordnungen gehören nicht
-zu diesem Profil. Pseudonyme sind nicht anonym.
+## Contributing and license
 
-Mit installierter Quarto-Laufzeit erstellt der Worker einen HTML-Bericht aus einem
-festen Pakettemplate. Fehlende Autorenangaben werden ausdrücklich ausgewiesen.
-Ohne optionale Renderlaufzeit entsteht ein gekennzeichneter einfacher HTML-Fallback;
-ein tatsächlicher Renderfehler lässt den Auftrag fehlschlagen. Das Manifest nennt
-den Renderer und prüft sämtliche ausgelieferten Dateien.
-
-## Dokumentation und Entwicklung
-
-- [Nutzungsanleitung](docs/user-guide.md): Installation, Offlineworkflow und Grenzen.
-- [Ausführbare Offlinevignette](packages/delphyr/vignettes/offline.Rmd): zwei Runden,
-  Gruppenregeln, Missingness und Feedback. Nach Installation mit Vignetten:
-  `vignette("offline", package = "delphyr")`.
-- [Berichte und Exportprofile](docs/reporting.md): Inhalt, Quarto und Reproduktion.
-- [Synthetische Kommunikation](docs/communications.md): Vorschau, Freigabe, Sink und Absturzverhalten.
-- [Protokolländerungen](docs/protocol-amendments.md), [Panelimport](docs/panel-import.md)
-  und [Teilnahme](docs/participation.md): versionierte Managementabläufe.
-- [Authentifizierung](docs/authentication.md) und [Einladungen](docs/invitations.md):
-  tatsächliche Nachweise und verbleibende Hosting-/UI-Gates.
-- [Spezifikation](docs/spec/00_START_HERE.md): Methodik, Rollen, Sicherheit und Betrieb.
-- [CTTIR-Konventionen](docs/adr/017-suite-conventions.md): Dokumentation und Oberflächengestaltung.
-- [Implementierungsstatus](docs/IMPLEMENTATION_STATUS.md): aktuelle Nachweise und offene Arbeit.
-
-Entwicklung und Beispiele verwenden ausschließlich synthetische Daten. `admin/`
-bleibt eine lokale, ignorierte Ablage. Zugangsdaten, echte Studiendaten und lokale
-Bibliotheken gehören nicht ins Repository.
-
-## Lizenz
-
-MIT © Raban Heller. Siehe [LICENSE](LICENSE).
+Use synthetic examples and preserve existing study evidence. `admin/` remains
+local and ignored; credentials, real participant data, local libraries, and
+private exports must not enter Git. This project is licensed under the
+[MIT License](LICENSE), copyright Raban Heller.

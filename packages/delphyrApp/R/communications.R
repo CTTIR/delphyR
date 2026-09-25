@@ -37,8 +37,8 @@ communications_server <- function(id, study, lang, call, services) {
         shiny::tags$p(class = "del-banner", tr(l, "Nur lokale Testbelege. Diese Anwendung versendet keine E-Mails. Empf\u00e4nger werden ausschlie\u00dflich durch Studienpseudonyme dargestellt.", "Local test receipts only. This application sends no email. Recipients are represented only by study pseudonyms.")),
         shiny::selectInput(ns("round"), tr(l, "Runde", "Round"), if (nrow(r)) stats::setNames(r$id, paste(tr(l, "Runde", "Round"), r$number, state_label(r$state, l))) else character(), selected = field("round", if (nrow(r)) r$id[1] else NULL)),
         shiny::uiOutput(ns("recipients")),
-        shiny::selectInput(ns("kind"), tr(l, "Mitteilungsart", "Message type"), stats::setNames(c("invitation", "round_start", "reminder", "deadline_change", "completion"), if (l == "en") c("Invitation", "Round opening", "Reminder", "Deadline change", "Study completion") else c("Einladung", "Rundenbeginn", "Erinnerung", "Frist\u00e4nderung", "Studienabschluss")), selected = field("kind", "invitation")),
-        shiny::selectInput(ns("locale"), tr(l, "Sprache der Mitteilung", "Message language"), c("Deutsch" = "de", "English" = "en"), selected = field("locale", l)),
+        shiny::selectInput(ns("kind"), tr(l, "Mitteilungsart", "Message type"), stats::setNames(c("invitation", "round_start", "reminder", "deadline_change", "completion"), tr(l, c("Einladung", "Rundenbeginn", "Erinnerung", "Frist\u00e4nderung", "Studienabschluss"), c("Invitation", "Round opening", "Reminder", "Deadline change", "Study completion"))), selected = field("kind", "invitation")),
+        shiny::selectInput(ns("locale"), tr(l, "Sprache der Mitteilung", "Message language"), c("English" = "en", "Fran\u00e7ais" = "fr", "Deutsch" = "de"), selected = field("locale", l)),
         shiny::numericInput(ns("version"), tr(l, "Vorlagenversion", "Template version"), value = field("version", 1), min = 1, step = 1),
         shiny::textInput(ns("subject"), tr(l, "Betreff", "Subject"), value = field("subject"), width = "100%"),
         shiny::textAreaInput(ns("message"), tr(l, "Vollst\u00e4ndiger Nachrichtentext", "Complete message text"), value = field("message"), width = "100%"),
@@ -56,7 +56,7 @@ communications_server <- function(id, study, lang, call, services) {
       )
     })
     shiny::outputOptions(output, "body", suspendWhenHidden = FALSE)
-    output$status <- shiny::renderText(status())
+    output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     shiny::observeEvent(input$round, attempt(function() {
       shiny::req(allowed(), input$round)
@@ -122,6 +122,6 @@ communications_server <- function(id, study, lang, call, services) {
 }
 
 delivery_label <- function(state, lang) {
-  values <- if (identical(lang, "en")) c(draft = "Draft", queued = "Queued", running = "Processing", sink_recorded = "Local receipt recorded", suppressed = "Suppressed", delivery_unknown = "Outcome unknown") else c(draft = "Entwurf", queued = "Eingereiht", running = "In Bearbeitung", sink_recorded = "Lokaler Beleg gespeichert", suppressed = "Unterdr\u00fcckt", delivery_unknown = "Ergebnis unbekannt")
+  values <- tr(lang, c(draft = "Entwurf", queued = "Eingereiht", running = "In Bearbeitung", sink_recorded = "Lokaler Beleg gespeichert", suppressed = "Unterdr\u00fcckt", delivery_unknown = "Ergebnis unbekannt"), c(draft = "Draft", queued = "Queued", running = "Processing", sink_recorded = "Local receipt recorded", suppressed = "Suppressed", delivery_unknown = "Outcome unknown"))
   unname(ifelse(state %in% names(values), values[state], state))
 }

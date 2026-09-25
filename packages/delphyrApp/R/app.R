@@ -11,7 +11,7 @@
 #'   session identity independently. Mutually exclusive with actor.
 #' @param repo_factory Optional function creating a repository for each session;
 #'   its DBI connection is closed when the session ends.
-#' @param language Initial interface language, de or en.
+#' @param language Initial interface language: en (default), fr or de.
 #' @param services Named list of service functions, each accepting repo and actor
 #'   as their first two arguments. NULL uses exported delphyr services.
 #' @return A shiny.appobj, runnable with shiny::runApp().
@@ -21,7 +21,7 @@
 #'   # Resolve repo and actor on the server before constructing the application.
 #'   shiny::runApp(run_app(repo, actor))
 #' }
-run_app <- function(repo = NULL, actor = NULL, language = c("de", "en"), services = NULL,
+run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), services = NULL,
                     actor_factory = NULL, repo_factory = NULL) {
   language <- match.arg(language)
   if (is.null(actor_factory)) {
@@ -49,7 +49,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("de", "en"), service
   shiny::addResourcePath("delphyr-brand", system.file("www", package = "delphyrApp"))
   ui <- shiny::fluidPage(
     theme = bslib::bs_theme(version = 5, bg = "#eceff2", fg = "#22303c", primary = "#0e6e78", success = "#0e6e78", danger = "#b3372b", base_font = "system-ui"),
-    shiny::tags$head(shiny::tags$style(shiny::HTML(app_css())),
+    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){document.documentElement.lang=lang;});});", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
       shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-hex.png")),
     shiny::tags$div(
       class = "del-wrap",
@@ -57,7 +57,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("de", "en"), service
         class = "del-header", shiny::tags$div(class = "del-brand",
           shiny::tags$img(class = "del-logo", src = "delphyr-brand/delphyR-hex.png", alt = "", width = 72, height = 84),
           shiny::tags$h1("delphyR")),
-        shiny::selectInput("language", tr(language, "Sprache", "Language"), c("Deutsch" = "de", "English" = "en"), selected = language, width = "190px")
+        shiny::selectInput("language", tr(language, "Sprache", "Language"), c("English" = "en", "Fran\u00e7ais" = "fr", "Deutsch" = "de"), selected = language, width = "190px")
       ),
       shiny::uiOutput("banner"),
       shiny::tags$main(
@@ -94,8 +94,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("de", "en"), service
       return(invisible(NULL))
     }
     call <- function(name, ...) services[[name]](session_repo, session_actor, ...)
-    lang <- shiny::reactive(input$language)
+    lang <- shiny::reactive(if (is.null(input$language)) language else input$language)
     shiny::observeEvent(lang(), {
+      session$sendCustomMessage("delphyr-language", lang())
       shiny::updateSelectInput(session, "language", label = tr(lang(), "Sprache", "Language"))
       shiny::updateSelectInput(session, "study", label = tr(lang(), "Studie", "Study"))
     })
@@ -111,7 +112,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("de", "en"), service
       shiny::tags$h2(tr(lang(), "Gemeinsam Wissen bewerten", "Assess evidence together")),
       shiny::tags$p(workspace_intro(capabilities(), lang()))
     ))
-    output$status <- shiny::renderText(status())
+    output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     shiny::observeEvent(TRUE,
       {

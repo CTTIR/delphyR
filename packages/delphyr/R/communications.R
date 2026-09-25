@@ -5,13 +5,13 @@
 #' @param enrollment_ids Exact recipient enrollment UUIDs; no addresses accepted.
 #' @param kind invitation, round_start, reminder, deadline_change or completion.
 #' @param subject,body Final plain text without unresolved template placeholders.
-#' @param locale de or en.
+#' @param locale en, fr or de.
 #' @param template_version Positive immutable template version.
 #' @param command_id Idempotency key.
 #' @return Campaign id, exact content/recipient hash and recipient count.
 #' @export
 prepare_campaign <- function(repo, actor, round_id, enrollment_ids, kind, subject, body,
-                             locale = "de", template_version = 1L, command_id) {
+                             locale = "en", template_version = 1L, command_id) {
   transaction(repo, function() {
     ensure(repo$environment %in% c("development", "test"), "communications.sink_only", "DEL_FORBIDDEN")
     r <- round_get(repo, actor, round_id, "coordinate", " FOR SHARE")
@@ -20,7 +20,7 @@ prepare_campaign <- function(repo, actor, round_id, enrollment_ids, kind, subjec
     ensure(length(kind) == 1 && kind %in% c("invitation", "round_start", "reminder", "deadline_change", "completion"), "campaign.kind")
     ensure(scalar_text(subject) && nchar(subject, type = "bytes") <= 200 && scalar_text(body) && nchar(body, type = "bytes") <= 20000 &&
       !grepl("[\r\n]", subject) && !grepl("{{", paste(subject, body), fixed = TRUE) && !grepl("}}", paste(subject, body), fixed = TRUE), "campaign.text")
-    ensure(length(locale) == 1 && locale %in% c("de", "en") && whole(template_version) && length(template_version) == 1 && template_version > 0, "campaign.template")
+    ensure(length(locale) == 1 && locale %in% c("en", "fr", "de") && whole(template_version) && length(template_version) == 1 && template_version > 0, "campaign.template")
     recipients <- sort(enrollment_ids)
     payload <- list(round_id = round_id, enrollment_ids = recipients, kind = kind, subject = subject, body = body, locale = locale, template_version = template_version)
     command(repo, actor, r$study_id, "campaign_prepare", command_id, payload, function() {

@@ -7,7 +7,7 @@
 run_app(
   repo = NULL,
   actor = NULL,
-  language = c("de", "en"),
+  language = c("en", "fr", "de"),
   services = NULL,
   actor_factory = NULL,
   repo_factory = NULL
@@ -18,7 +18,7 @@ run_app(
 
 \item{actor}{Trusted actor supplied by server-side session setup.}
 
-\item{language}{Initial interface language, de or en.}
+\item{language}{Initial interface language: en (default), fr or de.}
 
 \item{services}{Named list of service functions, each accepting repo and actor
 as their first two arguments. NULL uses exported delphyr services.}
