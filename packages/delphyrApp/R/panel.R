@@ -2,18 +2,20 @@ panel_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::tags$div(style = "display:none", shiny::textOutput(ns("visible"))),
+    shiny::tags$div(id = ns("connection"), class = "del-banner", role = "alert", hidden = "hidden"),
+    shiny::tags$script(shiny::HTML(connection_script(ns("connection"), ns("workspace")))),
     shiny::conditionalPanel(
       condition = sprintf("output['%s'] === 'yes'", ns("visible")),
       shiny::tags$section(
-        class = "del-sheet", shiny::uiOutput(ns("heading")),
+        id = ns("workspace"), class = "del-sheet", shiny::uiOutput(ns("heading")),
         shiny::selectInput(ns("enrollment"), "Runde", character()),
         shiny::actionButton(ns("load"), "Runde laden"), status_ui(ns("status")),
-        shiny::uiOutput(ns("questionnaire"))
+        shiny::uiOutput(ns("questionnaire")), shiny::uiOutput(ns("withdrawal"))
       )
     )
   )
 }
-panel_server <- function(id, study, lang, call, feedback_available = FALSE, capabilities_available = FALSE) {
+panel_server <- function(id, study, lang, call, feedback_available = FALSE, capabilities_available = FALSE, withdrawal_available = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     visible <- shiny::reactiveVal(!capabilities_available)
     output$visible <- shiny::renderText(if (visible()) "yes" else "no")
@@ -23,6 +25,31 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
     status <- shiny::reactiveVal("")
     receipt <- shiny::reactiveVal(NULL)
     generation <- 0L
+    output$withdrawal <- shiny::renderUI({
+      shiny::req(withdrawal_available, study(), visible())
+      ns <- session$ns
+      shiny::tags$details(
+        shiny::tags$summary(tr(lang(), "Teilnahme beenden", "End participation")),
+        shiny::tags$p(tr(lang(), "Dies beendet weitere Antworten und Einladungen in dieser synthetischen Studie. Bereits gespeicherte Daten bleiben erhalten. Dies ist kein L\u00f6schantrag.", "This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.")),
+        shiny::checkboxInput(ns("withdraw_confirm"), tr(lang(), "Ich m\u00f6chte meine Teilnahme beenden und verstehe den beschriebenen Datenverbleib.", "I want to end participation and understand the stated data retention."), FALSE),
+        shiny::actionButton(ns("withdraw"), tr(lang(), "Teilnahme verbindlich beenden", "Confirm end of participation"))
+      )
+    })
+    shiny::observeEvent(input$withdraw, {
+      shiny::req(withdrawal_available, study())
+      if (!isTRUE(input$withdraw_confirm)) {
+        status(tr(lang(), "Bitte den Teilnahmer\u00fcckzug ausdr\u00fccklich best\u00e4tigen.", "Explicitly confirm withdrawal first."))
+        return()
+      }
+      tryCatch({
+        result <- call("withdraw_participation", study(), "synthetic_retain_prior_data", command_id())
+        editors(list())
+        q(NULL)
+        receipt(NULL)
+        status(paste(tr(lang(), "Teilnahme beendet. Gespeicherte Daten bleiben erhalten. Beleg:", "Participation ended. Saved data are retained. Receipt:"), result$id))
+        shiny::updateCheckboxInput(session, "withdraw_confirm", value = FALSE)
+      }, error = function(e) status(safe_error(e, lang())))
+    })
     output$heading <- shiny::renderUI(shiny::tags$h2(tr(lang(), "Meine Teilnahme", "My participation")))
     output$status <- shiny::renderText(status())
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
@@ -90,7 +117,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
         if (nrow(z$receipt)) shiny::tags$p(paste(tr(l, "Abgabebeleg:", "Submission receipt:"), z$receipt$id, z$receipt$submitted_at)),
         shiny::tags$p(class = "del-note", shiny::textOutput(ns("save_note"))),
         lapply(z$module_ids, function(x) rating_ui(ns(x))),
-        shiny::uiOutput(ns("progress")),
+        shiny::tags$div(class = "del-progress", shiny::uiOutput(ns("progress"))),
         shiny::checkboxInput(ns("confirm"), tr(l, "Ich habe meine Antworten gepr\u00fcft. Die Abgabe beendet die Bearbeitung.", "I reviewed my answers. Submission ends editing."), FALSE),
         shiny::actionButton(ns("submit"), tr(l, "Verbindlich abgeben", "Submit final responses"), class = "btn-primary"),
         status_ui(ns("receipt"))
@@ -132,7 +159,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
     output$progress <- shiny::renderUI({
       shiny::req(q())
       a <- editors()
-      n <- sum(vapply(a, function(x) x$answered(), logical(1)))
+      n <- sum(vapply(a, function(x) x$answered() && !x$dirty(), logical(1)))
       shiny::tags$p(paste(n, "/", length(a), tr(lang(), "Bewertungsfelder best\u00e4tigt gespeichert.", "response fields confirmed saved.")))
     })
     output$receipt <- shiny::renderText({
@@ -186,6 +213,7 @@ rating_server <- function(id, q, item, lang, call) {
     }
     baseline <- shiny::reactiveVal(list(status = old_status, value = old_value))
     message <- shiny::reactiveVal("")
+    save_failed <- shiny::reactiveVal(FALSE)
     answered <- shiny::reactiveVal(old_status != "not_answered")
     output$title <- shiny::renderUI({
       texts <- jsonlite::fromJSON(item$texts)
@@ -219,7 +247,7 @@ rating_server <- function(id, q, item, lang, call) {
       opts <- response_choices(scale, l)
 
       shiny::tags$fieldset(
-        disabled = if (identical(q$enrollment$state, "submitted")) "disabled" else NULL, shiny::selectInput(ns("kind"), tr(l, "Antworttyp", "Response type"), opts, selected = old_status),
+        disabled = if (isTRUE(q$enrollment$state %in% c("submitted", "withdrawn"))) "disabled" else NULL, shiny::selectInput(ns("kind"), tr(l, "Antworttyp", "Response type"), opts, selected = old_status),
         if (scale$type == "free_text") {
           shiny::textAreaInput(ns("value"), tr(l, "Antworttext", "Response text"), value = old_value, width = "100%")
         } else {
@@ -241,7 +269,7 @@ rating_server <- function(id, q, item, lang, call) {
       list(status = if (is.null(input$kind)) old_status else input$kind, value = if (is.null(input$value)) old_value else input$value)
     })
     dirty <- shiny::reactive(!identical(current(), baseline()))
-    output$status <- shiny::renderText(if (dirty()) paste(tr(lang(), "Ungespeicherte \u00c4nderung.", "Unsaved change."), message()) else if (nzchar(message())) message() else if (revision() > 0) tr(lang(), "Gespeicherter Stand", "Saved response") else tr(lang(), "Noch nicht gespeichert", "Not yet saved"))
+    output$status <- shiny::renderText(if (dirty()) paste(tr(lang(), "Ungespeicherte \u00c4nderung.", "Unsaved change."), if (save_failed()) message() else "") else if (nzchar(message())) message() else if (revision() > 0) tr(lang(), "Gespeicherter Stand", "Saved response") else tr(lang(), "Noch nicht gespeichert", "Not yet saved"))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     shiny::observeEvent(input$save, {
       a <- current()
@@ -250,12 +278,16 @@ rating_server <- function(id, q, item, lang, call) {
       tryCatch(
         {
           r <- call("save_response", q$enrollment$id, item$id, list(value = value, status = a$status), revision(), command_id())
+          save_failed(FALSE)
           revision(r$revision)
           baseline(a)
           answered(a$status != "not_answered")
           message(paste(tr(lang(), "Gespeichert:", "Saved:"), r$saved_at))
         },
-        error = function(e) message(safe_error(e, lang()))
+        error = function(e) {
+          save_failed(TRUE)
+          message(safe_error(e, lang()))
+        }
       )
     })
     list(dirty = dirty, revision = revision, answered = answered)

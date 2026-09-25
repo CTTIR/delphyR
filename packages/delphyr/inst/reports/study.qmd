@@ -1,0 +1,135 @@
+---
+title: "delphyR – synthetischer Studienbericht"
+lang: de
+format:
+  html:
+    embed-resources: true
+    toc: true
+    number-sections: true
+    theme: cosmo
+    code-fold: false
+execute:
+  echo: false
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+# Only this packaged template is executable. All study content remains JSON data.
+x <- jsonlite::fromJSON("report-data.json", simplifyVector = TRUE)
+escape <- function(value) {
+  value <- as.character(value)
+  value[is.na(value)] <- "nicht verfügbar"
+  value <- gsub("&", "&amp;", value, fixed = TRUE)
+  value <- gsub("<", "&lt;", value, fixed = TRUE)
+  value <- gsub(">", "&gt;", value, fixed = TRUE)
+  value <- gsub('"', "&quot;", value, fixed = TRUE)
+  gsub("'", "&#39;", value, fixed = TRUE)
+}
+show_table <- function(table) {
+  if (!is.data.frame(table) || !nrow(table)) {
+    cat("<p>Nicht dokumentiert oder keine Einträge im freigegebenen Profil.</p>\n")
+    return(invisible(NULL))
+  }
+  cat('<div style="overflow-x:auto"><table><thead><tr>',
+      paste0("<th scope=\"col\">", escape(names(table)), "</th>", collapse = ""),
+      "</tr></thead><tbody>")
+  for (i in seq_len(nrow(table))) cat("<tr>", paste0("<td>", escape(unlist(table[i, ], use.names = FALSE)), "</td>", collapse = ""), "</tr>")
+  cat("</tbody></table></div>\n")
+}
+show_json <- function(value) cat("<pre>", escape(jsonlite::toJSON(value, auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null")), "</pre>\n")
+```
+
+# Zweck und Datenstand
+
+Dieser Bericht enthält synthetische Entwicklungsdaten. Er ist kein öffentlicher
+Datenrelease und keine wissenschaftliche oder institutionelle Studienfreigabe.
+Beispielschwellen sind keine methodische Empfehlung.
+
+```{r}
+#| results: asis
+show_json(x$metadata)
+```
+
+# Protokoll und Regeln
+
+Gültige numerische Bewertungen bilden den Nenner. Enthaltung und fehlende
+Beurteilbarkeit sind keine Nullbewertungen. Quartile verwenden Typ 7.
+Konsensklassifikation und menschliche Itementscheidung werden getrennt dargestellt.
+
+```{r}
+#| results: asis
+show_json(x$protocol)
+```
+
+# Eingefrorenes Instrument
+
+Die folgenden Texte und Versionen stammen aus dem Instrument der analysierten
+Runde. Sie sind keine individuellen Antworten.
+
+```{r}
+#| results: asis
+show_table(x$instrument)
+```
+
+# Ergebnisse und Nenner
+
+```{r}
+#| results: asis
+show_table(x$results)
+show_table(x$denominators)
+```
+
+# Fehlende Angaben und Verteilungen
+
+```{r}
+#| results: asis
+show_table(x$missingness)
+show_table(x$distributions)
+```
+
+# Redaktionelle Entscheidungen und Itembeziehungen
+
+Diese strukturierten Angaben zeigen den Stand zum Exportzeitpunkt. Sie sind nicht
+rückwirkend Bestandteil des eingefrorenen Antwortsnapshots. Qualitative Originale,
+redaktionelle Freitextbegründungen und Kontozuordnungen sind nicht enthalten.
+
+```{r}
+#| results: asis
+show_table(x$decisions)
+show_table(x$lineage)
+```
+
+# Noch notwendige Autorenangaben
+
+Die Software ergänzt keine fachliche Interpretation, Finanzierung, Interessenkonflikte
+oder fehlende Freigaben. Die folgende Übersicht ist keine ACCORD-/CREDES-Zertifizierung.
+
+```{r}
+#| results: asis
+show_table(x$author_fields)
+```
+
+# Datenwörterbuch
+
+```{r}
+#| results: asis
+show_table(x$dictionary)
+```
+
+# Reproduktion und Grenzen
+
+Die wissenschaftlichen Hashes verbinden Snapshot, Regeln und Analyse. Der
+Berichtszeitpunkt kann sich bei einem erneuten Export unterscheiden. HTML-Bytes
+sind kein Ersatz für den Vergleich kanonischer Analyseergebnisse.
+
+```{r}
+#| results: asis
+show_json(x$provenance)
+cat("<p>Berichtsdaten-Hash: <code>", escape(x$content_hash), "</code></p>")
+```
+
+Das Forschungsexportprofil enthält keine Kontakte oder Zugangstokens. Pseudonyme
+sind nicht anonym. Berichtsfreigabe, methodische Bewertung und weitergehende
+Offenlegung bleiben menschliche Entscheidungen.

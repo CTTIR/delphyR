@@ -1,71 +1,80 @@
 # Implementierungsstatus
 
-Stand: 2026-09-25. Entwicklungsstand 0.0.1, synthetische P0-Umgebung.
+Stand: 2026-09-25. Version 0.0.1, ausschließlich synthetische Entwicklung.
 Die vollständige P1-Plattform ist **noch nicht abgenommen**.
 
-## Implementiert und geprüft
+## Implementiert und lokal geprüft
 
-- Kernpackage mit Protokoll-/Skalen-/Antwortprüfung, deterministischer Analytik,
-  Gruppenregeln, Missingness, Vergleichbarkeit und kleinteiliger Feedbackunterdrückung.
-- PostgreSQL mit sechs checksummierten Migrationen, studienübergreifenden
-  Integritätsconstraints und technischen Unveränderlichkeitssperren.
-- Aktuelle Rollenprüfung, versionsgebundene Einwilligung, Revisionen und
-  inhaltsgebundene Retryreceipts; Save/Submit/Close einschließlich realer Konkurrenztests.
-- Freigabe/Öffnung/Abschluss, fixierte Snapshots mit Submission-/Revisionslinks,
-  Analyse, exakte Feedbackfreigabe, eigene Vorantwort und begründete Itementscheidungen.
-- Dauerhafte Analyse-/Exportjobs mit Leases, Versuchslimit und erneuter Rechteprüfung.
-  Private numerische Exporte mit Dateimanifest, HTML-Ergebnistabelle und Offline-Reproduktion.
-- Qualitative Originale, getrennte Redaktion/Zusammenfassung, unabhängige Freigabe,
-  Themen, Codierungen, Quellenbezüge und unveränderliche Split-/Merge-Historie als Services.
-- Synthetische Kampagnen mit exakter Vorschau/Freigabe, Outbox, Abbruch,
-  Eligibilityprüfung und ausschließlich lokalem Datenbank-Sink.
-- `delphyrApp`: DE/EN-Panel, bestätigte Saves, Konflikt-/Fehlerzustände,
-  Einwilligung, Abgabequittung; Management für Rundenzustände, Analyse, Feedback,
-  CSV-Instrumentvorschau, Folgerunde und autorisierten Export.
-- README, ausführbare Vignetten beider Packages, reproduzierbare Browserfixtures,
-  Lockfile, gepinnte CI-Aktionen und lokale Betriebs-/Restoreanleitung.
+- Deterministische Offlineanalytik: Skalen, Missingness, Nenner, Gruppenregeln,
+  Versionen, Stabilität und kontrollierte Feedbackunterdrückung.
+- Elf checksummierte PostgreSQL-Migrationen, Unveränderlichkeit, aktuelle Rechte,
+  Studien-/Personenisolierung und inhaltsgebundene Retryreceipts.
+- Einwilligung, bestätigte Revisionen und atomare Abgabe/Schließung; reale
+  Konkurrenzprüfungen einschließlich Teilnahmerückzug gegen laufende Saves.
+- Protokollamendments mit Vorgänger, Begründung, Versionshash und Prüfung belegter
+  Gruppen sowie unveränderter Skalenidentität; bestehende Runden bleiben unverändert.
+- Rundenzustände, eingefrorene Snapshots, Analyse, genaue Feedbackfreigabe,
+  persönliche Vorantworten und menschliche Entscheidungen.
+- Qualitative Originale, separate Redaktion/Zusammenfassung, unabhängige Freigabe,
+  Themen, Codierung, Quellenzuordnung und Split-/Merge-Historie.
+- Synthetische Kampagnen mit exakter Empfängervorschau, Freigabe, Outbox, Leases,
+  Unterdrückung und ausschließlich lokalem Datenbank-Sink.
+- Panelimport mit Zeilenfehlern, konservativer Normalisierung, blockierenden
+  Dublettenreviews, genauer Dateifreigabe und atomarem Receipt; Kontakte getrennt.
+- Einmaltoken-Services: kryptographische Zufallswerte, ausschließlich Tokenhashes
+  gespeichert, Ablauf, Revokation, explizit vorab genehmigte Issuer-/Subject-Bindung,
+  bestätigte Annahme und echte Konkurrenzprüfung. Keine Kontozuordnung per E-Mail.
+- Synthetischer Teilnahmerückzug mit ausdrücklich erklärtem Datenverbleib;
+  künftige Stakeholderänderungen verändern keine früheren Rundenzuordnungen.
+- Durable Analyse-/Exportjobs, private numerische Exporte, Quarto-Berichte,
+  Datendictionary, Instrument-/Nenner-/Missingness-/Entscheidungs-/Herkunftstabellen,
+  Manifest und unabhängige Offline-Reproduktion.
+- DE/EN-Shiny mit bestätigten Saves, Fehler-/Konfliktzuständen, Verbindungswarnung,
+  ausdrücklicher Abgabe und Rückzug; rollenabhängige Navigation, Protokollreview,
+  Management, Redaktion, Panelimport und Kampagnenfreigabe.
+- README und ausführbare Vignetten nach den geprüften CTTIR-Konventionen;
+  mobile Ansichten, Live-Status und reproduzierbare Browserprüfungen.
 
-## Tatsächlich ausgeführte Nachweise
+## Ausgeführte Prüfungen
 
-| Prüfung | Ergebnis | Umfang |
+| Prüfung | Ergebnis | Abgrenzung |
 |---|---|---|
-| Reine Kernverträge | 63 Assertions, keine Warnungen | Methodik, Hashing, Validierung |
-| PostgreSQL-Serviceverträge | 59 Assertions | Identität, Revisionen, Rollback, vier Konkurrenzfälle |
-| Zusätzliche Rennen/Versionsverträge | 6 Assertions | Revokation/Frist nach Lockwartezeit, Eintritt/Return, Itemversion |
-| Worker und Export | 17 Assertions | Leasewiederaufnahme, Versuchslimit, Rechte, Dateimanipulation |
-| Qualitative Services | 30 Assertions | Originalschutz, unabhängige Freigabe, Herkunft, Isolation |
-| Kommunikations-Sink | 38 Assertions | Freigabe, Dedupe, Unterdrückung, Unsicherheit, Isolation |
-| Zweirundiger Servicepfad | bestanden | 30 Personen, 12 Items, 720 Antworten, eigene Vorwerte, Exportreproduktion |
-| Shiny-Module und Browser | bestanden, siehe Testbericht | Simulierte Services und separater echter PostgreSQL-Panelpfad |
-| Packagechecks | beide Status OK | `--as-cran --no-manual`, Incomingprüfung deaktiviert |
-| Datenbankrestore | bestanden | 44 Tabellen, 32 Snapshots, sechs Migrationen in frischer Instanz |
+| Offline-Testlauf | 77 Assertions | 47 DB-Testfälle dort bewusst übersprungen |
+| PostgreSQL-Integration | 338 Assertions, keine Fehler/Warnungen/Skips | Aufteilung im Validierungsbericht |
+| Shiny-Module | 115 Assertions | Service-/Session-/Navigationstests |
+| Reale Chromium-Pfade | bestanden | Panel, Netzabbruch, Tastaturpfad, Redaktion, Kampagne, Protokoll, Import, Navigation |
+| Reale OIDC-Integration | 12 Prüfungen bestanden | Direkter Shiny-Backendpfad, lokal synthetisch |
+| Stock Shiny Server OSS | nicht qualifiziert | Header gehen im WebSocket-Transport verloren; Sitzung wird korrekt abgewiesen |
+| Zweirundiger Servicepfad | bestanden | 30 Personen, 12 bilinguale Items, 720 Antworten, Feedback, Exportreproduktion |
+| Leere Migration | bestanden | Elf Migrationen, identischer Wiederholungslauf, Servicefixture |
+| Packagechecks | beide Status OK im abschließenden lokalen Lauf | Vignetten gebaut; Incomingprüfung deaktiviert |
+| DB-/Artefaktrestore | bestanden | Konsistenter DB-Snapshot und ausgewählter Studienexport; keine Produktions-RPO/RTO |
+| Lokaler Servicelasttest | 360 Saves bestätigt und neu gelesen | 30 Prozesse, p95 0,083 s; Browser/Internet nicht enthalten |
 
-Logs liegen lokal unter `.checks/`. Einzelheiten und tatsächliche Grenzen:
-[Validierung](validation/2026-09-25.md), [Browser-QA](../packages/delphyrApp/inst/qa/README.md).
-Hosted CI wird separat vom lokalen Nachweis bewertet.
+Details: [Validierung](validation/2026-09-25.md), [Browser-QA](../packages/delphyrApp/inst/qa/README.md),
+[Authentifizierung](authentication.md), [Reporting](reporting.md),
+[Panelimport](panel-import.md), [Einladungen](invitations.md),
+[Teilnahme](participation.md), [Protokolländerungen](protocol-amendments.md).
+Keine CRAN-Einreichung oder wissenschaftliche/klinische Validierung behauptet.
+Hosted CI wird pro tatsächlichem Commit separat geprüft.
 
-## Offene Arbeit bis P1
+## Verbleibende P1-Arbeit und externe Gates
 
-- Institutionelle OIDC-/Gatewayintegration einschließlich WebSocket, Sessionablauf,
-  Einladungstoken und externe Kontobindung; getrennte produktive DB-/Workerrollen.
-- Panel-/Kontaktdatenimport, tatsächliche Governance, vollständige Protokollamendments,
-  Widerrufs-/Lösch-/Aufbewahrungsprozesse und redaktionelle Managementoberflächen.
-- Vollständige qualitative Herkunft im Teilnehmerfeedback und freigegebene Freitextexporte.
-- Produktiver Provideradapter, Reminderpläne, Zeitzonen-/Ruhezeitregeln und
-  kontrollierte Auflösung unklarer Zustellungszustände. Kein externer Versand freigegeben.
-- Vollständiger Quarto-Studienbericht, zusätzliche Exportprofile, kombinierter
-  Datenbank-/Artefaktrestore und bereinigte Aufbewahrung verwaister Dateien.
-- Autosave, Netzunterbrechung/Wiederaufnahme im Browser, vollständiger
-  Management-Browserpfad, Tastatur-/Assistenztechnik-/Browsermatrix und Lasttest.
-- Vollständiges produktives Shiny-Server-/Proxydeployment, Release-/Pilotabnahme.
+- Produktive institutionelle Governance, Einwilligungs-/Aufbewahrungs-/Löschregeln,
+  Betreiberverantwortung und genehmigter Umgang mit Forschungsdaten.
+- Stock-OSS-Hostingentscheidung oder gesonderte Qualifikation des direkten
+  Backends mit produktivem TLS, Geheimnisverwaltung und getrennten Betriebsrollen.
+- Browserworkflow für Einladungsausgabe/-annahme und vollständige Kontoeinrichtung;
+  bestehende vorab provisionierte Konten sind Voraussetzung der geprüften Services.
+- Vollständige qualitative Herkunft im Teilnehmerfeedback, freigegebene
+  Freitext-/Audit-/Publikationsprofile und wissenschaftliche Autorenangaben.
+- Produktiver Provideradapter, Reminderpläne, Ruhezeiten und kontrollierte
+  Auflösung unklarer Zustellungen. Kein externer Versand freigegeben.
+- Autosave, vollständiger Management-End-to-End-Browserpfad, systematische
+  Tab-Reihenfolge/Assistenztechnik-/Cross-Browser-Abnahme und End-to-End-Lasttest.
+- Genehmigte Aufbewahrung/Bereinigung, vollständiger Produktivrestore, Pilot-/Releaseabnahme.
 
-Fehlende P1-Funktionen sind keine optionalen P2-Erweiterungen. Produktionsangaben
-und tatsächliche Studienfreigaben werden nicht aus synthetischen Fixtures abgeleitet.
-
-## Start und Fortsetzung
-
-[README](../README.md), [Betrieb](operations.md), [CURRENT_STATE](../CURRENT_STATE.md)
-und [HANDOVER](../HANDOVER.md). `admin/`, lokale Daten, Bibliotheken und Backups
-bleiben ignoriert. Nächster großer Arbeitsschritt: vollständige Managementabläufe
-und echte Testgatewayintegration mit getrennten Sessions; die übrigen offenen
-P1-Gates bleiben in der [Anforderungsmatrix](requirements-matrix.md) sichtbar.
+Diese Punkte werden nicht durch synthetische Beispiele oder grüne lokale Tests
+als erledigt dargestellt. `admin/`, Daten, Backups und lokale Bibliotheken bleiben
+ignoriert. Einstieg und reproduzierbare Befehle: [README](../README.md),
+[Betrieb](operations.md), [HANDOVER](../HANDOVER.md).

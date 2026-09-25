@@ -8,7 +8,7 @@ Description: A bilingual Shiny interface for synthetic Delphi studies, using
     receipts. Production authentication and deployment remain acceptance gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Imports: shiny, bslib, delphyr, jsonlite, uuid, zip
+Imports: DBI, shiny, bslib, delphyr, jsonlite, uuid, zip
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown
 VignetteBuilder: knitr
 Config/testthat/edition: 3

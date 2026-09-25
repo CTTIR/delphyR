@@ -188,3 +188,25 @@ process_campaign_sink <- function(repo, study_id = NULL, lease_seconds = 30L) {
   }
   complete_campaign_sink(repo, j)
 }
+
+#' List rounds available to a campaign coordinator
+#' @param repo Repository.
+#' @param actor Actor with coordinate capability.
+#' @param study_id Study UUID.
+#' @return Minimal round identifiers, numbers and states.
+#' @export
+list_campaign_rounds <- function(repo, actor, study_id) {
+  authorize(repo, actor, study_id, "coordinate")
+  query(repo, "SELECT id,number,state FROM research.rounds WHERE study_id=$1 ORDER BY number", study_id)
+}
+
+#' Preview eligible campaign selection fields without contacts or answers
+#' @param repo Repository.
+#' @param actor Actor with coordinate capability.
+#' @param round_id Round UUID.
+#' @return Enrollment UUID, study pseudonym and participation state.
+#' @export
+list_campaign_enrollments <- function(repo, actor, round_id) {
+  r <- round_get(repo, actor, round_id, "coordinate")
+  query(repo, "SELECT id AS enrollment_id,panelist_id AS pseudonym,state FROM research.enrollments WHERE study_id=$1 AND round_id=$2 ORDER BY id", r$study_id, r$id)
+}

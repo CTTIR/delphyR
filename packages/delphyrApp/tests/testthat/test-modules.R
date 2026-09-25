@@ -176,3 +176,39 @@ test_that("manager without panel capability has no participation section", {
     expect_false(enrollments_read)
   })
 })
+
+test_that("editing a committed answer never labels the new value saved", {
+  q <- fixture()
+  q$responses <- data.frame(round_item_id = "item", revision = 1L, status = "answered", value_int = 7L, value_text = NA_character_)
+  shiny::testServer(delphyrApp:::rating_server, args = list(q = q, item = q$items, lang = function() "en", call = function(...) list(revision = 2L, saved_at = "committed-time")), {
+    session$setInputs(kind = "answered", value = "7", save = 1)
+    expect_match(output$status, "Saved:", fixed = TRUE)
+    session$setInputs(value = "8")
+    expect_match(output$status, "Unsaved change", fixed = TRUE)
+    expect_false(grepl("Saved:", output$status, fixed = TRUE))
+    expect_equal(revision(), 2L)
+  })
+})
+
+test_that("withdrawal needs explicit confirmation and reports the durable receipt", {
+  withdrawals <- 0L
+  call <- function(name, ...) {
+    if (name == "list_enrollments") return(data.frame(id = character(), number = integer(), round_state = character()))
+    if (name == "withdraw_participation") {
+      withdrawals <<- withdrawals + 1L
+      expect_equal(list(...)[[2]], "synthetic_retain_prior_data")
+      return(list(id = "withdrawal-receipt"))
+    }
+    stop("unexpected service")
+  }
+  shiny::testServer(delphyrApp:::panel_server, args = list(study = function() "study", lang = function() "en", call = call, withdrawal_available = TRUE), {
+    session$flushReact()
+    session$setInputs(withdraw = 1)
+    expect_equal(withdrawals, 0L)
+    expect_match(output$status, "confirm withdrawal")
+    session$setInputs(withdraw_confirm = TRUE, withdraw = 2)
+    expect_equal(withdrawals, 1L)
+    expect_match(output$status, "withdrawal-receipt")
+    expect_null(q())
+  })
+})

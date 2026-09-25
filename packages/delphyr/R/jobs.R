@@ -84,19 +84,35 @@ write_export <- function(repo, actor, snapshot_id) {
   writeLines(c("# Synthetischer Forschungsexport", "Keine Kontakte oder Kontozuordnungen. Pseudonyme sind nicht anonym.", "snapshot.json ist der ma\u00dfgebliche unver\u00e4nderte Datensatz; CSV-Texte sind formelsicher maskiert.", "Ausf\u00fchren: Rscript reproduce.R <Exportverzeichnis>. Freitextprofil nicht freigegeben.", "Schwellen sind synthetische Beispiele, keine methodische Empfehlung."), file.path(staging, "README.md"))
   writeLines(c("args <- commandArgs(trailingOnly=TRUE)", "path <- if(length(args)) args[1] else '.'", "result <- delphyr::reproduce_export(path)", "print(result$results)"), file.path(staging, "reproduce.R"))
   writeLines(json(a$provenance), file.path(staging, "provenance.json"))
-  files <- list.files(staging, full.names = TRUE)
-  manifest <- list(schema_version = "1.0", snapshot_hash = s$content_hash, result_hash = a$provenance$result_hash, software_version = as.character(utils::packageVersion("delphyr")), r_version = R.version.string, files = lapply(files, function(f) list(name = basename(f), sha256 = digest::digest(file = f, algo = "sha256"), bytes = file.info(f)$size)))
-  writeLines(json(manifest), file.path(staging, "manifest.json"))
-  # A portable HTML report escapes every data value; interpretation is never invented.
-  esc <- function(x) {
-    x <- gsub("&", "&amp;", as.character(x), fixed = TRUE)
-    x <- gsub("<", "&lt;", x, fixed = TRUE)
-    gsub(">", "&gt;", x, fixed = TRUE)
+  report_data <- prepare_report_data(repo, actor, snapshot_id)
+  write_report_data(report_data, staging)
+  # Only a missing optional runtime permits the basic report fallback.
+  rendered <- tryCatch(
+    {
+      render_study_report(report_data, staging)
+      TRUE
+    },
+    DEL_DEPENDENCY = function(e) FALSE
+  )
+  renderer <- if (rendered) "quarto_html" else "basic_html_missing_quarto_runtime"
+  if (!rendered) {
+    # A portable HTML report escapes every data value; interpretation is never invented.
+    esc <- function(x) {
+      x <- gsub("&", "&amp;", as.character(x), fixed = TRUE)
+      x <- gsub("<", "&lt;", x, fixed = TRUE)
+      gsub(">", "&gt;", x, fixed = TRUE)
+    }
+    rows <- apply(a$results[, c("item_code", "dimension_code", "stratum", "n_valid", "classification")], 1, function(v) paste0("<tr>", paste0("<td>", esc(v), "</td>", collapse = ""), "</tr>"))
+    writeLines(c('<!doctype html><html lang="de"><meta charset="utf-8"><title>delphyR \u2013 synthetischer Bericht</title><main><h1>Synthetischer Studienbericht</h1><p>Einfacher HTML-Fallback: optionale Quarto-Laufzeit nicht verf\u00fcgbar. Entwicklungsnachweis. Fachliche Interpretation und institutionelle Angaben: nicht dokumentiert.</p><table><caption>Unver\u00e4nderlicher Analysestand</caption><thead><tr><th>Item</th><th>Dimension</th><th>Gruppe</th><th>G\u00fcltiges n</th><th>Klassifikation</th></tr></thead><tbody>', rows, "</tbody></table></main></html>"), file.path(staging, "report.html"))
   }
-  rows <- apply(a$results[, c("item_code", "dimension_code", "stratum", "n_valid", "classification")], 1, function(v) paste0("<tr>", paste0("<td>", esc(v), "</td>", collapse = ""), "</tr>"))
-  writeLines(c('<!doctype html><html lang="de"><meta charset="utf-8"><title>delphyR \u2013 synthetischer Bericht</title><main><h1>Synthetischer Studienbericht</h1><p>Entwicklungsnachweis. Fachliche Interpretation und institutionelle Angaben: nicht dokumentiert.</p><table><caption>Unver\u00e4nderlicher Analysestand</caption><thead><tr><th>Item</th><th>Dimension</th><th>Gruppe</th><th>G\u00fcltiges n</th><th>Klassifikation</th></tr></thead><tbody>', rows, "</tbody></table></main></html>"), file.path(staging, "report.html"))
   files <- list.files(staging, full.names = TRUE)
-  files <- files[basename(files) != "manifest.json"]
+  manifest <- list(
+    schema_version = "1.0", snapshot_hash = s$content_hash,
+    result_hash = a$provenance$result_hash,
+    software_version = as.character(utils::packageVersion("delphyr")),
+    r_version = R.version.string,
+    report = list(renderer = renderer, data_hash = report_data$content_hash)
+  )
   manifest$files <- lapply(files, function(f) list(name = basename(f), sha256 = digest::digest(file = f, algo = "sha256"), bytes = file.info(f)$size))
   writeLines(json(manifest), file.path(staging, "manifest.json"))
   hash <- digest::digest(file = file.path(staging, "manifest.json"), algo = "sha256")

@@ -22,3 +22,20 @@ ein bestandener P0-Pfad ist keine P1-Abnahme.
 Keine echte Rekrutierung, externe Nachrichten oder Produktionsdeployments.
 `admin/` und lokale Daten bleiben ignoriert. Keine angewandte SQL-Migration ändern;
 weitere Korrekturen als neue nummerierte Migration ergänzen.
+
+## Neuer integrierter Stand
+
+338 reale PostgreSQL-Assertions, 77 Offline-Assertions und 115 App-Assertions;
+beide lokalen Packagechecks Status OK. Die endgültige Aufteilung, Builds und
+Restorehashes stehen in `docs/validation/2026-09-25.md`. Institutionelle Gates,
+Stock-OSS-Headertransport und Einladungsoberflächen bleiben ausdrücklich offen.
+
+Elf Migrationen sind angewandt und gefroren. Entwürfe künftiger Migrationen zuerst
+außerhalb des `*.sql`-Globs vorbereiten, dann als fertig geprüfte Datei hinzufügen;
+ein paralleler Integrationslauf wendet jede sichtbare SQL-Datei an. Es werden
+niemals registrierte Checksummen auf nachträglich geänderte Dateien umgeschrieben.
+
+Ausgewählte Studienartefakte zusammen mit der Datenbank prüfen:
+`DELPHYR_RESTORE_STUDY=$(cat .checks/latest-e2e-study.txt) scripts/restore-check.sh`.
+Der Auth-Qualifikationspfad und seine kontrollierten Start-/Stopbefehle stehen in
+`docs/authentication.md`. Private Authfixtures niemals veröffentlichen.

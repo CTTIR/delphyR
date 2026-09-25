@@ -47,8 +47,13 @@ Deadlines show the protocol time zone and explicit UTC offset.
 
 Formal assistive-technology, cross-browser, and mobile acceptance remains open.
 This version deliberately uses explicit saves. Debounced autosave, offline
-recovery, full protocol/instrument editing, qualitative work, and communication
-administration remain acceptance work. Released feedback is displayed beside
+recovery and full instrument editing remain acceptance work. Managers can
+inspect immutable protocol versions, validate a complete JSON amendment, review
+its field changes, and approve it explicitly for future rounds only.
+Editorial modules preserve originals, save separate redactions or summaries,
+require another person to review exact versions, and record theme coding and
+item provenance. Communication campaigns preview exact pseudonyms and plain
+text before approval for local test receipts; no email transport is enabled. Released feedback is displayed beside
 relevant items, with own prior responses and a changed-wording notice.
 
 ## Architecture and verification
@@ -56,9 +61,12 @@ relevant items, with own prior responses and a changed-wording notice.
 Namespaced Shiny modules call injected services; they contain no SQL and no
 consensus formulas. `golem` is not required: a small package with explicit
 service injection and `testServer()` provides the needed P0 separation without
-an additional framework. Repository connections belong to the calling host.
-A host deploying multiple users must construct an application per authenticated
-server identity; a single shared demo actor is not multi-user authentication.
+an additional framework. A fixed `repo` connection belongs to the calling host. For multiple users,
+`actor_factory(session, repo)` resolves the trusted identity once per session,
+and `repo_factory()` can create a separate repository connection for each
+session; the application closes these factory-created connections when the
+session ends. A single shared demo actor is not multi-user authentication.
+Factory errors or missing identities close the session before service access.
 
 ```r
 testthat::test_local("packages/delphyrApp")
@@ -71,3 +79,13 @@ Analysis and export operations are processed by a separate trusted worker.
 Use **Check operation** to refresh queue status. Downloads recheck artifact
 permissions before packaging the authorized export directory. Feedback release
 requires a preview and confirmation of the exact candidate hash.
+
+Editorial access requires the edit capability; independent review requires
+manage. Communication controls require coordinate. These interface rules are
+rechecked in the core services. See [qualification evidence](inst/qa/README.md)
+for local PostgreSQL browser paths and remaining verification boundaries.
+
+The navigation links reflect the selected study's permissions and preserve
+open forms when moving between sections. Coordinators can preview synthetic
+contact CSVs, resolve blocking duplicates, and approve an exact file to create
+unbound invitation drafts. This import creates no accounts or response links.

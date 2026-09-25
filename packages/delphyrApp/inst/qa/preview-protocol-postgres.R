@@ -1,0 +1,16 @@
+if (!identical(Sys.getenv("DELPHYR_TEST_DB"), "true")) stop("Set DELPHYR_TEST_DB=true to opt in.")
+.libPaths(c(normalizePath('.R-library'),.libPaths()));pkgload::load_all('packages/delphyr',quiet=TRUE);pkgload::load_all('packages/delphyrApp',quiet=TRUE)
+path<-Sys.getenv('DELPHYR_PROTOCOL_FIXTURE','.checks/protocol-browser-fixture.rds')
+dir.create(dirname(path),recursive=TRUE,showWarnings=FALSE)
+if(!file.exists(path)){
+ r<-connect_repository(host='127.0.0.1',port=55439,dbname='delphyr',user='postgres',environment='development',artifact_root=file.path(getwd(),'.artifacts'))
+ migrate_repository(r);f<-demo_study(r,n=2L,item_count=1L);f$original<-list_protocol_versions(r,f$manager,f$study_id);saveRDS(f,path);DBI::dbDisconnect(r$con)
+}
+f<-readRDS(path)
+r<-connect_repository(host='127.0.0.1',port=55439,dbname='delphyr',user='delphyr_runtime',environment='development',artifact_root=file.path(getwd(),'.artifacts'))
+a<-demo_actor(r,f$manager$principal_id)
+p<-jsonlite::fromJSON(f$original$config,simplifyVector=FALSE);p$stopping$max_rounds<-4L;jsonlite::write_json(p,Sys.getenv('DELPHYR_PROTOCOL_JSON','.checks/protocol-browser-candidate.json'),auto_unbox=TRUE,null='null',digits=NA,pretty=TRUE)
+ns<-asNamespace('delphyr');services<-as.list(ns)[vapply(as.list(ns),is.function,logical(1))];call<-function(name,...)services[[name]](r,a,...)
+ui<-shiny::fluidPage(theme=bslib::bs_theme(version=5,primary='#0e6e78'),shiny::tags$style(shiny::HTML(delphyrApp:::app_css())),shiny::tags$div(class='del-wrap',delphyrApp:::protocols_ui('protocols')))
+server<-function(input,output,session)delphyrApp:::protocols_server('protocols',function()f$study_id,function()'en',call,services)
+shiny::runApp(shiny::shinyApp(ui,server),host='127.0.0.1',port=3873L,launch.browser=FALSE)

@@ -5,6 +5,10 @@ body {color:#22303c;background:#eceff2;font-family:system-ui,-apple-system,"Sego
 .del-header {display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;}
 .del-header h1 {font-size:2.1rem;font-weight:750;color:#0e6e78;margin:0;}
 .del-banner {background:#fff5d8;border-left:5px solid #8a5900;padding:12px 16px;margin:20px 0;color:#533800;}
+.del-nav {background:white;border:1px solid #dce3e7;border-radius:7px;padding:8px 16px;}
+.del-nav ul {list-style:none;display:flex;flex-wrap:wrap;gap:4px 20px;margin:0;padding:0;}
+.del-nav a {display:inline-flex;align-items:center;min-height:44px;color:#0e6e78;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
+[id^="section-"] {scroll-margin-top:16px;}
 .del-sheet {background:white;border:1px solid #dce3e7;border-radius:10px;padding:24px;margin:18px 0;}
 .del-item {border-top:1px solid #dce3e7;padding:22px 0;max-width:75ch;}
 .del-item h3 {font-size:1.25rem;line-height:1.5;}
@@ -57,4 +61,54 @@ round_display <- function(rounds, language, timezone = "UTC") {
   )
   names(out) <- c(tr(language, "Runde", "Round"), tr(language, "Status", "State"), tr(language, "Abgabefrist", "Deadline"))
   out
+}
+
+connection_script <- function(banner_id, workspace_id) {
+  sprintf(
+    "(function(){
+      var lost=false, restored=false;
+      var boxId=%s, workspaceId=%s;
+      function show(){
+        var box=document.getElementById(boxId);
+        if(!box || !lost) return;
+        var language=document.getElementById('language');
+        var en=language && language.value==='en';
+        box.hidden=false;
+        box.textContent=restored ?
+          (en ? 'Connection restored. Review the last saved responses before continuing. Pending edits have not been confirmed saved.' : 'Verbindung wiederhergestellt. Pruefen Sie vor dem Fortsetzen den zuletzt gespeicherten Stand. Offene Aenderungen sind nicht als gespeichert bestaetigt.') :
+          (en ? 'Connection lost. Changes are not being saved. Keep a copy of pending text before reloading; a reload restores only confirmed responses.' : 'Verbindung unterbrochen. Aenderungen werden nicht gespeichert. Sichern Sie offene Texte vor dem Neuladen; danach sind nur bestaetigte Antworten wiederhergestellt.');
+        var workspace=document.getElementById(workspaceId);
+        if(workspace) workspace.querySelectorAll('.del-status, .del-progress').forEach(function(x){x.hidden=!restored;});
+      }
+      $(document).on('shiny:disconnected',function(){lost=true;restored=false;show();});
+      $(document).on('shiny:connected',function(){if(lost){restored=true;show();}});
+      $(document).on('change','#language',show);
+      window.addEventListener('offline',function(){lost=true;restored=false;show();});
+    })();",
+    jsonlite::toJSON(banner_id, auto_unbox = TRUE),
+    jsonlite::toJSON(workspace_id, auto_unbox = TRUE)
+  )
+}
+
+workspace_sections <- function(capabilities, lang) {
+  ids <- c("section-panel", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-communications")
+  labels <- if (identical(lang, "en")) c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Communications") else c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Kommunikation")
+  show <- c("panel" %in% capabilities, "manage" %in% capabilities, "manage" %in% capabilities, any(c("edit", "manage") %in% capabilities), "coordinate" %in% capabilities, "coordinate" %in% capabilities)
+  data.frame(id = ids[show], label = labels[show], stringsAsFactors = FALSE)
+}
+
+workspace_intro <- function(capabilities, lang) {
+  if ("manage" %in% capabilities) {
+    return(tr(lang, "Verwalten Sie Protokoll, Runden und unabh\u00e4ngige Pr\u00fcfungen. W\u00e4hlen Sie einen Studienbereich, um den n\u00e4chsten Schritt vorzubereiten.", "Manage the protocol, rounds and independent reviews. Choose a study section to prepare the next step."))
+  }
+  if ("coordinate" %in% capabilities) {
+    return(tr(lang, "Pr\u00fcfen Sie synthetische Kontakte und genaue Empf\u00e4ngerlisten, bevor Sie Importe oder lokale Testbelege freigeben.", "Review synthetic contacts and exact recipient lists before approving imports or local test receipts."))
+  }
+  if ("edit" %in% capabilities) {
+    return(tr(lang, "Bewahren Sie Originalquellen und begr\u00fcnden Sie getrennte redaktionelle Fassungen, Codierungen und Itembez\u00fcge.", "Preserve original sources and document separate editorial versions, coding decisions and item provenance."))
+  }
+  if ("panel" %in% capabilities) {
+    return(tr(lang, "Speichern Sie jede Antwort und pr\u00fcfen Sie den best\u00e4tigten Stand vor Ihrer ausdr\u00fccklichen Abgabe.", "Save each response and review the confirmed answers before explicitly submitting your round."))
+  }
+  tr(lang, "W\u00e4hlen Sie eine Studie, um Ihre verf\u00fcgbaren Arbeitsbereiche zu sehen.", "Choose a study to see your available work areas.")
 }

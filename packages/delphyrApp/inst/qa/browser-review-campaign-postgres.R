@@ -1,0 +1,12 @@
+if (!identical(Sys.getenv("DELPHYR_TEST_DB"), "true")) stop("Set DELPHYR_TEST_DB=true to opt in.")
+b<-chromote::ChromoteSession$new();b$Page$navigate('http://127.0.0.1:3872');Sys.sleep(2)
+js<-function(code){r<-b$Runtime$evaluate(code);if(!is.null(r$exceptionDetails))stop(r$exceptionDetails$text);r$result$value}
+js("document.querySelectorAll('details').forEach(x=>x.open=true);var select=document.getElementById('editorial-review_edit').selectize;select.setValue(Object.keys(select.options)[0]);document.getElementById('editorial-preview_review').click()")
+Sys.sleep(.4);x<-js("document.getElementById('editorial-review_preview').innerText");print(x);stopifnot(length(x)==1,grepl('Summary (not a quotation)',x,fixed=TRUE),grepl('Synthetic summary without',x,fixed=TRUE),!grepl('SAMPLE-12',x,fixed=TRUE))
+js("var reason=document.getElementById('editorial-review_reason');reason.value='Independent review preserves the expressed view.';reason.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('editorial-review_confirm').click();document.getElementById('editorial-release').click()")
+Sys.sleep(.5);x<-js("document.getElementById('editorial-status').innerText");print(x);stopifnot(length(x)==1,grepl('Saved.',x,fixed=TRUE))
+js("var recipients=document.getElementById('communications-enrollments').selectize;recipients.setValue([Object.keys(recipients.options)[0]]);for(const [id,value] of [['communications-subject','Synthetic QA invitation'],['communications-message','Synthetic QA content only. No email will be sent.']]){const e=document.getElementById(id);e.value=value;e.dispatchEvent(new Event('change',{bubbles:true}))};document.getElementById('communications-prepare').click()")
+Sys.sleep(.5);x<-js("document.getElementById('communications-preview').innerText");print(x);stopifnot(length(x)==1,grepl('1 exactly selected recipients',x,fixed=TRUE))
+js("var reason=document.getElementById('communications-reason');reason.value='Exact single pseudonym and synthetic text reviewed.';reason.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('communications-confirm').click();document.getElementById('communications-release').click()")
+Sys.sleep(.5);x<-js("document.getElementById('communications-status').innerText");print(x);stopifnot(length(x)==1,grepl('Approved. No email will be sent.',x,fixed=TRUE))
+b$screenshot(file.path(tempdir(),'delphyr-editorial-campaign.png'));b$close()

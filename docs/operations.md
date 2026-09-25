@@ -53,6 +53,19 @@ Prozesse im jeweiligen Terminal mit `Ctrl+C` beenden. Das Beenden einer App lös
 keine Datenbank. Lokale Bibliotheken, Fixture-Dateien, Prüfprotokolle und Artefakte
 sind ignoriert und werden nicht mit Git übertragen.
 
+## Verbindung und Identität je Sitzung
+
+Das Demo-Startskript verwendet einen festen synthetischen Actor. Eine Instanz für
+`manager` oder `1` ist deshalb keine Anmeldung für mehrere unabhängige Personen.
+`delphyrApp::run_app()` kann mit `repo_factory()` eine Verbindung je Sitzung und mit
+`actor_factory(session, repo)` deren vertrauenswürdige Identität auflösen. Eine so
+erstellte Verbindung wird am Sitzungsende geschlossen; bei einem direkt übergebenen
+`repo` übernimmt der Host die Bereinigung.
+
+Factory-Funktionen gehören in vertrauenswürdigen Servercode. Sie dürfen weder
+Browserrollen noch beliebige Header ungeprüft übernehmen. Die vorhandene
+Factory-Schnittstelle ist keine qualifizierte OIDC-Integration.
+
 ## Gezielte Funktionsprüfung
 
 ```sh
@@ -92,6 +105,20 @@ Mindestens ein eingefrorener synthetischer Snapshot muss vorhanden sein. Der
 zweirundige Demopfad erzeugt solche Snapshots. Ein leeres Datenbankschema allein
 gilt nicht als erfolgreicher Recovery-Nachweis.
 
+Für einen konkret ausgewählten synthetischen Studienexport können zusätzlich die
+privaten Artefaktdateien gesichert, wiederhergestellt und offline reproduziert
+werden. Nach dem zweirundigen Demopfad steht dessen Studien-ID in
+`.checks/latest-e2e-study.txt`:
+
+```sh
+DELPHYR_RESTORE_STUDY="$(cat .checks/latest-e2e-study.txt)" scripts/restore-check.sh
+```
+
+Dieser Modus prüft das Artefaktregister im selben Datenbanksnapshot, kontrolliert
+Dateipfade, Manifest und Dateiprüfsummen, kopiert die gesicherten Bytes in ein neues
+Restoreverzeichnis und führt `reproduce_export()` darauf aus. Artefakte anderer
+Studien gehören nicht zum ausgewählten Nachweis.
+
 Jeder Lauf legt ein neues, nur für den lokalen Benutzer zugängliches Verzeichnis
 unter `.checks/restore-*` an. Darin liegen `database.dump`, `restore.log`, die
 Quell- und Zielvergleiche sowie bei Erfolg `result.json` mit `status: PASS`,
@@ -99,13 +126,27 @@ Image-ID, Dump-SHA-256 und Prüfbereich. Vorherige Nachweise werden nicht gelös
 Das Skript entfernt ausschließlich seinen eigenen temporären Restorecontainer
 samt dessen Volume; der Quellcontainer und dessen Volume bleiben bestehen.
 
-Dies belegt **Datenbankwiederherstellung im synthetischen P0-System**. Exportdateien
-im privaten Artefaktspeicher werden hier nicht gesichert oder wiederhergestellt;
-entsprechende Datenbankeinträge allein stellen deren Bytes nicht wieder her.
-OIDC, SMTP, Betriebskonfiguration, Schlüssel, produktive Rollen, Point-in-time-Recovery
-und zugesicherte Wiederanlauf- oder Datenverlustzeiten sind ebenfalls nicht Teil
-dieses Tests. Eine vollständige Betriebsfreigabe erfordert zusätzliche Nachweise
-aus [Abnahme und Release](spec/26_ACCEPTANCE_AND_RELEASE.md).
+Ohne `DELPHYR_RESTORE_STUDY` belegt der Lauf **Datenbankwiederherstellung im
+synthetischen P0-System**; private Artefaktbytes gehören dann nicht dazu.
+Mit der Studienauswahl umfasst er zusätzlich deren registrierte Artefakte und ihre
+Offline-Reproduktion. Der genaue Umfang steht in `result.json`.
+
+OIDC, SMTP, Betriebskonfiguration, Schlüssel, produktive Rollen,
+Point-in-time-Recovery und zugesicherte Wiederanlauf- oder Datenverlustzeiten sind
+nicht Teil dieses Tests. Eine vollständige Betriebsfreigabe erfordert zusätzliche
+Nachweise aus [Abnahme und Release](spec/26_ACCEPTANCE_AND_RELEASE.md).
+
+## Begrenzter Lastnachweis
+
+```sh
+DELPHYR_TEST_DB=true Rscript scripts/load-check.R
+```
+
+Dieser synthetische Dienstetest startet unabhängige R-Prozesse mit eigenen
+Runtime-Verbindungen und überprüft bestätigte Speicherungen durch erneutes Laden.
+Er misst den lokalen Service-/Datenbankpfad. Browser, Netzlatenz, TLS, OIDC und
+assistive Technologien sind darin nicht enthalten. Ergebnisse gelten für die
+geprüfte Umgebung und sind keine allgemeine Kapazitätszusage.
 
 ## Fehlerbehandlung
 

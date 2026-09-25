@@ -12,7 +12,7 @@ r <- connect_repository(
   user = "postgres", environment = "test"
 )
 tryCatch(migrate_repository(r), finally = DBI::dbDisconnect(r$con))
-for (file in c("test-services.R", "test-service-contracts.R", "test-jobs.R", "test-qualitative.R", "test-communications.R")) {
+for (file in c("test-services.R", "test-service-contracts.R", "test-jobs.R", "test-qualitative.R", "test-communications.R", "test-authentication.R", "test-reporting.R", "test-protocols.R", "test-panel-import.R", "test-participation.R", "test-invitations.R")) {
   path <- file.path(root, "packages/delphyr/tests/testthat", file)
   if (file.exists(path)) testthat::test_file(path, stop_on_failure = TRUE)
 }

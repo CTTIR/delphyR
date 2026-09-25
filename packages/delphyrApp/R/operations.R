@@ -31,7 +31,7 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
       ns <- session$ns
       shiny::tagList(
         shiny::tags$hr(), shiny::tags$h3(tr(lang(), "Auswertung und Folgerunde", "Analysis and subsequent round")),
-        shiny::tags$p(tr(lang(), "Diese Aktionen beziehen sich auf die oben ausgew\u00e4hlte Runde. Warteschlangenauftr\u00e4ge ben\u00f6tigen einen laufenden Entwicklungsworker.", "These actions use the round selected above. Queued operations require a running development worker.")),
+        shiny::tags$p(tr(lang(), "Diese Aktionen beziehen sich auf die oben ausgew\u00e4hlte Runde. Analyse und Export werden im Hintergrund vorbereitet; mit Auftrag pr\u00fcfen sehen Sie den aktuellen Stand.", "These actions use the round selected above. Analysis and exports are prepared in the background; use Check operation to see their progress.")),
         shiny::tags$div(class = "del-actions", shiny::actionButton(ns("freeze"), tr(lang(), "Runde einfrieren", "Freeze round")), shiny::actionButton(ns("analyse"), tr(lang(), "Analyse beauftragen", "Request analysis")), shiny::actionButton(ns("poll"), tr(lang(), "Auftrag pr\u00fcfen", "Check operation")), shiny::actionButton(ns("read"), tr(lang(), "Analyse anzeigen", "View analysis"))),
         shiny::tableOutput(ns("analysis")),
         shiny::tags$details(

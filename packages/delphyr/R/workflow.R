@@ -167,6 +167,7 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
         panel <- panel[eligible, , drop = FALSE]
       }
       ensure(nrow(panel) > 0, "round.panel")
+      ensure(all(panel$group_code %in% unlist(p$config$panel$groups)), "round.panel_groups", "DEL_CONFLICT")
       for (i in seq_len(nrow(panel))) execute(repo, "INSERT INTO research.enrollments(id,study_id,round_id,panelist_id,group_code) VALUES($1,$2,$3,$4,$5)", uid(), study_id, id, panel$id[i], panel$group_code[i])
       list(id = id, hash = h)
     })

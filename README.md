@@ -95,8 +95,18 @@ Rscript scripts/start-demo.R 1 3850
 Studienleitung: <http://127.0.0.1:3849>; erste Panelperson:
 <http://127.0.0.1:3850>. Die Studienleitung prüft und öffnet die vorbereitete Runde.
 Die Panelperson stimmt der angezeigten Demoinformation zu, speichert Antworten
-und gibt sie ausdrücklich ab. Die separate Workerinstanz bearbeitet Analyse und
-Export; eine geschlossene Runde wird anschließend eingefroren.
+und gibt sie ausdrücklich ab. Eine geschlossene Runde wird eingefroren; die separate Workerinstanz bearbeitet
+anschließend Analyse und Export sowie freigegebene lokale Nachrichtenquittungen.
+
+Berechtigte Redakteure bewahren Originaltexte und getrennte redigierte Fassungen,
+Zusammenfassungen, Codierungen und Itembeziehungen. Eine andere berechtigte Person
+prüft die genaue Fassung vor Freigabe. Koordinatoren wählen Studienpseudonyme und
+prüfen Nachrichtentext und Empfängermenge ausdrücklich; es erfolgt kein E-Mailversand.
+
+`run_app(repo, actor)` verwendet eine feste synthetische Identität für alle Sitzungen
+dieser lokalen Instanz. Für getrennte Sitzungen stehen `repo_factory()` und
+`actor_factory(session, repo)` zur Verfügung; der Host muss die Identität
+serverseitig auflösen. Diese Schnittstellen sind noch kein geprüfter OIDC-Adapter.
 
 Die UI ist im [App-Package](packages/delphyrApp/README.md) mit geprüften Ansichten
 dokumentiert. [Betriebsanleitung](docs/operations.md) erläutert den isolierten
@@ -110,12 +120,32 @@ DELPHYR_TEST_DB=true Rscript scripts/integration.R
 Rscript scripts/check-packages.R
 ```
 
+## Private Forschungsberichte
+
+Der numerische Export enthält den reproduzierbaren Snapshot, Protokoll und
+Analyseergebnisse sowie ein Datenwörterbuch, eingefrorene Instrumenttexte,
+Missingness, strukturierte Itementscheidungen und Itembeziehungen. Qualitative
+Originale, redaktionelle Freitextbegründungen und Kontozuordnungen gehören nicht
+zu diesem Profil. Pseudonyme sind nicht anonym.
+
+Mit installierter Quarto-Laufzeit erstellt der Worker einen HTML-Bericht aus einem
+festen Pakettemplate. Fehlende Autorenangaben werden ausdrücklich ausgewiesen.
+Ohne optionale Renderlaufzeit entsteht ein gekennzeichneter einfacher HTML-Fallback;
+ein tatsächlicher Renderfehler lässt den Auftrag fehlschlagen. Das Manifest nennt
+den Renderer und prüft sämtliche ausgelieferten Dateien.
+
 ## Dokumentation und Entwicklung
 
 - [Nutzungsanleitung](docs/user-guide.md): Installation, Offlineworkflow und Grenzen.
 - [Ausführbare Offlinevignette](packages/delphyr/vignettes/offline.Rmd): zwei Runden,
   Gruppenregeln, Missingness und Feedback. Nach Installation mit Vignetten:
   `vignette("offline", package = "delphyr")`.
+- [Berichte und Exportprofile](docs/reporting.md): Inhalt, Quarto und Reproduktion.
+- [Synthetische Kommunikation](docs/communications.md): Vorschau, Freigabe, Sink und Absturzverhalten.
+- [Protokolländerungen](docs/protocol-amendments.md), [Panelimport](docs/panel-import.md)
+  und [Teilnahme](docs/participation.md): versionierte Managementabläufe.
+- [Authentifizierung](docs/authentication.md) und [Einladungen](docs/invitations.md):
+  tatsächliche Nachweise und verbleibende Hosting-/UI-Gates.
 - [Spezifikation](docs/spec/00_START_HERE.md): Methodik, Rollen, Sicherheit und Betrieb.
 - [CTTIR-Konventionen](docs/adr/017-suite-conventions.md): Dokumentation und Oberflächengestaltung.
 - [Implementierungsstatus](docs/IMPLEMENTATION_STATUS.md): aktuelle Nachweise und offene Arbeit.

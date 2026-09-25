@@ -1,0 +1,9 @@
+# Explicit alternative backend; this is not stock Shiny Server qualification.
+services:
+  app:
+    entrypoint: ["Rscript", "/srv/shiny-server/delphyr/run-direct.R"]
+    command: []
+    user: shiny
+    working_dir: /srv/shiny-server/delphyr
+    environment:
+      DELPHYR_AUTH_PEERS: "172.30.247.2"

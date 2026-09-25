@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import subprocess
+import shutil
 import tempfile
 import time
 import uuid
@@ -55,7 +56,12 @@ try:
     if not snapshot or any(c not in "0123456789ABCDEFabcdef-" for c in snapshot):
         raise RuntimeError("Could not acquire a valid exported source snapshot")
     prefix = "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SET TRANSACTION SNAPSHOT '" + snapshot + "';\n"
+    artifact_study = os.environ.get("DELPHYR_RESTORE_STUDY", "")
+    if artifact_study:
+        artifact_study = str(uuid.UUID(artifact_study))
     checks = {"tables": counts_sql, "migrations": migrations_sql, "snapshots": snapshots_sql, "schema": schema_sql}
+    if artifact_study:
+        checks["artifacts"] = "SELECT id,storage_key,checksum FROM ops.artifacts WHERE study_id='" + artifact_study + "' ORDER BY id;\n"
     expected = {}
     for key, sql in checks.items():
         value = psql(source, prefix + sql + "COMMIT;\n")
@@ -66,6 +72,35 @@ try:
     with (out / "database.dump").open("wb") as stream:
         run(["docker", "exec", source, "pg_dump", "-U", "postgres", "-d", database,
              "--format=custom", "--no-owner", "--no-privileges", "--snapshot=" + snapshot], stdout=stream)
+    artifact_records = []
+    if artifact_study:
+        if not expected["artifacts"].strip():
+            raise RuntimeError("Selected synthetic study has no registered artifacts")
+        artifact_root = (root / ".artifacts").resolve(strict=True)
+        for row in expected["artifacts"].splitlines():
+            artifact_id, key, checksum = row.split("|")
+            key = str(uuid.UUID(key))
+            source_dir = artifact_root / key
+            if source_dir.is_symlink() or source_dir.resolve(strict=True).parent != artifact_root:
+                raise RuntimeError("Unsafe artifact directory")
+            manifest_path = source_dir / "manifest.json"
+            if manifest_path.is_symlink() or hashlib.sha256(manifest_path.read_bytes()).hexdigest() != checksum:
+                raise RuntimeError("Artifact manifest does not match registry")
+            manifest = json.loads(manifest_path.read_text())
+            allowed = {"manifest.json"}
+            for entry in manifest["files"]:
+                filename = entry["name"]
+                if Path(filename).name != filename or filename in (".", "..", "manifest.json"):
+                    raise RuntimeError("Unsafe manifest filename")
+                file = source_dir / filename
+                if file.is_symlink() or hashlib.sha256(file.read_bytes()).hexdigest() != entry["sha256"]:
+                    raise RuntimeError("Artifact member checksum mismatch")
+                allowed.add(filename)
+            if set(f.name for f in source_dir.iterdir()) != allowed:
+                raise RuntimeError("Artifact contains unregistered files")
+            destination = out / "artifact-backup" / key
+            shutil.copytree(source_dir, destination)
+            artifact_records.append((key, checksum))
     holder.stdin.write("ROLLBACK;\n\\q\n")
     holder.stdin.flush()
     holder.communicate(timeout=15)
@@ -103,13 +138,22 @@ try:
         if observed != checksum:
             raise RuntimeError("Migration checksum mismatch: " + version)
         migration_checks.append(version)
+    for key, checksum in artifact_records:
+        restored_dir = out / "artifact-restored" / key
+        shutil.copytree(out / "artifact-backup" / key, restored_dir)
+        if hashlib.sha256((restored_dir / "manifest.json").read_bytes()).hexdigest() != checksum:
+            raise RuntimeError("Restored artifact registry mismatch")
+        code = '.libPaths(c(normalizePath(".R-library"),.libPaths()));pkgload::load_all("packages/delphyr",quiet=TRUE);delphyr::reproduce_export(commandArgs(TRUE)[1]);cat("OFFLINE RESTORED ARTIFACT PASS\\n")'
+        with (out / ("artifact-" + key + ".log")).open("wb") as log:
+            run(["Rscript", "-e", code, str(restored_dir)], cwd=root, stdout=log, stderr=log)
     digest = hashlib.sha256((out / "database.dump").read_bytes()).hexdigest()
-    summary = dict(status="PASS", scope="synthetic PostgreSQL database recovery only", source_container=source,
+    summary = dict(status="PASS", scope=("synthetic PostgreSQL and selected-study artifact recovery" if artifact_study else "synthetic PostgreSQL database recovery only"), source_container=source,
         restore_container=name, image_id=image, exported_snapshot=snapshot, dump_sha256=digest,
         compared=list(checks), table_count=len(expected["tables"].splitlines()),
         frozen_snapshot_count=len(expected["snapshots"].splitlines()), migrations_verified=migration_checks,
+        artifact_study=artifact_study or None, restored_artifacts=len(artifact_records),
         elapsed_seconds=round(time.monotonic()-started, 3),
-        exclusions=["private artifact bytes", "OIDC", "SMTP", "production permissions", "PITR", "production RPO/RTO"])
+        exclusions=(["private artifact bytes"] if not artifact_study else ["artifacts of other studies"]) + ["OIDC", "SMTP", "production permissions", "PITR", "production RPO/RTO"])
     (out / "result.json").write_text(json.dumps(summary, indent=2) + "\n")
     print("RESTORE PASS: " + str(out), flush=True)
 finally:

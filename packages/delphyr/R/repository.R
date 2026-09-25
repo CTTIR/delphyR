@@ -113,7 +113,7 @@ command <- function(repo, actor, study, type, key, payload, fun) {
   # Admission follows every potentially blocking service lock. A revocation
   # committed before this check wins; already admitted transactions may finish.
   capability <- c(
-    create_study = "manage", capability = "manage", publish_consent = "manage",
+    create_study = "manage", amend_protocol = "manage", capability = "manage", publish_consent = "manage",
     consent = "panel", add_panelist = "manage", prepare_round = "manage", transition_round = "manage",
     save = "panel", submit = "panel", freeze = "manage", analyse = "analyse", feedback_draft = "analyse",
     release_feedback = "manage", assign_feedback = "manage", decision = "manage",
@@ -121,7 +121,7 @@ command <- function(repo, actor, study, type, key, payload, fun) {
     qualitative_source = "edit", qualitative_edit = "edit", qualitative_release = "manage",
     qualitative_theme = "edit", qualitative_code = "edit", qualitative_item_source = "edit",
     qualitative_lineage = "manage", campaign_prepare = "coordinate",
-    campaign_release = "coordinate", campaign_cancel = "coordinate"
+    campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage"
   )[[type]]
   authorize(repo, actor, study, capability)
   h <- content_hash(payload)

@@ -8,7 +8,7 @@ Description: Validated study protocols, deterministic consensus and longitudinal
     requires the documented security and operational acceptance gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Imports: DBI, digest, jsonlite, uuid
+Imports: DBI, digest, jsonlite, openssl, uuid
 Suggests: RPostgres, callr, withr, pkgload, testthat (>= 3.0.0), knitr, rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr

@@ -166,6 +166,27 @@ dasselbe Ergebnis. Hashes weisen Änderungen nach; sie ersetzen weder Zugriffssc
 noch die fachliche Prüfung der Eingaben. Für eine Weitergabe müssen Datenfreigabe,
 Datenschutz und der tatsächliche Exportvertrag zusätzlich erfüllt sein.
 
+## Vom Offlineergebnis zum Forschungsbericht
+
+Der private Datenbankexport verwendet dieselbe `analyse_round()`-Logik. Sein
+Manifest erfasst unter anderem `snapshot.json`, Ergebnisse, Datenwörterbuch,
+eingefrorene Instrumenttexte und den HTML-Bericht. Nach Entpacken eines solchen
+Exports prüft `reproduce_export()` die Dateiprüfsummen und berechnet die Analyse
+neu; dafür wird weder die App noch Quarto benötigt:
+
+```{r exported-study, eval=FALSE}
+# Ein bereits autorisiert bezogener Export, kein Demo-Download aus dem Internet.
+reproduced <- reproduce_export("/pfad/zum/entpackten-export")
+reproduced$provenance$result_hash
+```
+
+Berichtsdienste benötigen eine berechtigte Datenbankverbindung. Sie gehören nicht
+zum oben ausgeführten Offlinepfad. Der Bericht trennt eingefrorene Forschungsdaten
+von zum Exportzeitpunkt beobachteten redaktionellen Angaben. Fehlende Autorenangaben
+bleiben als „nicht dokumentiert“ markiert. Qualitative Originale und individuelle
+Freitextantworten sind im numerischen Exportprofil ausgeschlossen. Ein solcher
+Forschungsexport ist keine Freigabe zur öffentlichen Veröffentlichung.
+
 ```{r session}
 sessionInfo()
 ```

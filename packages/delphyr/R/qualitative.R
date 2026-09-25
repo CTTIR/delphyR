@@ -244,3 +244,14 @@ get_qualitative_provenance <- function(repo, actor, study_id, export = FALSE) {
     result
   })
 }
+
+#' List exact redacted versions for independent management review
+#' @param repo Repository.
+#' @param actor Actor with manage capability.
+#' @param study_id Study UUID.
+#' @return Reviewed content candidates and release state; excludes originals.
+#' @export
+list_qualitative_reviews <- function(repo, actor, study_id) {
+  authorize(repo, actor, study_id, "manage")
+  query(repo, "SELECT e.id,e.source_id,s.source_ref,e.kind,e.redacted_text,e.reason,e.hash,(r.id IS NOT NULL) AS released,(e.edited_by<>$2::uuid) AS can_review FROM research.qualitative_edits e JOIN research.qualitative_sources s ON s.study_id=e.study_id AND s.id=e.source_id LEFT JOIN research.qualitative_releases r ON r.study_id=e.study_id AND r.edit_id=e.id WHERE e.study_id=$1 ORDER BY e.created_at,e.id", study_id, actor$principal_id)
+}

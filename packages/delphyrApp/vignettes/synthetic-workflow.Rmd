@@ -1,8 +1,8 @@
 ---
-title: "A synthetic panel workflow"
+title: "Synthetische Studie in der Shiny-Oberfläche"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{A synthetic panel workflow}
+  %\VignetteIndexEntry{Synthetische Studie in der Shiny-Oberfläche}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,60 +11,125 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-`delphyrApp` separates the panel's response form from the transactional
-`delphyr` services. This vignette describes the synthetic development path;
-production authentication and deployment are not qualified.
+`delphyrApp` trennt die Oberfläche von den transaktionalen Diensten in `delphyr`.
+Diese Vignette erläutert den synthetischen Entwicklungsworkflow. Produktive
+Authentifizierung und Deployment sind nicht qualifiziert. Die Oberflächensprache
+kann Deutsch oder Englisch sein; die Dokumentation beschreibt keine automatische
+Übersetzung wissenschaftlicher Inhalte.
 
-## Start with a trusted identity
+## Mit einer vertrauenswürdigen Identität starten
 
-An application host creates the repository connection and resolves the actor
-on the server. Neither a role selector nor a URL parameter may establish an
-identity. A local demonstration starts with an existing synthetic actor:
+Für eine lokale Instanz mit einer festen synthetischen Identität:
 
 ```{r launch, eval=FALSE}
-app <- delphyrApp::run_app(repo, actor, language = "en")
+# repo und actor stammen aus der vertrauenswürdigen serverseitigen Demoeinrichtung.
+app <- delphyrApp::run_app(repo, actor, language = "de")
 shiny::runApp(app, host = "127.0.0.1")
 ```
 
-The application does not close the repository connection: its owner manages
-connection lifetime. A multi-user host must provide the correct trusted actor
-for each session; sharing one demo actor is not authentication.
+Der aufrufende Host verwaltet die Lebensdauer einer direkt übergebenen Verbindung.
+Alle Sitzungen dieser Instanz verwenden denselben festen Actor; dies ist kein
+Mehrbenutzer-Login. Rolle oder Identität dürfen nicht aus einem Browserfeld oder
+URL-Parameter stammen.
 
-## Read, respond, review
+Für eine eigene Verbindung und Identitätsauflösung je Sitzung stehen Factories
+zur Verfügung. Das folgende Gerüst zeigt die Schnittstelle; die Verifikation
+muss der vertrauenswürdige Host implementieren:
 
-Choose a study, select a round, and load its questionnaire. Study information is
-shown as stored, including its language. Record consent explicitly. Each
-response field starts without a preselected rating. A response may instead use
-one of the missing-response categories allowed by that study's scale.
+```{r session-factories, eval=FALSE}
+make_repository <- function() {
+  delphyr::connect_repository(
+    host = "127.0.0.1", port = 55439, dbname = "delphyr",
+    user = "delphyr_runtime", environment = "development"
+  )
+}
+resolve_actor <- function(session, repo) {
+  # Hier ist eine überprüfte serverseitige Identitätsbindung erforderlich.
+  stop("Identitätsadapter noch nicht konfiguriert")
+}
+app <- delphyrApp::run_app(
+  repo_factory = make_repository,
+  actor_factory = resolve_actor,
+  language = "de"
+)
+```
 
-Save each response field. The status changes to **Saved** only after a service
-returns a committed revision and timestamp. Failed saves retain the pending
-form value. A conflict requires reloading and reviewing the authoritative
-version; automatic overwriting is not offered.
+Eine Factory-Verbindung wird beim Sitzungsende geschlossen. Schlägt die
+Identitätsauflösung fehl, wird die Sitzung beendet. Die Factory-Schnittstelle
+allein liefert weder einen geprüften OIDC-Gateway noch eine produktive Anmeldung.
 
-The progress count means confirmed response fields, rather than question
-pages or participants. Save pending changes before submitting. The final
-confirmation is intentional: the core service forbids editing after submission.
-Required fields, round state, deadline, consent, ownership, and revision-set
-consistency are checked again by the core service. A successful submission
-returns its receipt and server timestamp.
+## Lesen, bewerten und verbindlich abgeben
 
-## Management
+Studie und zugewiesene Runde auswählen, Fragebogen laden und die gespeicherte
+Studieninformation lesen. Einwilligung ausdrücklich festhalten. Bewertungsfelder
+beginnen ohne vorausgewählten Mittelwert. Statt einer Bewertung können die in der
+Skala erlaubten Sonderantworten gewählt werden.
 
-A server-authorized manager can view round status and request a lifecycle
-transition with a reason and explicit confirmation. The service repeats
-permission checks and verifies the instrument hash. A hidden control is never
-the authorization boundary. A closed round can be frozen, then analysis and
-export jobs can be queued for a separate trusted worker. Check the operation
-to retrieve results. Review the exact feedback candidate before release and
-assign it to an unopened subsequent round. Bilingual CSV instruments are
-validated and previewed before round preparation. Export downloads recheck
-permissions.
+Jedes Antwortfeld ausdrücklich speichern. **Gespeichert** erscheint erst nach einer
+bestätigten Revision und Serverzeit. Fehlgeschlagene Speicherungen lassen den
+Eingabewert bestehen. Bei einem Konflikt den maßgeblichen Serverstand neu laden und
+prüfen; ein automatisches Überschreiben wird nicht angeboten.
 
-## Current scope
+Der Fortschrittszähler zählt bestätigte Antwortfelder. Ausstehende Änderungen vor
+der Abgabe speichern und die Abschlussbestätigung bewusst setzen. Der Service
+prüft Einwilligung, Eigentümerschaft, Rechte, Frist, Pflichtfelder und den exakten
+Revisionssatz erneut. Eine erfolgreiche Abgabe liefert eine dauerhafte Quittung;
+danach ist die Bearbeitung dieser Runde abgeschlossen.
 
-The P0 interface offers bilingual navigation, labeled controls, keyboard focus,
-responsive forms, and live save-status regions. It does not claim formal
-accessibility conformance. Autosave, production login, real mail, full editing modules, and cross-browser acceptance remain
-separate work. Service injection supports deterministic module testing without
-a live database.
+## Runden, Feedback und Berichte steuern
+
+Berechtigte Studienleitungen prüfen Instrument und Rundenstatus. Zustandswechsel
+brauchen eine Begründung und Bestätigung; der Service prüft Instrument-Hash und
+Rechte. Nach Schließen kann die Runde eingefroren werden. Analyse und Export werden
+als Aufträge an einen separaten Worker übergeben. Den Auftragsstatus erneut prüfen,
+um Ergebnisse abzurufen.
+
+Die konkrete Feedbackfassung vor der Freigabe ansehen und bestätigen. Freigegebenes
+Feedback kann einer ungeöffneten Folgerunde zugeordnet werden. Es wird dort mit den
+eigenen Vorantworten und gegebenenfalls einem Hinweis auf geänderten Wortlaut gezeigt.
+Zweisprachige CSV-Instrumente werden vor der Rundenvorbereitung validiert und in einer
+Vorschau geprüft.
+
+Der Exportdownload prüft Berechtigung und Integrität erneut. Das numerische Profil
+enthält Snapshot, Protokoll, Ergebnisse, Provenienz, Datenwörterbuch, Instrumenttexte
+und einen HTML-Bericht. Der Worker verwendet bei vorhandener Runtime ein festes
+Quarto-Template. Ohne optionale Runtime ist der einfache HTML-Fallback ausdrücklich
+gekennzeichnet; ein tatsächlicher Renderfehler bleibt ein fehlgeschlagener Auftrag.
+Qualitative Originale und individuelle Freitextantworten sind in diesem Profil
+nicht freigegeben. Fehlende Autorenangaben werden nicht erfunden.
+
+## Redaktion und unabhängige Prüfung
+
+Redakteure bewahren synthetische Originalquellen und speichern getrennte redigierte
+Fassungen oder Zusammenfassungen mit Begründung. Eine Zusammenfassung ist als solche
+markiert und kein Zitat. Eine andere berechtigte Person prüft die genaue Fassung
+vor Freigabe.
+
+Themenversionen, Einschluss-/Ausschlusscodierungen, Quellenbezüge und Itemteilungen
+oder -zusammenführungen dokumentieren ihre Herkunft. Ein Quellenbezug importiert
+noch kein Instrumentitem. Verborgene UI-Bereiche sind kein Ersatz für die erneute
+serverseitige Rechteprüfung.
+
+## Synthetische Kampagnen
+
+Koordinatoren wählen exakte Studienpseudonyme und fertigen Nachrichtentext.
+Die daraus erzeugte Vorschau bindet Text und Empfängermenge. Eine Änderung verlangt
+eine neue Vorschau; Freigabe braucht eine ausdrückliche Bestätigung und Begründung.
+
+Ein separater Worker schreibt ausschließlich lokale Testquittungen. Er prüft
+Teilnahme, Rechte, Rückzug und bei Erinnerungen eine inzwischen erfolgte Abgabe erneut.
+Die Oberfläche verschickt keine E-Mail. Storno verhindert verbleibende Verarbeitung,
+löscht aber keine bestehenden Quittungen. Eine abgelaufene laufende Lease wird als
+`delivery_unknown` sichtbar und nicht blind erneut verarbeitet.
+
+## Gestaltung und verbleibende Abnahme
+
+Die Oberfläche verwendet Systemschriften, sichtbare Formularbeschriftungen,
+Tastaturfokus, responsive Formulare und Live-Statusmeldungen. Deutsch und Englisch
+sind verfügbar; ein Sprachwechsel darf keine ausstehenden Eingaben löschen.
+Farbe allein vermittelt keine Rückmeldung.
+
+Dies ist kein Nachweis formaler Barrierefreiheit. Assistive Technologien,
+vollständige plattformübergreifende Browserabnahme, Autosave, produktive Anmeldung,
+externer Nachrichtenversand und Betriebsfreigabe bleiben eigene Abnahmebereiche.
+Die Service-Injektion ermöglicht gezielte Modultests ohne laufende Datenbank.

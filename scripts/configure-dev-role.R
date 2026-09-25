@@ -8,8 +8,8 @@ for (schema in c("identity", "research", "ops")) {
   DBI::dbExecute(r$con, paste("GRANT USAGE ON SCHEMA", schema, "TO delphyr_runtime"))
   DBI::dbExecute(r$con, paste("GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA", schema, "TO delphyr_runtime"))
 }
-for (table in c("identity.principals", "identity.memberships", "identity.capabilities", "research.studies", "research.rounds", "research.enrollments", "research.response_current", "research.feedback", "ops.jobs")) DBI::dbExecute(r$con, paste("GRANT UPDATE ON", table, "TO delphyr_runtime"))
+for (table in c("identity.principals", "identity.memberships", "identity.capabilities", "research.studies", "research.rounds", "research.enrollments", "research.panelists", "research.response_current", "research.feedback", "ops.jobs")) DBI::dbExecute(r$con, paste("GRANT UPDATE ON", table, "TO delphyr_runtime"))
 # Optional component delivery-state tables are granted only if migrated.
-for (table in c("ops.message_delivery", "ops.campaigns")) if (!is.na(DBI::dbGetQuery(r$con, paste0("SELECT to_regclass('", table, "')::text AS x"))$x)) DBI::dbExecute(r$con, paste("GRANT UPDATE ON", table, "TO delphyr_runtime"))
+for (table in c("ops.message_delivery", "ops.campaigns", "identity.panel_invitations")) if (!is.na(DBI::dbGetQuery(r$con, paste0("SELECT to_regclass('", table, "')::text AS x"))$x)) DBI::dbExecute(r$con, paste("GRANT UPDATE ON", table, "TO delphyr_runtime"))
 DBI::dbDisconnect(r$con)
 cat("Synthetic runtime role configured; no owner, DDL, delete or superuser rights.\n")

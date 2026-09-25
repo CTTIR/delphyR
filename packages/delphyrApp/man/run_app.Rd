@@ -4,7 +4,14 @@
 \alias{run_app}
 \title{Build a synthetic study application with a trusted server identity}
 \usage{
-run_app(repo, actor, language = c("de", "en"), services = NULL)
+run_app(
+  repo = NULL,
+  actor = NULL,
+  language = c("de", "en"),
+  services = NULL,
+  actor_factory = NULL,
+  repo_factory = NULL
+)
 }
 \arguments{
 \item{repo}{A connected delphyr repository; lifetime is managed by the caller.}
@@ -15,6 +22,12 @@ run_app(repo, actor, language = c("de", "en"), services = NULL)
 
 \item{services}{Named list of service functions, each accepting repo and actor
 as their first two arguments. NULL uses exported delphyr services.}
+
+\item{actor_factory}{Optional trusted function(session, repo) resolving each
+session identity independently. Mutually exclusive with actor.}
+
+\item{repo_factory}{Optional function creating a repository for each session;
+its DBI connection is closed when the session ends.}
 }
 \value{
 A shiny.appobj, runnable with shiny::runApp().
