@@ -1,0 +1,15 @@
+Package: delphyrApp
+Title: Accessible Study Workflows for Delphi Panels
+Version: 0.0.1
+Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "58561665+r-heller@users.noreply.github.com")
+Description: A bilingual Shiny interface for synthetic Delphi studies, using
+    injected transactional services from 'delphyr'. Separates trusted server
+    identity from browser inputs and presents explicit save and submission
+    receipts. Production authentication and deployment remain acceptance gates.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports: shiny, bslib, delphyr, jsonlite, uuid, zip
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+RoxygenNote: 8.0.0

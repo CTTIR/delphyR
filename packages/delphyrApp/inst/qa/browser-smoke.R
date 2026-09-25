@@ -1,0 +1,13 @@
+b<-chromote::ChromoteSession$new();b$Page$navigate('http://127.0.0.1:3867');Sys.sleep(2)
+js<-function(code){z<-b$Runtime$evaluate(code);if(!is.null(z$exceptionDetails))stop(z$exceptionDetails$text);z}
+js("document.getElementById('panel-load').click()");Sys.sleep(1)
+js("document.getElementById('panel-item_1_1-kind').selectize.setValue('answered');document.getElementById('panel-item_1_1-value').selectize.setValue('7')");Sys.sleep(.5)
+js("document.getElementById('language').selectize.setValue('de')");Sys.sleep(.5)
+x<-js("JSON.stringify({value:document.getElementById('panel-item_1_1-value').value,status:document.getElementById('panel-item_1_1-status').textContent,question:document.getElementById('panel-item_1_1-title').textContent})")$result$value;print(x)
+stopifnot(length(x)==1L)
+stopifnot(grepl('"value":"7"',x,fixed=TRUE),grepl('Ungespeicherte',x,fixed=TRUE))
+js("document.getElementById('panel-item_1_1-save').click()");Sys.sleep(.5)
+x<-js("document.getElementById('panel-item_1_1-status').textContent")$result$value;print(x);stopifnot(length(x)==1L);stopifnot(grepl('Gespeichert:',x,fixed=TRUE))
+js("document.getElementById('panel-confirm').click();document.getElementById('panel-submit').click()");Sys.sleep(.5)
+x<-js("document.getElementById('panel-receipt').textContent")$result$value;print(x);stopifnot(length(x)==1L);stopifnot(grepl('synthetic-submission',x,fixed=TRUE))
+b$close()

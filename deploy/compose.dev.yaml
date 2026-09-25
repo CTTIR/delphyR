@@ -1,0 +1,18 @@
+# Loopback-only, disposable SYNTHETIC development database. Not production.
+services:
+  postgres:
+    container_name: delphyr-dev-postgres
+    image: postgres:17@sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675
+    ports: ["127.0.0.1:55439:5432"]
+    environment:
+      POSTGRES_DB: delphyr
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - delphyr-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d delphyr"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  delphyr-dev:

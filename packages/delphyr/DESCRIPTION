@@ -9,7 +9,7 @@ Description: Validated study protocols, deterministic consensus and longitudinal
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: DBI, digest, jsonlite, uuid
-Suggests: RPostgres, testthat (>= 3.0.0), knitr, rmarkdown
+Suggests: RPostgres, callr, withr, pkgload, testthat (>= 3.0.0), knitr, rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 RoxygenNote: 8.0.0

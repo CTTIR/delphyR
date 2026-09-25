@@ -1,0 +1,5 @@
+dir.create(".checks", showWarnings = FALSE, mode = "0700")
+.libPaths(c(normalizePath(".R-library"), .libPaths()))
+pkgload::load_all("packages/delphyr", quiet = TRUE)
+roxygen2::roxygenise("packages/delphyr")
+testthat::test_dir("packages/delphyr/tests/testthat", stop_on_failure = TRUE)

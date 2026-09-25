@@ -19,5 +19,5 @@ delphyr_comparison table, reporting attrition and unpaired means separately.
 Compare paired responses across compatible rounds
 }
 \examples{
-compare_rounds(demo_snapshot(c(5,7,8,9)), demo_snapshot(c(6,7,7,9)))
+compare_rounds(demo_snapshot(c(5, 7, 8, 9)), demo_snapshot(c(6, 7, 7, 9)))
 }

@@ -18,5 +18,8 @@ Classification and unrounded proportions with numerator and denominator.
 Classify consensus from explicit counts
 }
 \examples{
-classify_consensus(list(n_valid=10,n_agree=7,n_disagree=1), demo_protocol()$analysis$consensus)
+classify_consensus(
+  list(n_valid = 10, n_agree = 7, n_disagree = 1),
+  demo_protocol()$analysis$consensus
+)
 }

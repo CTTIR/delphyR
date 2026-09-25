@@ -1,0 +1,41 @@
+name: Package and PostgreSQL checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17@sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675
+        env:
+          POSTGRES_DB: delphyr
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['55439:5432']
+        options: --health-cmd 'pg_isready -U postgres -d delphyr' --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
+        with:
+          use-public-rspm: true
+      - name: System dependencies
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev pandoc
+      - name: R dependencies
+        run: Rscript scripts/bootstrap.R
+      - name: Unit tests and documentation
+        run: mkdir -p .checks && Rscript scripts/check.R
+      - name: PostgreSQL contracts
+        env:
+          DELPHYR_TEST_DB: 'true'
+        run: Rscript scripts/integration.R
+      - name: Empty migration
+        run: Rscript scripts/migration-empty.R
+      - name: Two-round service scenario
+        run: Rscript scripts/demo-e2e.R
+      - name: Package builds and checks
+        run: Rscript scripts/check-packages.R
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: validation
+          path: .checks/

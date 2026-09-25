@@ -3,7 +3,7 @@
 Die Spezifikation liegt unter `docs/spec/`; Einstieg und vollständiger Auftrag:
 `00_START_HERE.md` und `27_ORCHESTRATOR_PROMPT.md`.
 
-- Repositoryname delpyR; Packages delphyr und delphyrApp; MIT-Lizenz.
+- Repositoryname delphyR; Packages delphyr und delphyrApp; MIT-Lizenz.
 - Nach jedem wesentlichen geprüften Schritt auf main committen und pushen.
 - Ohne ausdrückliche weitere Erlaubnis keine zusätzlichen Agenten einsetzen.
 - Ausschließlich synthetische Entwicklungsdaten; keine realen Nachrichten oder Produktivdeployments.

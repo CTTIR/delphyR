@@ -3,7 +3,7 @@
 Status: accepted. Datum: 2026-09-24.
 
 Der Nutzer hat das öffentliche Repository CTTIR/delpyR und MIT ausdrücklich gewählt.
-Der Repositoryname bleibt delpyR, die technischen Packages folgen der Spezifikation:
+Am 25.09.2026 wurde das Repository auf ausdrücklichen Nutzerwunsch in CTTIR/delphyR umbenannt. Die technischen Packages folgen der Spezifikation:
 delphyr und delphyrApp. Copyrightinhaber entsprechend bestehender CTTIR-Packages:
 Raban Heller. Die private Originalablage admin/ bleibt ignoriert; eine unveränderte
 Spezifikationskopie unter docs/spec/ macht den Arbeitsvertrag nachvollziehbar.

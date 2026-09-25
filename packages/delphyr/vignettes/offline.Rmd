@@ -1,29 +1,171 @@
 ---
-title: "Zwei Runden offline auswerten"
+title: "Zwei Delphi-Runden offline auswerten"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Zwei Runden offline auswerten}
+  %\VignetteIndexEntry{Zwei Delphi-Runden offline auswerten}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-Die synthetischen Beispielschwellen sind keine methodische Empfehlung.
-Das Kernpackage benötigt für diese Auswertung weder Shiny noch PostgreSQL.
-
-```{r}
-library(delphyr)
-protocol <- new_protocol(demo_protocol())
-first <- demo_snapshot()
-second <- demo_snapshot(c(2,4,7,7,7,8,8,9,9,9))
-analysis <- analyse_round(first)
-as.data.frame(analysis)
-compare_rounds(first, second)
-prepare_feedback(analysis)$results
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-`n_valid` ist der Nenner der Zustimmungsquote. Zugewiesene Personen,
-Abgaben und Sonderantworten werden separat berichtet. Quartile verwenden Typ 7.
-Die leere zweite Gruppe bleibt sichtbar und ergibt unzureichende Daten.
-Die Demo verwendet für ihre Gesamtentscheidung ausdrücklich das gepoolte Profil.
-Neue Itembedeutung muss im Mapping als nicht vergleichbar ausgewiesen werden.
-Konsens, deskriptive Veränderung und menschliche Itementscheidung bleiben getrennt.
+Diese Vignette zeigt einen vollständigen **Offlineanalysepfad** mit synthetischen
+Bewertungen. Sie benötigt weder Shiny noch PostgreSQL. Sie demonstriert keine
+Rekrutierung, Datenerhebung oder produktive Studienfreigabe. Die verwendeten
+Konsensschwellen sind Beispiele und müssen für eine reale Studie fachlich begründet
+und vorab festgelegt werden.
+
+## Protokoll und Rundensatz prüfen
+
+```{r protocol}
+library(delphyr)
+
+config <- demo_protocol()
+validate_protocol(config)$valid
+protocol <- new_protocol(config)
+protocol$analysis$consensus$group_policy
+```
+
+Das Standardprotokoll verlangt Ergebnisse in allen vorgesehenen Panelgruppen
+(`all_required_groups`). Die kompakte Snapshotdemo verwendet dagegen ausdrücklich
+`pooled`: Ihre zehn Bewertungen stammen aus einer Gruppe. Diese Entscheidung ist
+Teil des eingefrorenen Protokolls und keine nachträgliche automatische Anpassung.
+
+```{r snapshot}
+first <- demo_snapshot()
+first$protocol$analysis$consensus$group_policy
+first$items
+```
+
+`new_snapshot()` nimmt Antworten, Panelzuordnungen, das Instrument und ein
+validiertes Protokoll entgegen. Der Inhalts-Hash bindet diese Daten an die
+Rundennummer. Änderungen erfolgen durch einen neuen Snapshot; manipulierte Inhalte
+werden bei der Analyse anhand des Hashes erkannt.
+
+## Ergebnisse mit Nennern lesen
+
+```{r analysis}
+analysis <- analyse_round(first)
+analysis$decisions
+analysis$results[, c("stratum", "n_assigned", "n_submitted", "n_valid",
+                     "n_agree", "n_disagree", "p_agree", "classification")]
+```
+
+Die zehn gültigen Bewertungen enthalten sieben Werte in 7–9, einen Wert in 1–3
+und zwei mittlere Werte. Damit betragen die ungerundeten Anteile 0,7 und 0,1.
+Unter der Demoregel ergibt dies `consensus_in`. Die leere Gruppe
+`public_contributors` bleibt als `insufficient_data` sichtbar. Ein gepooltes
+Gesamtergebnis belegt keinen Konsens in jeder Gruppe.
+
+```{r required-groups}
+required_groups <- protocol$analysis$consensus
+analyse_round(first, rules = required_groups)$decisions
+```
+
+Die explizite alternative Regel liefert hier `insufficient_data`. Sie wird im
+Analyseobjekt mit einem eigenen Regel-Hash dokumentiert und ändert den ursprünglichen
+Snapshot nicht. Für eine vorab festgelegte Hauptanalyse gilt dessen eingefrorenes
+Protokoll.
+
+```{r missingness}
+with_missing <- analyse_round(demo_snapshot(c(NA, 4, 6, 7, 7, 8, 8, 9, 9, 9)))
+with_missing$denominators
+with_missing$missingness
+with_missing$decisions
+```
+
+`NA` wird in dieser Demofunktion als `not_answered` materialisiert. Neun gültige
+Bewertungen unterschreiten das beispielhafte Mindest-n von zehn. Zugewiesene Personen,
+Abgaben und Sonderantworten werden separat gezählt; Missingness wird nicht als null
+im Skalenwert ersetzt. Median und Quartile beziehen sich auf gültige Bewertungen,
+Quartile verwenden Typ 7.
+
+## Zweite Runde konstruieren und vergleichen
+
+Die Demofunktion erstellt standardmäßig Runde 1. Für eine echte zweite Runde wird
+ein neuer Snapshot mit `round_number = 2L` konstruiert. Die Personen-IDs und die
+Itembedeutung bleiben in diesem Beispiel gleich.
+
+```{r second-round}
+second_demo <- demo_snapshot(c(2, 4, 7, 7, 7, 8, 8, 9, 9, 9))
+response_columns <- c("panelist_id", "item_code", "item_version", "dimension_code",
+                      "answer_status", "value_integer", "value_text")
+assignment_columns <- c("panelist_id", "group_code", "submitted")
+second <- new_snapshot(
+  responses = second_demo$data[, response_columns],
+  assignments = unique(second_demo$data[, assignment_columns]),
+  items = second_demo$items,
+  protocol = second_demo$protocol,
+  round_number = 2L
+)
+
+analyse_round(second)$decisions
+comparison <- compare_rounds(first, second)
+comparison[, c("status", "n_paired", "n_lost", "n_new",
+                "median_absolute_change", "proportion_unchanged")]
+```
+
+Zehn Personen sind gepaart; acht Bewertungen bleiben unverändert. Deskriptive
+Veränderung ist keine automatische Entscheidung über Stabilität oder Studienende.
+Auch stabiler Dissens ist möglich. Ungepaarte Rundenmittelwerte dürfen nicht als
+individuelle Veränderung interpretiert werden.
+
+Ändert sich die Bedeutung eines Items, wird der direkte Vergleich ausgeschlossen.
+Ein explizites Mapping dokumentiert die redaktionelle Entscheidung:
+
+```{r comparability}
+mapping <- data.frame(
+  item_code = "I001", dimension_code = "relevance",
+  previous_version = 1L, current_version = 1L,
+  comparable = FALSE, reason = "Vergleich fachlich ausgeschlossen"
+)
+compare_rounds(first, second, mapping)[, c("status", "reason", "n_paired")]
+```
+
+Neue Itemversionen sind ohne ausdrückliches geeignetes Mapping standardmäßig nicht
+vergleichbar. Das Mapping ersetzt keine fachliche Prüfung.
+
+## Feedback als Entwurf vorbereiten
+
+```{r feedback}
+feedback <- prepare_feedback(analysis)
+validate_feedback(feedback)
+feedback$results[, c("stratum", "n_valid", "classification", "suppressed")]
+```
+
+Standardmäßig enthält der Entwurf nur das Gesamtergebnis. Kleine Gruppen dürfen
+nicht über Differenzen zum Gesamtergebnis rekonstruiert werden. Bei aktivierten
+Gruppenstatistiken unterdrückt die aktuelle Implementierung konservativ sämtliche
+Ergebnisse eines Items, sobald ein ausgewiesenes Stratum unter dem Mindest-n liegt:
+
+```{r suppression}
+group_feedback <- prepare_feedback(analysis, policy = list(
+  group_statistics = TRUE,
+  minimum_display_cell_n = 5L,
+  complementary_suppression = TRUE
+))
+group_feedback$results[, c("stratum", "n_valid", "classification", "suppressed")]
+```
+
+Diese Zellregel ist kein allgemeiner Anonymitätsnachweis. Qualitative Zusammenfassungen
+müssen geprüft sein und einen Quellenverweis tragen. Ein Feedbackentwurf ist noch
+kein veröffentlichtes, unveränderliches Feedbackrelease.
+
+## Reproduktion und Provenienz
+
+```{r reproducibility}
+identical(analysis, analyse_round(first))
+analysis$provenance[c("software_version", "quantile_type", "snapshot_hash",
+                      "rules_hash", "result_hash")]
+```
+
+Die gleiche eingefrorene Eingabe und Regel erzeugt in derselben Softwareumgebung
+dasselbe Ergebnis. Hashes weisen Änderungen nach; sie ersetzen weder Zugriffsschutz
+noch die fachliche Prüfung der Eingaben. Für eine Weitergabe müssen Datenfreigabe,
+Datenschutz und der tatsächliche Exportvertrag zusätzlich erfüllt sein.
+
+```{r session}
+sessionInfo()
+```

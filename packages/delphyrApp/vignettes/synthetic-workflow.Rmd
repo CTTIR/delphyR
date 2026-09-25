@@ -1,0 +1,70 @@
+---
+title: "A synthetic panel workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A synthetic panel workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+`delphyrApp` separates the panel's response form from the transactional
+`delphyr` services. This vignette describes the synthetic development path;
+production authentication and deployment are not qualified.
+
+## Start with a trusted identity
+
+An application host creates the repository connection and resolves the actor
+on the server. Neither a role selector nor a URL parameter may establish an
+identity. A local demonstration starts with an existing synthetic actor:
+
+```{r launch, eval=FALSE}
+app <- delphyrApp::run_app(repo, actor, language = "en")
+shiny::runApp(app, host = "127.0.0.1")
+```
+
+The application does not close the repository connection: its owner manages
+connection lifetime. A multi-user host must provide the correct trusted actor
+for each session; sharing one demo actor is not authentication.
+
+## Read, respond, review
+
+Choose a study, select a round, and load its questionnaire. Study information is
+shown as stored, including its language. Record consent explicitly. Each
+response field starts without a preselected rating. A response may instead use
+one of the missing-response categories allowed by that study's scale.
+
+Save each response field. The status changes to **Saved** only after a service
+returns a committed revision and timestamp. Failed saves retain the pending
+form value. A conflict requires reloading and reviewing the authoritative
+version; automatic overwriting is not offered.
+
+The progress count means confirmed response fields, rather than question
+pages or participants. Save pending changes before submitting. The final
+confirmation is intentional: the core service forbids editing after submission.
+Required fields, round state, deadline, consent, ownership, and revision-set
+consistency are checked again by the core service. A successful submission
+returns its receipt and server timestamp.
+
+## Management
+
+A server-authorized manager can view round status and request a lifecycle
+transition with a reason and explicit confirmation. The service repeats
+permission checks and verifies the instrument hash. A hidden control is never
+the authorization boundary. A closed round can be frozen, then analysis and
+export jobs can be queued for a separate trusted worker. Check the operation
+to retrieve results. Review the exact feedback candidate before release and
+assign it to an unopened subsequent round. Bilingual CSV instruments are
+validated and previewed before round preparation. Export downloads recheck
+permissions.
+
+## Current scope
+
+The P0 interface offers bilingual navigation, labeled controls, keyboard focus,
+responsive forms, and live save-status regions. It does not claim formal
+accessibility conformance. Autosave, production login, real mail, full editing modules, and cross-browser acceptance remain
+separate work. Service injection supports deterministic module testing without
+a live database.
