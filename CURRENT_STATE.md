@@ -18,6 +18,8 @@ und 115 Shiny-Assertions. Reale Chromium-Pfade prüfen Panel/Abgabe, Netzabbruch
 Redaktion, Kampagnen, Protokollamendments, Panelimport und rollenabhängige Navigation.
 Der zweirundige Servicepfad bestätigt 720 Antworten von 30 synthetischen Personen.
 Elf Migrationen sind checksummiert; alte SQL-Dateien nicht verändern.
+Beide Packagechecks bestehen lokal und in Hosted CI für `0f03ae6`:
+https://github.com/CTTIR/delphyR/actions/runs/36123381681.
 
 ## Authentifizierung und Grenzen
 

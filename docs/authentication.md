@@ -16,6 +16,11 @@ expiry is a cap on one Shiny session, not a claim that IdP-wide logout instantly
 terminates every websocket or that OIDC authentication age was independently
 revalidated by R.
 
+The container fixture qualifies authentication and session isolation. Its temporary
+artifact directory is intentionally separate from the host development worker;
+export download and a complete worker/storage deployment are not qualified by
+this authentication fixture. Use the host demo for the tested export workflow.
+
 The application uses a trusted `actor_factory(session, repo)` once for each
 session and a `repo_factory()` for a separate connection, closed at session end.
 The fixed-actor demonstration interface remains separate. Neither mock request
