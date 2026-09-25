@@ -5,6 +5,12 @@ Die vollständige P1-Plattform ist **noch nicht abgenommen**.
 
 ## Implementiert und lokal geprüft
 
+- brainwritR-Farbgebung: Petrolgrün `#0e6e78`, Warnrot `#b3372b`,
+  Schiefertext und grauer Hintergrund; Delfin-Hexlogo in App und READMEs.
+  Bestätigte Saves erscheinen grün, ungespeicherte/fehlgeschlagene Saves rot,
+  jeweils zusätzlich mit Textstatus. Chromium: 1280 px und 390 px ohne
+  horizontales Überlaufen, Logo geladen und keine Shiny-Ausgabefehler.
+
 - Deterministische Offlineanalytik: Skalen, Missingness, Nenner, Gruppenregeln,
   Versionen, Stabilität und kontrollierte Feedbackunterdrückung.
 - Elf checksummierte PostgreSQL-Migrationen, Unveränderlichkeit, aktuelle Rechte,
@@ -41,7 +47,7 @@ Die vollständige P1-Plattform ist **noch nicht abgenommen**.
 |---|---|---|
 | Offline-Testlauf | 77 Assertions | 47 DB-Testfälle dort bewusst übersprungen |
 | PostgreSQL-Integration | 338 Assertions, keine Fehler/Warnungen/Skips | Aufteilung im Validierungsbericht |
-| Shiny-Module | 115 Assertions | Service-/Session-/Navigationstests |
+| Shiny-Module | 117 Assertions | Service-/Session-/Navigationstests |
 | Reale Chromium-Pfade | bestanden | Panel, Netzabbruch, Tastaturpfad, Redaktion, Kampagne, Protokoll, Import, Navigation |
 | Reale OIDC-Integration | 12 Prüfungen bestanden | Direkter Shiny-Backendpfad, lokal synthetisch |
 | Stock Shiny Server OSS | nicht qualifiziert | Header gehen im WebSocket-Transport verloren; Sitzung wird korrekt abgewiesen |

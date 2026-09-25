@@ -50,7 +50,7 @@ communications_server <- function(id, study, lang, call, services) {
           class = "del-actions",
           shiny::actionButton(ns("release"), tr(l, "F\u00fcr lokale Testbelege freigeben", "Approve local test receipts")),
           shiny::actionButton(ns("refresh"), tr(l, "Belegstatus aktualisieren", "Refresh receipt status")),
-          shiny::actionButton(ns("cancel"), tr(l, "Ausstehende Testbelege abbrechen", "Cancel pending test receipts"))
+          shiny::actionButton(ns("cancel"), tr(l, "Ausstehende Testbelege abbrechen", "Cancel pending test receipts"), class = "btn-outline-danger")
         ),
         status_ui(ns("status"))
       )

@@ -46,13 +46,17 @@ run_app <- function(repo = NULL, actor = NULL, language = c("de", "en"), service
   }
   required <- c("list_studies", "list_enrollments", "get_questionnaire", "record_consent", "save_response", "submit_round")
   if (!all(required %in% names(services)) || !all(vapply(services, is.function, logical(1)))) stop("Incomplete service adapter.", call. = FALSE)
+  shiny::addResourcePath("delphyr-brand", system.file("www", package = "delphyrApp"))
   ui <- shiny::fluidPage(
-    theme = bslib::bs_theme(version = 5, primary = "#0e6e78", base_font = "system-ui"),
-    shiny::tags$head(shiny::tags$style(shiny::HTML(app_css()))),
+    theme = bslib::bs_theme(version = 5, bg = "#eceff2", fg = "#22303c", primary = "#0e6e78", success = "#0e6e78", danger = "#b3372b", base_font = "system-ui"),
+    shiny::tags$head(shiny::tags$style(shiny::HTML(app_css())),
+      shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-hex.png")),
     shiny::tags$div(
       class = "del-wrap",
       shiny::tags$header(
-        class = "del-header", shiny::tags$h1("delphyR"),
+        class = "del-header", shiny::tags$div(class = "del-brand",
+          shiny::tags$img(class = "del-logo", src = "delphyr-brand/delphyR-hex.png", alt = "", width = 72, height = 84),
+          shiny::tags$h1("delphyR")),
         shiny::selectInput("language", tr(language, "Sprache", "Language"), c("Deutsch" = "de", "English" = "en"), selected = language, width = "190px")
       ),
       shiny::uiOutput("banner"),

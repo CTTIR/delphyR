@@ -1,27 +1,36 @@
 # Scientific forms follow the suite's teal/slate palette and system typography.
 app_css <- function() '
+:root {--del-accent:#0e6e78;--del-accent-soft:#eef6f6;--del-warn:#b3372b;--del-warn-soft:#fbefed;--del-line:#dce3e7;}
 body {color:#22303c;background:#eceff2;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
 .del-wrap {max-width:1040px;margin:auto;padding:24px 20px 60px;}
 .del-header {display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;}
+.del-brand {display:flex;align-items:center;gap:16px;}
+.del-logo {width:72px;height:84px;object-fit:contain;}
 .del-header h1 {font-size:2.1rem;font-weight:750;color:#0e6e78;margin:0;}
-.del-banner {background:#fff5d8;border-left:5px solid #8a5900;padding:12px 16px;margin:20px 0;color:#533800;}
-.del-nav {background:white;border:1px solid #dce3e7;border-radius:7px;padding:8px 16px;}
+.del-banner {background:var(--del-warn-soft);border-left:3px solid var(--del-warn);padding:12px 16px;margin:20px 0;color:var(--del-warn);border-radius:0 8px 8px 0;}
+.del-nav {background:white;border:1px solid #dce3e7;border-radius:14px;padding:8px 16px;}
 .del-nav ul {list-style:none;display:flex;flex-wrap:wrap;gap:4px 20px;margin:0;padding:0;}
 .del-nav a {display:inline-flex;align-items:center;min-height:44px;color:#0e6e78;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
 [id^="section-"] {scroll-margin-top:16px;}
-.del-sheet {background:white;border:1px solid #dce3e7;border-radius:10px;padding:24px;margin:18px 0;}
+.del-sheet {background:white;border:1px solid #dce3e7;border-radius:14px;padding:24px;margin:18px 0;box-shadow:0 1px 2px rgba(34,48,60,.10);}
 .del-item {border-top:1px solid #dce3e7;padding:22px 0;max-width:75ch;}
 .del-item h3 {font-size:1.25rem;line-height:1.5;}
+h1,h2,h3,h4 {letter-spacing:-.01em;overflow-wrap:anywhere;}
 h2 {font-size:1.55rem;} p {max-width:75ch;line-height:1.6;}
-.btn {min-height:44px;border-radius:7px;white-space:normal;}
-a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {outline:3px solid #9b5100!important;outline-offset:3px;}
-.del-status {border-left:3px solid #0e6e78;padding:8px 12px;margin:12px 0;overflow-wrap:anywhere;}
+.btn {min-height:44px;border-radius:8px;font-weight:600;white-space:normal;}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {outline:3px solid var(--del-accent)!important;outline-offset:3px;}
+.form-control,.form-select,.selectize-input {min-height:44px;border-color:#9cabb7;}
+.del-status {border-left:3px solid #9cabb7;padding:8px 12px;margin:12px 0;overflow-wrap:anywhere;}
+.del-status--saved {border-color:var(--del-accent);background:var(--del-accent-soft);color:var(--del-accent);}
+.del-status--attention,.shiny-output-error {border-color:var(--del-warn);color:var(--del-warn);}
+.del-status--attention {background:var(--del-warn-soft);}
 .del-status:has(.shiny-text-output:empty) {border:0;padding:0;margin:0;}
 .del-management:has(> .shiny-html-output:first-child:empty):has(> .del-status .shiny-text-output:empty) {border:0;padding:0;margin:0;background:transparent;}
 .shiny-input-container:has(input[type="checkbox"]) {width:100%;}
-.del-note {color:#506273;font-size:.95rem;}
+.del-note {color:#5b6b7a;font-size:.95rem;}
 .del-actions {display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}
 .del-consent {white-space:pre-wrap;max-width:75ch;}
+footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 .table {display:block;overflow-x:auto;}
 @media(max-width:600px) {.del-wrap{padding:16px 12px}.del-sheet{padding:16px}.shiny-input-container{max-width:100%}h1{font-size:1.7rem}}
 @media(prefers-reduced-motion:reduce) {*{animation:none!important;transition:none!important}}

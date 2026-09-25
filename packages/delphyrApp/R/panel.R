@@ -32,7 +32,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
         shiny::tags$summary(tr(lang(), "Teilnahme beenden", "End participation")),
         shiny::tags$p(tr(lang(), "Dies beendet weitere Antworten und Einladungen in dieser synthetischen Studie. Bereits gespeicherte Daten bleiben erhalten. Dies ist kein L\u00f6schantrag.", "This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.")),
         shiny::checkboxInput(ns("withdraw_confirm"), tr(lang(), "Ich m\u00f6chte meine Teilnahme beenden und verstehe den beschriebenen Datenverbleib.", "I want to end participation and understand the stated data retention."), FALSE),
-        shiny::actionButton(ns("withdraw"), tr(lang(), "Teilnahme verbindlich beenden", "Confirm end of participation"))
+        shiny::actionButton(ns("withdraw"), tr(lang(), "Teilnahme verbindlich beenden", "Confirm end of participation"), class = "btn-outline-danger")
       )
     })
     shiny::observeEvent(input$withdraw, {
@@ -197,7 +197,7 @@ rating_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tags$section(
     class = "del-item", shiny::uiOutput(ns("title")), shiny::uiOutput(ns("prior")), shiny::tableOutput(ns("feedback")), shiny::uiOutput(ns("form")),
-    shiny::actionButton(ns("save"), "Antwort speichern / Save response"), status_ui(ns("status"))
+    shiny::actionButton(ns("save"), "Antwort speichern / Save response", class = "btn-primary"), shiny::uiOutput(ns("save_status"))
   )
 }
 rating_server <- function(id, q, item, lang, call) {
@@ -269,6 +269,11 @@ rating_server <- function(id, q, item, lang, call) {
       list(status = if (is.null(input$kind)) old_status else input$kind, value = if (is.null(input$value)) old_value else input$value)
     })
     dirty <- shiny::reactive(!identical(current(), baseline()))
+    output$save_status <- shiny::renderUI({
+      tone <- if (dirty() || save_failed()) "attention" else if (revision() > 0) "saved" else "neutral"
+      shiny::tags$div(class = paste("del-status", paste0("del-status--", tone)),
+        role = "status", `aria-live` = "polite", shiny::textOutput(session$ns("status")))
+    })
     output$status <- shiny::renderText(if (dirty()) paste(tr(lang(), "Ungespeicherte \u00c4nderung.", "Unsaved change."), if (save_failed()) message() else "") else if (nzchar(message())) message() else if (revision() > 0) tr(lang(), "Gespeicherter Stand", "Saved response") else tr(lang(), "Noch nicht gespeichert", "Not yet saved"))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     shiny::observeEvent(input$save, {

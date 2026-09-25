@@ -1,4 +1,4 @@
-# delphyrApp
+# delphyrApp <img src="inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR dolphin hex logo" />
 
 A focused, bilingual Shiny workspace for **synthetic Delphi studies** in the
 CTTIR suite. Panel members save their own responses and receive a durable
