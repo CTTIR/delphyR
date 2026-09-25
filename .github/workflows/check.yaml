@@ -19,7 +19,7 @@ jobs:
         with:
           use-public-rspm: true
       - name: System dependencies
-        run: sudo apt-get update && sudo apt-get install -y libpq-dev pandoc
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev libuv1-dev pandoc
       - name: R dependencies
         run: Rscript scripts/bootstrap.R
       - name: Unit tests and documentation
