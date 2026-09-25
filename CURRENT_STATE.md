@@ -1,6 +1,10 @@
 # Current state
 
-As of 2026-09-25. Repository CTTIR/delphyR, branch main.
+Live verification: **2026-09-25 12:05 UTC**. Repository `CTTIR/delphyR`, branch `main`.
+Workspace: `/data/GitHub/CTTIR/public/delphyR`.
+Code baseline: `eb42fb6293f12cf052b990b46163623d80bd1a90`, matched `origin/main`
+at inspection with a clean working tree. The subsequent handover commit changes
+documentation only; use `git log -1` for its actual hash.
 `admin/` remains ignored; the original specifications are archived in `docs/spec/`.
 Current English guides document the implementation and its limitations.
 
@@ -36,8 +40,9 @@ editorial review, campaigns, protocol amendments, panel import, and
 permission-filtered navigation. Both package checks passed locally and in hosted
 CI for `0f03ae6`:
 https://github.com/CTTIR/delphyR/actions/runs/36123381681.
-Hosted CI for the current changes is pending; the historical run does not
-validate the current working tree.
+Current code CI **passed** for `eb42fb6293f12cf052b990b46163623d80bd1a90`:
+https://github.com/CTTIR/delphyR/actions/runs/36128911932.
+This is hosted technical validation, not deployment or P1 acceptance.
 
 ## Authentication and limitations
 
@@ -64,3 +69,38 @@ separate owner connection. Private files remain in `.local/`, `.checks/`,
 `HANDOVER.md` lists reproducible commands. Inspect current processes and Git
 status before continuing; do not rely on old process IDs. No external email or
 production use has been authorized.
+
+## Live runtime snapshot
+
+Recheck process identity and ports before changing anything; these PIDs are
+observations, not durable service identifiers.
+
+| Component | Observed state |
+|---|---|
+| Manager demo | PID 1686791, `Rscript scripts/start-demo.R manager`, listening on `127.0.0.1:3849` |
+| Local job/sink worker | PID 1751858, `Rscript scripts/worker.R` |
+| PostgreSQL | `delphyr-dev-postgres`, up, `127.0.0.1:55439` |
+| Authentication sandbox | `delphyr-auth-app`, `-gateway`, `-proxy`, `-keycloak` up; proxy `127.0.0.1:4189`, Keycloak `127.0.0.1:4190` |
+| Panel/QA previews | No listener on 3850 or 3868; trilingual QA server stopped after independent receipt verification |
+
+The authentication containers were not rebuilt for the language/branding commit;
+their running state does not establish that they contain current sources.
+The manager script uses source loading and reuses `.local/demo-fixture.rds`.
+That older fixture may display German titles or lack French instrument wording;
+its approved content is intentionally unchanged. Fresh `demo_study()` fixtures
+include EN/FR/DE. Do not delete fixtures or rewrite approved data to change the UI.
+The local installed package library was built before the final logo replacement;
+reinstall before checking installed-asset identity. Hosted CI checked the final commit.
+
+## Latest user decisions and completed work
+
+- Exact repository/brand spelling: `delphyR`; technical packages: `delphyr` and
+  `delphyrApp`. Documentation is English; UI is EN/FR/DE with English default.
+- Match brainwritR petrol `#0e6e78` and red `#b3372b`. Dolphin badge uses the CTTIR
+  dark hex, restrained illustration and external monospaced wordmark.
+  Canonical shipped asset: `packages/delphyrApp/inst/www/delphyR-hex.png`.
+- Repository description and topics have been updated and verified on GitHub.
+- The language, documentation, metadata and logo requests are implemented and
+  pushed. No code operation remains in progress. Local demo services remain up.
+- The current request is a durable takeover checkpoint. Future product work
+  should start from the open gates, not repeat the completed re-audit.

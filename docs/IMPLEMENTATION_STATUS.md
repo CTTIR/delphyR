@@ -117,3 +117,8 @@ verified separately for each actual commit.
 Synthetic examples and green local tests do not close these gates. `admin/`, data,
 backups and local libraries remain ignored. Entry points: [README](../README.md),
 [operations](operations.md), [HANDOVER](../HANDOVER.md).
+
+Hosted CI confirmation (2026-09-25 12:05 UTC): code commit
+`eb42fb6293f12cf052b990b46163623d80bd1a90` passed
+[run 36128911932](https://github.com/CTTIR/delphyR/actions/runs/36128911932).
+See `CURRENT_STATE.md` and `HANDOVER.md` for the verified takeover checkpoint.
