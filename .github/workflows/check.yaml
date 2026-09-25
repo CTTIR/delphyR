@@ -24,6 +24,8 @@ jobs:
         run: Rscript scripts/bootstrap.R
       - name: Unit tests and documentation
         run: mkdir -p .checks && Rscript scripts/check.R
+      - name: Restricted development database role
+        run: Rscript scripts/configure-dev-role.R
       - name: PostgreSQL contracts
         env:
           DELPHYR_TEST_DB: 'true'
