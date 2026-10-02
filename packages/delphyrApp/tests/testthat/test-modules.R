@@ -425,3 +425,80 @@ test_that("withdrawal needs explicit confirmation and reports the durable receip
     expect_null(q())
   })
 })
+
+management_review_services <- function() stats::setNames(rep(list(function(...) NULL), 7), c("get_capabilities", "get_study_setup", "list_rounds", "transition_round", "get_round_instrument", "get_round_readiness", "enroll_panel"))
+management_review_call <- function(state) {
+  function(name, ...) {
+    state$calls[[length(state$calls) + 1L]] <- list(name, ...)
+    switch(name,
+      get_capabilities = "manage",
+      get_study_setup = list(protocol = list(study = list(timezone = "Europe/Berlin"))),
+      list_rounds = data.frame(id = c("old", "round"), number = c(1L, 1L), state = c("cancelled", state$round_state), instrument_hash = c("old-hash", "listed-hash"), deadline = as.POSIXct("2026-12-01 10:00:00", tz = "UTC")),
+      get_round_instrument = list(
+        round = data.frame(id = "round", number = 1L, state = state$round_state, instrument_hash = "reviewed-hash", deadline = as.POSIXct("2026-12-01 10:00:00", tz = "UTC")),
+        protocol = list(version = 2L, hash = "protocol-hash"), consent = data.frame(id = "consent", locale = "en", content = "Synthetic study information", hash = "h"),
+        items = data.frame(item_code = "I001", item_version = 1L, dimension_code = "relevance", scale_code = "relevance_9", locale = c("de", "en"), text = c("Synthetisches Item", "Synthetic item"), required = TRUE, display_order = 1L, source_ref = "SRC"),
+        enrollments = data.frame(group_code = "professionals", state = "eligible", n = 3L),
+        events = data.frame(target_state = "review", content_hash = "reviewed-hash", reason = "Synthetic review", occurred_at = "2026-10-02 10:00:00+00")
+      ),
+      get_round_readiness = list(valid = !state$blocked, issues = if (state$blocked) {
+        data.frame(severity = c("error", "warning"), code = c("no_enrollments", "group_below_minimum"), path = c("round.enrollments", "panel.groups.professionals"), message_key = "x", details = c("", "professionals: 3 < 10"))
+      } else {
+        data.frame(severity = character(), code = character(), path = character(), message_key = character(), details = character())
+      }),
+      enroll_panel = list(id = "round", added = 2L),
+      transition_round = {
+        if (state$blocked && list(...)[[2]] == "open") stop(structure(list(message = "DEL_VALIDATION round.readiness:no_enrollments", call = NULL, code = "DEL_VALIDATION", path = "round.readiness:no_enrollments"), class = c("DEL_VALIDATION", "delphyr_error", "error", "condition")))
+        list(id = "round", state = list(...)[[2]])
+      },
+      stop("Unexpected service")
+    )
+  }
+}
+
+test_that("approval requires the displayed instrument and binds its exact hash", {
+  state <- new.env()
+  state$calls <- list()
+  state$round_state <- "review"
+  state$blocked <- FALSE
+  shiny::testServer(delphyrApp:::management_server, args = list(study = function() "study", lang = function() "en", call = management_review_call(state), services = management_review_services()), {
+    session$flushReact()
+    expect_match(output$body$html, "Withdrawn (never opened)", fixed = TRUE)
+    session$setInputs(round = "round", target = "approved", reason = "Reviewed", confirm = TRUE, transition = 1)
+    expect_match(output$status, "review this round", fixed = TRUE)
+    expect_false(any(vapply(state$calls, function(x) x[[1]] == "transition_round", logical(1))))
+    session$setInputs(review = 1)
+    expect_match(output$review_panel$html, "Instrument of round 1", fixed = TRUE)
+    expect_match(output$review_panel$html, "Synthetic study information", fixed = TRUE)
+    expect_match(output$review_panel$html, "No findings.", fixed = TRUE)
+    expect_match(output$review_items, "Synthetisches Item", fixed = TRUE)
+    expect_match(output$review_events, "Synthetic review", fixed = TRUE)
+    session$setInputs(transition = 2)
+    done <- Filter(function(x) x[[1]] == "transition_round", state$calls)[[1]]
+    expect_identical(done[2:4], list("round", "approved", "reviewed-hash"))
+    expect_match(output$status, "State change confirmed", fixed = TRUE)
+    expect_null(review())
+  })
+})
+
+test_that("a blocked opening shows the readiness findings instead of a success", {
+  state <- new.env()
+  state$calls <- list()
+  state$round_state <- "approved"
+  state$blocked <- TRUE
+  shiny::testServer(delphyrApp:::management_server, args = list(study = function() "study", lang = function() "en", call = management_review_call(state), services = management_review_services()), {
+    session$flushReact()
+    session$setInputs(round = "round", target = "open", reason = "Open", confirm = TRUE, transition = 1)
+    expect_match(output$status, "not ready yet", fixed = TRUE)
+    expect_match(output$review_readiness, "Blocking", fixed = TRUE)
+    expect_match(output$review_readiness, "No eligible panel member is enrolled.", fixed = TRUE)
+    expect_match(output$review_readiness, "professionals: 3 &lt; 10", fixed = TRUE)
+    session$setInputs(enroll = 1)
+    expect_match(output$status, "Panel members enrolled: 2", fixed = TRUE)
+    # Selecting another round discards the review of the previous one.
+    session$setInputs(round = "old")
+    expect_null(review())
+  })
+  expect_identical(readiness_label(c("deadline_passed", "unknown_code"), "de"), c("Die Frist ist abgelaufen.", "unknown_code"))
+  expect_identical(round_state_label(c("open", "cancelled"), "en"), c("Open", "Withdrawn (never opened)"))
+})

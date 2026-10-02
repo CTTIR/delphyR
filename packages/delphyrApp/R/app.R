@@ -46,7 +46,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       "list_campaign_rounds", "list_campaign_enrollments", "prepare_campaign",
       "preview_campaign", "release_campaign", "cancel_campaign", "list_protocol_versions", "amend_protocol", "withdraw_participation", "preview_panel_import", "import_panel", "get_panel_import_receipt",
       "list_panel_invitations", "register_invited_account", "issue_panel_invitation", "revoke_panel_invitation",
-      "preview_panel_invitation", "accept_panel_invitation"
+      "preview_panel_invitation", "accept_panel_invitation", "get_round_instrument", "get_round_readiness", "enroll_panel"
     )
     services <- stats::setNames(lapply(n, function(x) getExportedValue("delphyr", x)), n)
   }

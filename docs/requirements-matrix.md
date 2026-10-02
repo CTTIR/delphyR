@@ -5,7 +5,7 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | ID | Status | Evidence / boundary |
 |---|---|---|
 | STU-01 | implemented_tested | Immutable history, hash approval, group/scale identity; actual browser protocol upload/diff/approval. |
-| STU-02 | in_progress | Partial functionality; complete P1 gate remains open. |
+| STU-02 | implemented_tested | Readiness findings listed completely; approval/opening refused with concrete codes; PostgreSQL contract tests and Chromium manager journey (ADR-020). |
 | STU-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | PAN-01 | implemented_tested | CSV schema, row errors, duplicates, exact file approval and atomic import; actual browser and rollback test. |
 | PAN-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |

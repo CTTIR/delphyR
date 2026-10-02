@@ -21,7 +21,10 @@ transition_round(
 
 \item{round_id}{Round UUID.}
 
-\item{target}{review, approved, open, closed or finalized.}
+\item{target}{review, approved, open, closed, finalized or cancelled. Approval
+and opening are refused with DEL_VALIDATION while get_round_readiness()
+reports blocking findings. Only a round that was never opened can be
+cancelled; a cancelled round is final and frees its round number.}
 
 \item{expected_hash}{Exact instrument hash shown in review.}
 

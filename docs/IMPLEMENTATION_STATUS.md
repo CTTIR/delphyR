@@ -98,6 +98,27 @@ Details: [validation](validation/2026-09-25.md), [browser QA](../packages/delphy
 No CRAN submission or scientific/clinical validation is claimed. Hosted CI is
 verified separately for each actual commit.
 
+## Progress since the 2026-09-25 checkpoint
+
+Measured on 2026-10-02 against the current sources; each entry names its evidence.
+
+- **Invitation screens and account onboarding** ([invitations](invitations.md)):
+  coordinator registration of a stable issuer/subject account, issuance with a
+  one-time hand-over code, confirmed acceptance, unregistered-account notice.
+  PostgreSQL contracts, module tests and `browser-invitation-postgres.R`.
+- **Automatic saving** ([ADR-019](adr/019-automatic-saving.md)): per-field commit
+  confirmation, deliberate conflict resolution, retry-safe keys, submission with
+  a pending entry. Module tests and `browser-autosave-postgres.R` including a
+  two-tab conflict and connection loss.
+- **Round readiness and lifecycle** ([ADR-020](adr/020-round-lifecycle-and-readiness.md)):
+  blocking findings before approval and opening, exact instrument review,
+  withdrawal of unopened candidates, explicit enrollment of late members.
+  Migration 013, `test-round-lifecycle.R` and `browser-management-postgres.R`.
+
+Hosted CI failed for commit `5bf26c7` at the package check (non-ASCII source
+characters in `R/invitations.R`); the following commit repaired it and both
+packages carry a source-level ASCII test.
+
 ## Remaining P1 work and external gates
 
 - Institutional governance, consent/retention/deletion policies, operator

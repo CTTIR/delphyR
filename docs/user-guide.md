@@ -68,7 +68,19 @@ This is not an institutional deletion policy.
 
 ## Manage rounds and protocols
 
-Review instruments and confirm lifecycle changes with a reason. Freeze a closed
+Select a round and use **Review instrument and readiness**. The review shows the
+study information, every item in each approved language version, enrolled
+members by group, the approval history and the readiness findings. Approval is
+possible only after this exact instrument was displayed and binds its content
+checksum. Blocking findings prevent approval or opening; notes describe a
+foreseeable consequence, for example a required group below the minimum valid n.
+**Enroll eligible panel members** adds members who joined after the round was
+prepared, until the round closes. A candidate that was never opened can be
+withdrawn with a reason; it stays readable, frees its round number, and a
+corrected candidate is prepared as a new round. A round prepared before a
+protocol amendment must be withdrawn and prepared again.
+
+Confirm every lifecycle change with a reason. Freeze a closed
 round before queuing analysis or export for the separate worker. Refresh the
 operation state to obtain completed results. Preview the exact feedback candidate
 before release, then assign released feedback to an unopened next round.

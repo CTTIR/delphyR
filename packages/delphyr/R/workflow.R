@@ -102,6 +102,24 @@ add_panelist <- function(repo, actor, study_id, principal_id, group_code, comman
     })
   })
 }
+# Active panel members who may take part in the given round number under the
+# protocol's entry policy. Withdrawn round candidates never count as rounds.
+eligible_panel <- function(repo, study_id, number, config) {
+  panel <- query(repo, "SELECT p.id,p.group_code FROM research.panelists p JOIN identity.panelist_links l ON l.study_id=p.study_id AND l.panelist_id=p.id JOIN identity.memberships m ON m.study_id=l.study_id AND m.id=l.membership_id JOIN identity.principals a ON a.id=m.principal_id JOIN identity.capabilities c ON c.study_id=m.study_id AND c.membership_id=m.id AND c.capability='panel' AND c.revoked_at IS NULL WHERE p.study_id=$1 AND p.active AND m.active AND a.active ORDER BY p.id", study_id)
+  if (number > 1L) {
+    prior <- query(repo, "SELECT e.panelist_id,r.number,(s.id IS NOT NULL) AS submitted FROM research.enrollments e JOIN research.rounds r ON r.id=e.round_id LEFT JOIN research.submissions s ON s.study_id=e.study_id AND s.enrollment_id=e.id WHERE e.study_id=$1 AND r.number<$2 AND r.state<>'cancelled'", study_id, number)
+    first <- prior$panelist_id[prior$number == 1L]
+    last_submitted <- prior$panelist_id[prior$number == number - 1L & prior$submitted]
+    eligible <- rep(TRUE, nrow(panel))
+    if (!config$panel$late_entry) eligible <- eligible & panel$id %in% first
+    if (!config$panel$return_after_missed_round) {
+      eligible <- eligible &
+        (panel$id %in% last_submitted | (config$panel$late_entry & !panel$id %in% prior$panelist_id))
+    }
+    panel <- panel[eligible, , drop = FALSE]
+  }
+  panel
+}
 #' Prepare a frozen-instrument candidate and enroll active panelists
 #' @param repo Repository.
 #' @param actor Study manager.
@@ -123,11 +141,13 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
     one(query(repo, "SELECT id FROM identity.consent_versions WHERE id=$1 AND study_id=$2", consent_version_id, study_id))
     ensure(scalar_text(deadline) && grepl("(Z|[+-][0-9]{2}:[0-9]{2})$", deadline), "deadline.offset")
     command(repo, actor, study_id, "prepare_round", command_id, list(items, consent_version_id, deadline), function() {
-      number <- query(repo, "SELECT COALESCE(MAX(number),0)+1 AS n FROM research.rounds WHERE study_id=$1", study_id)$n
+      # A withdrawn candidate neither occupies a round number nor blocks its successor.
+      number <- query(repo, "SELECT COALESCE(MAX(number),0)+1 AS n FROM research.rounds WHERE study_id=$1 AND state<>'cancelled'", study_id)$n
       ensure(number <= p$config$stopping$max_rounds, "round.max")
-      if (number > 1) ensure(!nrow(query(repo, "SELECT id FROM research.rounds WHERE study_id=$1 AND state NOT IN ('released','finalized')", study_id)), "round.previous", "DEL_CONFLICT")
+      ensure(!nrow(query(repo, "SELECT id FROM research.rounds WHERE study_id=$1 AND state NOT IN ('released','finalized','cancelled')", study_id)), "round.previous", "DEL_CONFLICT")
       # Reusing a version is allowed only for exactly the same scientific content.
-      previous_items <- query(repo, "SELECT item_code,item_version,dimension_code,scale_code,texts::text,source_ref FROM research.round_items WHERE study_id=$1", study_id)
+      # Withdrawn candidates were never presented and do not bind a version.
+      previous_items <- query(repo, "SELECT i.item_code,i.item_version,i.dimension_code,i.scale_code,i.texts::text,i.source_ref FROM research.round_items i JOIN research.rounds r ON r.study_id=i.study_id AND r.id=i.round_id WHERE i.study_id=$1 AND r.state<>'cancelled'", study_id)
       for (k in unique(paste(items$item_code, items$dimension_code))) {
         z <- items[paste(items$item_code, items$dimension_code) == k, , drop = FALSE]
         old <- previous_items[previous_items$item_code == z$item_code[1] &
@@ -153,20 +173,9 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
         a <- z[1, ]
         execute(repo, "INSERT INTO research.round_items VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11)", uid(), study_id, id, a$item_code, a$item_version, a$dimension_code, a$scale_code, json(texts), a$required, a$display_order, a$source_ref)
       }
-      panel <- query(repo, "SELECT p.id,p.group_code FROM research.panelists p JOIN identity.panelist_links l ON l.study_id=p.study_id AND l.panelist_id=p.id JOIN identity.memberships m ON m.study_id=l.study_id AND m.id=l.membership_id JOIN identity.principals a ON a.id=m.principal_id JOIN identity.capabilities c ON c.study_id=m.study_id AND c.membership_id=m.id AND c.capability='panel' AND c.revoked_at IS NULL WHERE p.study_id=$1 AND p.active AND m.active AND a.active", study_id)
-      if (number > 1L) {
-        prior <- query(repo, "SELECT e.panelist_id,r.number,(s.id IS NOT NULL) AS submitted FROM research.enrollments e JOIN research.rounds r ON r.id=e.round_id LEFT JOIN research.submissions s ON s.study_id=e.study_id AND s.enrollment_id=e.id WHERE e.study_id=$1 AND r.number<$2", study_id, number)
-        first <- prior$panelist_id[prior$number == 1L]
-        last_submitted <- prior$panelist_id[prior$number == number - 1L & prior$submitted]
-        eligible <- rep(TRUE, nrow(panel))
-        if (!p$config$panel$late_entry) eligible <- eligible & panel$id %in% first
-        if (!p$config$panel$return_after_missed_round) {
-          eligible <- eligible &
-            (panel$id %in% last_submitted | (p$config$panel$late_entry & !panel$id %in% prior$panelist_id))
-        }
-        panel <- panel[eligible, , drop = FALSE]
-      }
-      ensure(nrow(panel) > 0, "round.panel")
+      # Opening, not preparation, requires enrolled panel members: the
+      # instrument can be reviewed while recruitment is still under way.
+      panel <- eligible_panel(repo, study_id, number, p$config)
       ensure(all(panel$group_code %in% unlist(p$config$panel$groups)), "round.panel_groups", "DEL_CONFLICT")
       for (i in seq_len(nrow(panel))) execute(repo, "INSERT INTO research.enrollments(id,study_id,round_id,panelist_id,group_code) VALUES($1,$2,$3,$4,$5)", uid(), study_id, id, panel$id[i], panel$group_code[i])
       list(id = id, hash = h)
@@ -177,7 +186,10 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
 #' @param repo Repository.
 #' @param actor Study manager.
 #' @param round_id Round UUID.
-#' @param target review, approved, open, closed or finalized.
+#' @param target review, approved, open, closed, finalized or cancelled. Approval
+#'   and opening are refused with DEL_VALIDATION while get_round_readiness()
+#'   reports blocking findings. Only a round that was never opened can be
+#'   cancelled; a cancelled round is final and frees its round number.
 #' @param expected_hash Exact instrument hash shown in review.
 #' @param reason Nonempty human rationale.
 #' @param command_id Idempotency key.
@@ -189,9 +201,13 @@ transition_round <- function(repo, actor, round_id, target, expected_hash, reaso
     ensure(scalar_text(reason), "reason")
     command(repo, actor, r$study_id, "transition_round", command_id, list(round_id, target, expected_hash, reason), function() {
       ensure(identical(r$instrument_hash, expected_hash), "round.hash", "DEL_CONFLICT")
-      allowed <- list(review = "draft", approved = "review", open = "approved", closed = "open", finalized = c("analysed", "released"))
+      allowed <- list(review = "draft", approved = "review", open = "approved", closed = "open", finalized = c("analysed", "released"), cancelled = c("draft", "review", "approved"))
       ensure(target %in% names(allowed) && r$state %in% allowed[[target]], "round.transition", "DEL_CONFLICT")
       if (target == "open") ensure(isTRUE(one(query(repo, "SELECT deadline>clock_timestamp() AS ok FROM research.rounds WHERE id=$1", r$id))$ok), "round.deadline", "DEL_ROUND_CLOSED")
+      if (target %in% c("approved", "open")) {
+        blocking <- readiness_blocking(round_readiness(repo, r), target)
+        if (length(blocking)) del_abort("DEL_VALIDATION", paste0("round.readiness:", paste(blocking, collapse = ",")))
+      }
       execute(repo, "UPDATE research.rounds SET state=$2,closed_at=CASE WHEN $2='closed' THEN clock_timestamp() ELSE closed_at END WHERE id=$1", round_id, target)
       execute(repo, "INSERT INTO research.round_events(id,study_id,round_id,target_state,content_hash,actor_id,reason) VALUES($1,$2,$3,$4,$5,$6,$7)", uid(), r$study_id, r$id, target, expected_hash, actor$principal_id, reason)
       if (target == "open") execute(repo, "UPDATE research.studies SET state='active' WHERE id=$1 AND state='draft'", r$study_id)
@@ -314,5 +330,142 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
 #' @export
 list_enrollments <- function(repo, actor, study_id) {
   m <- authorize(repo, actor, study_id, "panel")
-  query(repo, "SELECT e.id,e.state,r.number,r.state AS round_state FROM research.enrollments e JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN research.rounds r ON r.id=e.round_id WHERE e.study_id=$1 AND l.membership_id=$2 ORDER BY r.number", study_id, m)
+  query(repo, "SELECT e.id,e.state,r.number,r.state AS round_state FROM research.enrollments e JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN research.rounds r ON r.id=e.round_id WHERE e.study_id=$1 AND l.membership_id=$2 AND r.state<>'cancelled' ORDER BY r.number", study_id, m)
+}
+# Findings that decide whether a round may be approved or opened. Content
+# findings block approval; opening additionally needs time and participants.
+round_readiness <- function(repo, r) {
+  # Query parameters are evaluated lazily after a statement is sent; the round
+  # must already be resolved so that no query starts inside another.
+  force(r)
+  issues <- list()
+  add <- function(severity, code, path, details = "") {
+    issues[[length(issues) + 1L]] <<- data.frame(severity = severity, code = code, path = path, message_key = paste0("readiness.", code), details = as.character(details), stringsAsFactors = FALSE)
+  }
+  finish <- function() {
+    table <- if (length(issues)) do.call(rbind, issues) else data.frame(severity = character(), code = character(), path = character(), message_key = character(), details = character(), stringsAsFactors = FALSE)
+    structure(list(valid = !any(table$severity == "error"), issues = table, schema_version = "1.0"), class = "delphyr_validation")
+  }
+  study <- one(query(repo, "SELECT state FROM research.studies WHERE id=$1", r$study_id))
+  if (!study$state %in% c("draft", "active")) add("error", "study_not_active", "study.state", study$state)
+  latest <- one(query(repo, "SELECT id,version FROM research.protocol_versions WHERE study_id=$1 ORDER BY version DESC LIMIT 1", r$study_id))
+  own <- one(query(repo, "SELECT version,config::text FROM research.protocol_versions WHERE id=$1", r$protocol_id))
+  if (!identical(latest$id, r$protocol_id)) add("error", "protocol_superseded", "round.protocol", paste0("round: version ", own$version, "; current: version ", latest$version))
+  protocol <- tryCatch(new_protocol(from_json(own$config)), error = function(e) e)
+  if (inherits(protocol, "error")) {
+    add("error", "protocol_invalid", if (inherits(protocol, "delphyr_error")) protocol$path else "protocol")
+    return(finish())
+  }
+  languages <- unlist(protocol$study$languages)
+  consent <- one(query(repo, "SELECT locale FROM identity.consent_versions WHERE id=$1", r$consent_version_id))
+  if (!consent$locale %in% languages) add("error", "consent_language", "round.consent", consent$locale)
+  items <- query(repo, "SELECT item_code,dimension_code,scale_code,texts::text FROM research.round_items WHERE study_id=$1 AND round_id=$2 ORDER BY display_order,item_code,dimension_code", r$study_id, r$id)
+  if (!nrow(items)) add("error", "no_items", "round.items")
+  dims <- setNames(vapply(protocol$instrument$dimensions, `[[`, character(1), "scale"), vapply(protocol$instrument$dimensions, `[[`, character(1), "code"))
+  for (i in seq_len(nrow(items))) {
+    path <- paste("items", items$item_code[i], items$dimension_code[i], sep = ".")
+    if (!items$dimension_code[i] %in% names(dims) || !identical(unname(dims[items$dimension_code[i]]), items$scale_code[i])) add("error", "dimension_unknown", path, items$scale_code[i])
+    missing <- setdiff(languages, names(from_json(items$texts[i])))
+    if (length(missing)) add("error", "translation_missing", path, paste(missing, collapse = ","))
+  }
+  if (!isTRUE(one(query(repo, "SELECT deadline>clock_timestamp() AS ok FROM research.rounds WHERE id=$1", r$id))$ok)) add("error", "deadline_passed", "round.deadline")
+  enrolled <- query(repo, "SELECT e.panelist_id,e.group_code FROM research.enrollments e JOIN research.panelists p ON p.study_id=e.study_id AND p.id=e.panelist_id JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN identity.memberships m ON m.study_id=l.study_id AND m.id=l.membership_id JOIN identity.principals a ON a.id=m.principal_id JOIN identity.capabilities c ON c.study_id=m.study_id AND c.membership_id=m.id AND c.capability='panel' AND c.revoked_at IS NULL WHERE e.study_id=$1 AND e.round_id=$2 AND e.state IN ('eligible','in_progress') AND p.active AND m.active AND a.active", r$study_id, r$id)
+  if (!nrow(enrolled)) add("error", "no_enrollments", "round.enrollments")
+  rule <- protocol$analysis$consensus
+  if (nrow(enrolled)) {
+    if (identical(rule$group_policy, "all_required_groups")) {
+      for (g in unlist(protocol$panel$groups)) {
+        n <- sum(enrolled$group_code == g)
+        if (n < rule$min_valid_n) add("warning", "group_below_minimum", paste0("panel.groups.", g), paste0(g, ": ", n, " < ", rule$min_valid_n))
+      }
+    } else if (nrow(enrolled) < rule$min_valid_n) {
+      add("warning", "panel_below_minimum", "panel", paste0(nrow(enrolled), " < ", rule$min_valid_n))
+    }
+  }
+  if (r$state %in% c("draft", "review", "approved", "open")) {
+    everyone <- query(repo, "SELECT panelist_id FROM research.enrollments WHERE study_id=$1 AND round_id=$2", r$study_id, r$id)$panelist_id
+    waiting <- sum(!eligible_panel(repo, r$study_id, r$number, protocol)$id %in% everyone)
+    if (waiting > 0) add("warning", "panelists_not_enrolled", "round.enrollments", waiting)
+  }
+  if (r$number > 1L && !nrow(query(repo, "SELECT 1 AS x FROM research.feedback_assignments WHERE study_id=$1 AND round_id=$2 LIMIT 1", r$study_id, r$id))) {
+    add("warning", "feedback_unassigned", "round.feedback")
+  }
+  finish()
+}
+readiness_blocking <- function(readiness, target) {
+  codes <- unique(readiness$issues$code[readiness$issues$severity == "error"])
+  if (identical(target, "approved")) codes <- setdiff(codes, c("deadline_passed", "no_enrollments"))
+  codes
+}
+#' Review whether a round may be approved or opened
+#'
+#' Reports every finding at once instead of failing on the first. Errors block
+#' the transition; warnings describe a foreseeable methodological consequence,
+#' such as a required group below the minimum valid n, and leave the decision
+#' to the study team.
+#' @param repo Repository.
+#' @param actor Study manager.
+#' @param round_id Round UUID.
+#' @return delphyr_validation: valid, issues (severity, code, path,
+#'   message_key, details) and schema_version. Approval ignores the
+#'   deadline_passed and no_enrollments findings; opening requires none.
+#' @export
+get_round_readiness <- function(repo, actor, round_id) {
+  transaction(repo, function() {
+    r <- round_get(repo, actor, round_id, "manage")
+    round_readiness(repo, r)
+  })
+}
+#' Read the exact instrument of a round for review
+#' @inheritParams get_round_readiness
+#' @return Round number, state, deadline, content hash, protocol version,
+#'   study information and every item with all approved language versions.
+#'   Contains no panel identities or responses.
+#' @export
+get_round_instrument <- function(repo, actor, round_id) {
+  transaction(repo, function() {
+    r <- round_get(repo, actor, round_id, "manage")
+    protocol <- one(query(repo, "SELECT version,hash,config::text FROM research.protocol_versions WHERE id=$1", r$protocol_id))
+    list(
+      round = r[, c("id", "number", "state", "instrument_hash", "deadline"), drop = FALSE],
+      protocol = list(version = protocol$version, hash = protocol$hash, config = from_json(protocol$config)),
+      consent = one(query(repo, "SELECT id,locale,content,hash FROM identity.consent_versions WHERE id=$1", r$consent_version_id)),
+      items = query(repo, "SELECT i.item_code,i.item_version,i.dimension_code,i.scale_code,t.key AS locale,t.value AS text,i.required,i.display_order,i.source_ref FROM research.round_items i CROSS JOIN LATERAL jsonb_each_text(i.texts) t WHERE i.study_id=$1 AND i.round_id=$2 ORDER BY i.display_order,i.item_code,i.dimension_code,t.key", r$study_id, r$id),
+      enrollments = query(repo, "SELECT group_code,state,count(*)::int AS n FROM research.enrollments WHERE study_id=$1 AND round_id=$2 GROUP BY group_code,state ORDER BY group_code,state", r$study_id, r$id),
+      events = query(repo, "SELECT target_state,content_hash,reason,occurred_at::text AS occurred_at FROM research.round_events WHERE study_id=$1 AND round_id=$2 ORDER BY occurred_at", r$study_id, r$id)
+    )
+  })
+}
+#' Enroll eligible panel members who joined after a round was prepared
+#'
+#' Applies the round's protocol entry policy and each member's current
+#' stakeholder group. Enrollment is possible until the round closes. Feedback
+#' already assigned to an unopened round is assigned to the new enrollments as
+#' well; an open round with assigned feedback accepts no further enrollment, so
+#' that everyone rating in a round has the same information.
+#' @inheritParams get_round_readiness
+#' @param command_id Idempotency key.
+#' @return Round UUID and the number of enrollments added.
+#' @export
+enroll_panel <- function(repo, actor, round_id, command_id) {
+  transaction(repo, function() {
+    r <- round_get(repo, actor, round_id, "manage", " FOR UPDATE")
+    command(repo, actor, r$study_id, "enroll_panel", command_id, list(round_id), function() {
+      ensure(r$state %in% c("draft", "review", "approved", "open"), "round.state", "DEL_CONFLICT")
+      one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active')", r$study_id))
+      config <- new_protocol(from_json(one(query(repo, "SELECT config::text FROM research.protocol_versions WHERE id=$1", r$protocol_id))$config))
+      panel <- eligible_panel(repo, r$study_id, r$number, config)
+      enrolled <- query(repo, "SELECT panelist_id FROM research.enrollments WHERE study_id=$1 AND round_id=$2", r$study_id, r$id)$panelist_id
+      panel <- panel[!panel$id %in% enrolled, , drop = FALSE]
+      ensure(all(panel$group_code %in% unlist(config$panel$groups)), "round.panel_groups", "DEL_CONFLICT")
+      feedback <- query(repo, "SELECT DISTINCT feedback_id FROM research.feedback_assignments WHERE study_id=$1 AND round_id=$2", r$study_id, r$id)$feedback_id
+      if (nrow(panel) && length(feedback)) ensure(r$state != "open" && length(feedback) == 1L, "enrollment.feedback_locked", "DEL_CONFLICT")
+      for (i in seq_len(nrow(panel))) {
+        id <- uid()
+        execute(repo, "INSERT INTO research.enrollments(id,study_id,round_id,panelist_id,group_code) VALUES($1,$2,$3,$4,$5)", id, r$study_id, r$id, panel$id[i], panel$group_code[i])
+        if (length(feedback)) execute(repo, "INSERT INTO research.feedback_assignments VALUES($1,$2,$3,$4)", r$study_id, r$id, id, feedback)
+      }
+      list(id = r$id, added = nrow(panel))
+    })
+  })
 }

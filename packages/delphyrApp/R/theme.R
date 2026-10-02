@@ -30,6 +30,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .del-note {color:#5b6b7a;font-size:.95rem;}
 .del-actions {display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}
 .del-consent {white-space:pre-wrap;max-width:75ch;}
+.del-review {border-top:1px solid var(--del-line);border-bottom:1px solid var(--del-line);padding:8px 0 16px;margin:16px 0;}
+.del-review h4 {font-size:1.05rem;margin-top:18px;}
 .del-code {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;overflow-wrap:anywhere;resize:none;}
 footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 .table {display:block;overflow-x:auto;}
@@ -66,7 +68,7 @@ round_display <- function(rounds, language, timezone = "UTC") {
   }
   out <- data.frame(
     round = rounds$number,
-    state = state_label(rounds$state, language),
+    state = round_state_label(rounds$state, language),
     deadline = paste(format(deadline, "%Y-%m-%d %H:%M %z", tz = timezone), timezone),
     stringsAsFactors = FALSE
   )

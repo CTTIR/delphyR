@@ -11,16 +11,18 @@ connect_repository <- function(..., environment = c("development", "test"), arti
   structure(list(con = con, environment = environment, artifact_root = artifact_root), class = "delphyr_repository")
 }
 query <- function(repo, sql, ...) {
+  # Parameters are evaluated before the statement is sent: a lazily evaluated
+  # argument that itself runs a query must never start inside an open result.
+  params <- list(...)
   result <- DBI::dbSendQuery(repo$con, sql)
   on.exit(DBI::dbClearResult(result))
-  params <- list(...)
   if (length(params)) DBI::dbBind(result, params)
   DBI::dbFetch(result)
 }
 execute <- function(repo, sql, ...) {
+  params <- list(...)
   result <- DBI::dbSendStatement(repo$con, sql)
   on.exit(DBI::dbClearResult(result))
-  params <- list(...)
   if (length(params)) DBI::dbBind(result, params)
   DBI::dbGetRowsAffected(result)
 }
@@ -121,7 +123,7 @@ command <- function(repo, actor, study, type, key, payload, fun) {
     qualitative_source = "edit", qualitative_edit = "edit", qualitative_release = "manage",
     qualitative_theme = "edit", qualitative_code = "edit", qualitative_item_source = "edit",
     qualitative_lineage = "manage", campaign_prepare = "coordinate",
-    campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_account = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage"
+    campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_account = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage", enroll_panel = "manage"
   )[[type]]
   authorize(repo, actor, study, capability)
   h <- content_hash(payload)

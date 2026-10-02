@@ -15,6 +15,7 @@
 - English package guides and executable offline analysis vignette; authored study content retains its language.
 - Invitation issuance, account onboarding and confirmed acceptance in the interface, with a one-time hand-over code.
 - Automatic saving of settled responses with per-field commit confirmation, deliberate conflict resolution and retry-safe keys.
+- Round readiness findings that block approval or opening, exact instrument review, withdrawal of unopened round candidates and explicit enrollment of late panel members.
 
 This is a development version using synthetic data, not acceptance of the complete P1 platform.
 

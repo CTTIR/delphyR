@@ -317,3 +317,43 @@ Load the saved response and discard my entry	Charger la réponse enregistrée et
 Saved response loaded.	Réponse enregistrée chargée.
 Save each response field explicitly. Saving is not automatic.	Enregistrez explicitement chaque champ de réponse. L’enregistrement n’est pas automatique.
 Enter text or select another response type.	Saisissez un texte ou sélectionnez un autre type de réponse.
+Review instrument and readiness	Examiner l’instrument et l’état de préparation
+Enroll eligible panel members	Inscrire les membres admissibles du panel
+Display and review this round’s instrument before approving it.	Affichez et examinez l’instrument de ce tour avant de l’approuver.
+The round is not ready yet. The readiness review lists the findings.	Le tour n’est pas encore prêt. L’examen de préparation en énumère les constats.
+Panel members enrolled:	Membres du panel inscrits :
+Instrument of round	Instrument du tour
+Protocol version	Version du protocole
+Items in every approved language version	Items dans chaque version linguistique approuvée
+Enrolled panel members	Membres du panel inscrits
+Readiness review	Examen de préparation
+No findings.	Aucun constat.
+Approval history and technical details	Historique des approbations et détails techniques
+Content checksum:	Somme de contrôle du contenu :
+Item	Item
+Dimension	Dimension
+Wording	Libellé
+Requirement	Exigence
+Count	Nombre
+Blocking	Bloquant
+Note	Remarque
+Severity	Gravité
+Finding	Constat
+Detail	Détail
+Transition	Transition
+Time (UTC)	Heure (UTC)
+Withdrawn (never opened)	Retiré (jamais ouvert)
+The study is not in a state that allows data collection.	L’étude n’est pas dans un état permettant la collecte de données.
+The round was prepared under an earlier protocol version. Withdraw it and prepare a new round under the current protocol.	Le tour a été préparé sous une version antérieure du protocole. Retirez-le et préparez un nouveau tour sous le protocole actuel.
+The round’s protocol no longer validates.	Le protocole du tour n’est plus valide.
+The study information is not in one of the protocol languages.	L’information sur l’étude n’est rédigée dans aucune des langues du protocole.
+The round has no items.	Le tour ne contient aucun item.
+An item uses a dimension or scale that the protocol does not define.	Un item utilise une dimension ou une échelle que le protocole ne définit pas.
+An item lacks an approved language version.	Il manque à un item une version linguistique approuvée.
+The deadline has passed.	La date limite est dépassée.
+No eligible panel member is enrolled.	Aucun membre admissible du panel n’est inscrit.
+A required group has fewer enrolled members than the minimum valid n; its results would be insufficient data.	Un groupe requis compte moins de membres inscrits que le n valide minimal ; ses résultats seraient des données insuffisantes.
+Fewer members are enrolled than the minimum valid n; results would be insufficient data.	Moins de membres sont inscrits que le n valide minimal ; les résultats seraient des données insuffisantes.
+Eligible panel members are not yet enrolled in this round.	Des membres admissibles du panel ne sont pas encore inscrits à ce tour.
+No released feedback is assigned to this round.	Aucun retour publié n’est attribué à ce tour.
+This transition is not possible in the round’s current state, or the round has changed in the meantime.	Cette transition n’est pas possible dans l’état actuel du tour, ou le tour a été modifié entre-temps.

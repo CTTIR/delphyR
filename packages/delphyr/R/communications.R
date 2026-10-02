@@ -136,6 +136,9 @@ campaign_recipient_reason <- function(repo, c, enrollment_id) {
   if (!e$study_state %in% c("draft", "active", "completed")) {
     return("study_inactive")
   }
+  if (identical(e$round_state, "cancelled")) {
+    return("round_cancelled")
+  }
   cap <- query(repo, "SELECT capability FROM identity.capabilities WHERE study_id=$1 AND membership_id=$2 AND capability='panel' AND revoked_at IS NULL", c$study_id, e$membership_id)
   if (!nrow(cap)) {
     return("panel_right_revoked")
@@ -197,7 +200,7 @@ process_campaign_sink <- function(repo, study_id = NULL, lease_seconds = 30L) {
 #' @export
 list_campaign_rounds <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "coordinate")
-  query(repo, "SELECT id,number,state FROM research.rounds WHERE study_id=$1 ORDER BY number", study_id)
+  query(repo, "SELECT id,number,state FROM research.rounds WHERE study_id=$1 AND state<>'cancelled' ORDER BY number", study_id)
 }
 
 #' Preview eligible campaign selection fields without contacts or answers

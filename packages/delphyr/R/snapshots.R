@@ -176,7 +176,7 @@ get_feedback <- function(repo, actor, enrollment_id) {
 #' @export
 list_rounds <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "manage")
-  query(repo, "SELECT r.id,r.number,r.state,r.instrument_hash,r.deadline,s.id AS snapshot_id,(SELECT a.id FROM research.analyses a WHERE a.snapshot_id=s.id ORDER BY a.id LIMIT 1) AS analysis_id FROM research.rounds r LEFT JOIN research.snapshots s ON s.round_id=r.id WHERE r.study_id=$1 ORDER BY r.number", study_id)
+  query(repo, "SELECT r.id,r.number,r.state,r.instrument_hash,r.deadline,s.id AS snapshot_id,(SELECT a.id FROM research.analyses a WHERE a.snapshot_id=s.id ORDER BY a.id LIMIT 1) AS analysis_id FROM research.rounds r LEFT JOIN research.snapshots s ON s.round_id=r.id WHERE r.study_id=$1 ORDER BY r.number,(r.state<>'cancelled'),r.id", study_id)
 }
 #' Record a human decision separately from analytic classification
 #' @param repo Repository.
@@ -239,7 +239,7 @@ complete_study <- function(repo, actor, study_id, reason, command_id) {
     ensure(scalar_text(reason), "completion.reason")
     command(repo, actor, study_id, "complete_study", command_id, list(reason), function() {
       ensure(s$state == "active", "study.state", "DEL_CONFLICT")
-      r <- one(query(repo, "SELECT id,state FROM research.rounds WHERE study_id=$1 ORDER BY number DESC LIMIT 1", study_id))
+      r <- one(query(repo, "SELECT id,state FROM research.rounds WHERE study_id=$1 AND state<>'cancelled' ORDER BY number DESC LIMIT 1", study_id))
       ensure(r$state == "finalized", "completion.round", "DEL_CONFLICT")
       unresolved <- query(repo, "SELECT DISTINCT i.item_code FROM research.round_items i WHERE i.round_id=$1 AND NOT EXISTS (SELECT 1 FROM research.decisions d JOIN research.analyses a ON a.id=d.analysis_id JOIN research.snapshots sn ON sn.id=a.snapshot_id WHERE d.study_id=i.study_id AND d.item_code=i.item_code AND sn.round_id=i.round_id)", r$id)
       ensure(nrow(unresolved) == 0, "completion.decisions")

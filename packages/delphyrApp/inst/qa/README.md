@@ -320,3 +320,26 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-autosave-postgr
 (`autosave_ms = 0`) because the earlier scripts check pending and explicitly
 saved states; set `DELPHYR_QA_AUTOSAVE_MS` to change that host. This remains a
 narrow tested scenario on one browser, not an offline editor.
+
+## Study management: review, readiness, enrollment and withdrawal
+
+`browser-management-postgres.R` starts its own manager host and passed on
+2 October 2026 in Chromium against PostgreSQL with the restricted runtime role:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-management-postgres.R
+```
+
+- Approval was refused until the instrument of the selected round had been
+  displayed. The review showed the study information, both items in English,
+  French and German, the content checksum and the readiness notes.
+- A panel member added after preparation was enrolled explicitly; the round was
+  then approved and opened. Round events recorded each transition with its
+  reason and the reviewed checksum. Withdrawing the opened round was refused.
+- In a study without participants, content approval succeeded, opening was
+  refused, and the blocking finding was displayed. The candidate was withdrawn;
+  its three events remained and a new candidate received round number 1.
+- No Shiny output error and no horizontal overflow at 390 and 1280 pixels.
+
+This script covers the round lifecycle controls. Analysis, feedback, export and
+study completion in the browser are recorded separately.

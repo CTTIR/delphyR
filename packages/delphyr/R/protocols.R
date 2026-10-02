@@ -43,7 +43,7 @@ amend_protocol <- function(repo, actor, study_id, protocol, expected_hash, reaso
       }
       active_groups <- query(repo, "SELECT DISTINCT group_code FROM research.panelists WHERE study_id=$1 AND active", study_id)$group_code
       ensure(all(active_groups %in% unlist(protocol$panel$groups)), "protocol.active_panel_groups", "DEL_CONFLICT")
-      max_round <- query(repo, "SELECT COALESCE(MAX(number),0) AS n FROM research.rounds WHERE study_id=$1", study_id)$n
+      max_round <- query(repo, "SELECT COALESCE(MAX(number),0) AS n FROM research.rounds WHERE study_id=$1 AND state<>'cancelled'", study_id)$n
       ensure(protocol$stopping$max_rounds >= max_round, "protocol.existing_rounds")
       hash <- content_hash(protocol)
       ensure(!identical(hash, old$hash), "protocol.unchanged", "DEL_CONFLICT")
