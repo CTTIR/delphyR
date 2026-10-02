@@ -69,7 +69,7 @@ def record(mode):
  evidence['passed']=all(evidence['checks'].values())
  evidence['commit']=subprocess.run(['git','rev-parse','HEAD'],cwd=root,capture_output=True,text=True).stdout.strip()
  # The image is built from the packages; documentation may differ from the commit.
- evidence['sources_match_commit']=subprocess.run(['git','status','--porcelain','--','packages','deploy','scripts'],cwd=root,capture_output=True,text=True).stdout.strip()==''
+ evidence['sources_match_commit']=subprocess.run(['git','status','--porcelain','--','packages','deploy','scripts',':(exclude)*.md'],cwd=root,capture_output=True,text=True).stdout.strip()==''
  evidence['executed_at']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
  path=private/'qualification.json'
  history=json.loads(path.read_text()) if path.exists() else {}
