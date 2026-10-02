@@ -44,8 +44,39 @@ in the database sink only:
 Rscript scripts/worker.R
 ```
 
+The worker reports that it is alive every ten seconds under the name in
+`DELPHYR_WORKER_ID` (default `worker-1`); give every worker of an installation
+its own name.
+
 Stop each process with `Ctrl+C`. Stopping an app does not delete its database.
 Libraries, fixtures, logs and private artifacts are ignored by Git.
+
+## Status, housekeeping and runbooks
+
+```sh
+Rscript scripts/status.R                    # JSON; exit 0 ready, 1 not ready, 2 no database
+Rscript scripts/artifact-cleanup.R          # dry run: exports past their download period
+Rscript scripts/artifact-cleanup.R --apply  # remove their files and record the time
+Rscript scripts/hold-messages.R             # after a restore: count messages that waited for delivery
+Rscript scripts/hold-messages.R --apply     # hold them for the coordinator's decision
+```
+
+The status lists the schema state, workers with the seconds since they were
+last seen, waiting and failed background work by state and age, uncertain
+deliveries and exports. It holds counts and ages only. The
+[runbooks](runbooks/README.md) say what to do for each entry under `attention`
+and for the incidents an operator has to expect. What the software stores, for
+how long, and what it never removes by itself is described under
+[retention](governance/retention.md).
+
+## Several application processes
+
+A process serves the sessions it holds one request at a time. The
+[load qualification](load.md) gives the planning value for this hardware:
+one process for every eight people rating at the same time. What several
+processes need from the gateway and from storage, and what was checked with
+one, two and three processes, is described under
+[authentication](authentication.md#several-application-processes).
 
 ## Per-session connections and identities
 
@@ -83,13 +114,22 @@ PostgreSQL snapshot and uses it for both `pg_dump` and comparison data. Concurre
 new commits therefore do not change the expected backup contents.
 
 It starts a uniquely named temporary PostgreSQL container using the source image,
-with no Docker network or published ports. Access uses `docker exec`.
-`pg_restore` runs in one transaction with error-stop enabled. Checks cover:
+with no Docker network or published ports. Access uses `docker exec` and the
+local socket of that instance, whose directory lies inside the private result
+directory. `pg_restore` runs in one transaction with error-stop enabled.
+Checks cover:
 
 - Row counts and fingerprints in `identity`, `research` and `ops`.
 - Columns, constraints, custom triggers and functions.
 - Migration versions/checksums against local SQL files.
 - Frozen snapshot IDs, hashes and JSON.
+- The restored database in use (`scripts/restore-verify.R`): no migration is
+  pending, the restricted application role is set up anew, the status reports
+  the schema as current, every message that waited for delivery is put on hold
+  and a worker step sends nothing, a synthetic panel member reads the own
+  round and its stored answers, staff read the rounds, and every frozen
+  snapshot of one study is rebuilt, verified against its hash and analysed
+  again with the recorded result.
 
 At least one frozen synthetic snapshot is required; the two-round demo creates
 one. An empty schema is insufficient recovery evidence.
@@ -109,23 +149,28 @@ Each run creates a private `.checks/restore-*` directory containing `database.du
 `status: PASS`, image ID, dump SHA-256 and scope. Previous evidence is retained.
 Only the script's own temporary restore container and volume are removed.
 
-Without `DELPHYR_RESTORE_STUDY`, the receipt proves synthetic database recovery,
-not artifact-byte recovery. With it, the selected study's registered artifacts
-and offline reproduction are included. Read the exact scope in `result.json`.
-OIDC, SMTP, operating configuration, keys, production roles, point-in-time recovery
-and guaranteed RPO/RTO are excluded. Full operational acceptance requires separate
-evidence under the [archived acceptance requirements](spec/26_ACCEPTANCE_AND_RELEASE.md).
+Without `DELPHYR_RESTORE_STUDY`, the receipt proves synthetic database recovery
+and its use by the services, not artifact-byte recovery; the function check
+then takes the study whose round was closed last. With it, the selected
+study's registered artifacts and offline reproduction are included. Read the
+exact scope in `result.json`. The sign-in through the gateway on the restored
+instance, SMTP, operating configuration, keys, production roles, point-in-time
+recovery and guaranteed RPO/RTO are excluded. The steps of a real restore are
+in the [runbook](runbooks/backup-and-restore.md).
 
-## Limited load evidence
+## Load
+
+The [load qualification](load.md) measures 50 browser sessions that rate a
+round of specification size, with the capacity found per application process.
 
 ```sh
 DELPHYR_TEST_DB=true Rscript scripts/load-check.R
 ```
 
-Independent processes use runtime connections and reload confirmed saves. This
-measures the local service/database path, excluding browsers, internet latency,
-TLS, OIDC and assistive technology. Results apply to the measured environment;
-they are not a general capacity promise.
+This smaller check measures the service and database path alone: independent
+processes use runtime connections and reload confirmed saves, without
+browsers. Results apply to the measured environment; they are not a general
+capacity promise.
 
 ## Technical log and references
 

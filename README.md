@@ -82,15 +82,21 @@ The separate worker processes analysis, exports, and approved local message rece
 
 Each demo instance uses one fixed server identity. Session-specific repository
 and identity factories are available for trusted hosts; they do not themselves
-implement a login system. A local OIDC gateway has separate qualification
-[evidence and limits](docs/authentication.md). The stock Shiny Server OSS
-identity-header path and production deployment remain unqualified.
+implement a login system. Behind a local OIDC gateway (Keycloak, OAuth2 Proxy,
+nginx) the directly served application was qualified with one, two and three
+application processes, session lifetimes and sign-out
+([authentication](docs/authentication.md)). One process serves about eight
+people rating at the same time ([load qualification](docs/load.md)). The stock
+Shiny Server OSS identity-header path and production deployment remain
+unqualified.
 
 ## Study workflows
 
 - **Panel:** no preselected rating, automatic saving with per-field commit
-  confirmation, revision conflict checks, deliberate submission, and a durable receipt. Released feedback includes only
-  the participant's own previous responses alongside approved aggregates.
+  confirmation, revision conflict checks, long rounds in blocks with an
+  overview, keyboard operation, deliberate submission and a durable receipt.
+  Released feedback includes only the participant's own previous responses
+  alongside approved aggregates.
 - **Management:** study creation from a reviewed protocol, study information,
   staff rights, exact instrument review with readiness findings, round
   transitions, future-round protocol amendments, queued analysis and exports,
@@ -135,8 +141,12 @@ The manifest records the renderer and checksums every delivered file.
 - [Protocol amendments](docs/protocol-amendments.md), [panel import](docs/panel-import.md),
   [participation](docs/participation.md), and [synthetic communications](docs/communications.md).
 - [Authentication](docs/authentication.md), [invitations](docs/invitations.md),
-  [roles and rights](docs/roles-and-rights.md), [audit trail](docs/audit.md), and the
+  [roles and rights](docs/roles-and-rights.md), [audit trail](docs/audit.md),
+  [security](docs/security.md), and the
   [historical specification index](docs/spec/README.md).
+- [Load qualification](docs/load.md), [runbooks](docs/runbooks/README.md),
+  [governance material](docs/governance/README.md), and the
+  [release report](docs/validation/2026-10-03.md).
 
 Some detailed implementation documents and the historical specification remain
 in German. Current code and verified status take precedence over historical
@@ -149,9 +159,11 @@ Rscript scripts/check-packages.R
 ```
 
 The two-round service demonstration is independent of the interface. Database
-tests require explicit opt-in and create only synthetic fixtures. Formal
-accessibility, the complete browser matrix, institutional approvals, and
-production operations remain distinct gates.
+tests require explicit opt-in and create only synthetic fixtures. Each
+technical gate of P1 has its evidence on synthetic data; the acceptance
+decision, institutional approvals, a test with assistive technology and
+production operation remain open, see the
+[implementation status](docs/IMPLEMENTATION_STATUS.md).
 
 ## Contributing and license
 

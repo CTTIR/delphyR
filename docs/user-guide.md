@@ -43,9 +43,12 @@ not methodological recommendations.
 ## Participate in a round
 
 Use the [local setup guide](operations.md) to start separate synthetic manager
-and panel sessions. In the panel view, choose a study and assigned round, read
-the stored information, and record consent explicitly. Ratings start without
-a preselected value. Choose allowed special responses separately.
+and panel sessions. In the panel view, choose a study; the list of rounds
+starts with the open round you have not yet submitted. Read the stored
+information and record consent explicitly. Ratings start without a
+preselected value. Choose allowed special responses separately. Rating,
+moving between blocks and submitting work with the keyboard alone; a new
+block is announced by its heading, which receives the focus.
 
 A settled, complete entry is saved automatically about 1.5 seconds after the
 last change; **Save now** saves it immediately. Choosing a rating selects the
@@ -59,6 +62,16 @@ entry* replaces the entry with the stored response; nothing is overwritten
 automatically. Final submission first saves complete pending entries and is
 refused while any field is unconfirmed. Successful submission returns a durable
 receipt and ends editing for that round.
+
+A round with more than ten response fields is shown in blocks; the fields of
+one item stay together. **Previous block**, **Next block** and the list of
+blocks move between them. Pending complete entries are saved before a block is
+left; while an entry is incomplete or could not be saved, the block stays
+open and says so. Opening a round again continues at the first block that
+still has an open field. Above the submit button an overview states how many
+fields are answered, answered with a special response and open, and which
+blocks have open fields. Submitting while a required field is open shows the
+first block that has one.
 
 A disconnected browser must not imply successful saving. The tested reload
 path restores the last committed value; unsaved text is not an offline backup.
@@ -89,6 +102,13 @@ prepared, until the round closes. A candidate that was never opened can be
 withdrawn with a reason; it stays readable, frees its round number, and a
 corrected candidate is prepared as a new round. A round prepared before a
 protocol amendment must be withdrawn and prepared again.
+
+**Change the deadline** moves the deadline of a round that is not closed, with
+a reason. Before a round opens any future time is possible. An open round can
+only be extended, also after its deadline has passed; it then accepts answers
+again. A closed round is not reopened. The change appears in the approval
+history of the round and in the history of the study; the approval of the
+instrument is unaffected.
 
 Confirm every lifecycle change with a reason. Freeze a closed
 round before queuing analysis or export for the separate worker. Refresh the
@@ -148,8 +168,10 @@ or recipients need a new preview. The worker writes only local database sink
 receipts and suppresses obsolete reminders, withdrawals, and cancelled campaigns.
 `sink_recorded` is not an external delivery confirmation. A `delivery_unknown`
 message is never repeated automatically: under *Resolve uncertain deliveries*
-you record, with a rationale, that delivery was confirmed, that it is queued
-again with a possible duplicate, or that it is abandoned. See
+you see its cause and record, with a rationale, that delivery was confirmed,
+that it is queued again with a possible duplicate, or that it is abandoned.
+After a restore from a backup every message that was still waiting appears
+there with the cause *Was waiting when a backup was restored*. See
 [communications](communications.md).
 
 ## Document the study and decide comparability
@@ -196,6 +218,17 @@ browser fields, URLs, or headers.
 Use only synthetic data in the demonstration. Local gateway checks do not qualify
 the stock Shiny Server OSS transport or production operations. Institutional
 approvals and real messages are separate from software tests.
+
+## Sign in and out
+
+Where the application runs behind a sign-in, your account is recognised by
+the institution's identity provider; the application never asks for a
+password. A sign-in is valid for a limited time. When it has ended, the next
+action shows *Your sign-in has expired. Reload the page and sign in again.*
+Nothing is saved by that action; every entry that was confirmed as saved is
+kept, and after the reload you continue where you were. **Sign out** ends
+all your open pages of the application and the sign-in itself. On a shared
+computer, sign out before you leave.
 
 ## When something fails
 

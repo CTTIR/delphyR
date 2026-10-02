@@ -1,8 +1,8 @@
 # Browser qualification evidence
 
-These records describe specific synthetic checks performed on 25 September 2026.
-They are not a claim that every current screen, language, browser, or production
-component has been qualified. Current interface languages are English, German,
+These records describe specific synthetic checks, each with the date of its
+last run. They are not a claim that every current screen, language, browser, or
+production component has been qualified. Current interface languages are English, German,
 and French, with English as the default; historical EN/DE checks below retain
 their actual scope. Scientific study text is not automatically translated.
 
@@ -31,6 +31,8 @@ injected services; a complete real-database management browser journey remains o
 The application uses a separate worker for jobs. There is no browser control
 that assumes worker infrastructure privileges.
 
+Last run on 3 October 2026 against the current interface: passed.
+
 ## PostgreSQL browser path
 
 A separate real-database Chromium check passed on 2026-09-25 at 09:28 UTC.
@@ -50,6 +52,8 @@ management browser path and cross-browser/assistive-technology matrix remain
 open. The committed illustrative screenshots continue to use the deterministic
 service fixture. Queue, exact-feedback-review, and submission-guard tests use
 `testServer()`; they do not stand in for the open management browser matrix.
+
+Last run on 3 October 2026 against the current interface: passed.
 
 ## Reproduce the PostgreSQL browser check
 
@@ -95,7 +99,7 @@ formatting fix. The table displayed `2026-10-02 11:32 +0200 Europe/Berlin`,
 localized column headings and state names in German and English, and no
 participation section for an actor without panel capability. The screenshot
 `inst/figures/manager-desktop.png` captures the English view. This is a display
-check; the full management browser mutation workflow remains open.
+check; the management workflows are covered by the checks further below.
 
 ## Editorial and campaign module browser check
 
@@ -142,6 +146,8 @@ run; pass the same value to both preview hosts and the verifier. Stop the two
 hosts with Ctrl+C after checking. The full browser matrix, theme/lineage browser
 mutations, and production authentication deployment remain separate gates.
 
+Last run on 3 October 2026 against the current interface: passed.
+
 ## Network loss, keyboard input and reload
 
 The full panel application was checked in Chromium against PostgreSQL on
@@ -179,6 +185,8 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-network-keyboar
 DELPHYR_TEST_DB=true DELPHYR_QA_FIXTURE=.checks/network-new.rds Rscript packages/delphyrApp/inst/qa/verify-postgres.R
 ```
 
+Last run on 3 October 2026 against the current interface: passed.
+
 ## Protocol amendment browser check
 
 A focused protocol-module host was exercised in Chromium with PostgreSQL and
@@ -209,6 +217,8 @@ fixture, and optionally `DELPHYR_PROTOCOL_JSON` for its generated upload file;
 use the same values across the relevant commands. Defaults are ignored files
 under `.checks/`. Stop the host with Ctrl+C. Tests also reject invalid/oversized
 JSON, lack of explicit approval, and uploaded content changed after preview.
+
+Last run on 3 October 2026 against the current interface: passed.
 
 ## Panel import and workspace navigation
 
@@ -259,6 +269,8 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-navigation-post
 This checks section navigation and preservation of a draft field. It is not a
 formal accessibility audit or a substitute for the full browser matrix.
 
+Last run on 3 October 2026 against the current interface: passed.
+
 ## Trilingual re-audit
 
 `browser-languages.R` runs against a fresh `preview-postgres.R` fixture. It passed
@@ -271,6 +283,8 @@ The manager workspace was separately checked in all three languages: navigation,
 section headings, file control labels, retained rationale text, no Shiny output
 errors, and French desktop/mobile rendering. These checks do not constitute a
 complete translated management transaction journey or human linguistic review.
+
+Last run on 3 October 2026 against the current interface: passed.
 
 ## Invitation issuance and acceptance
 
@@ -289,6 +303,8 @@ resulting study access, both viewport widths, and independent database reads.
 The invitee identity comes from the gateway adapter with a synthetic trusted
 request; this is not an OIDC gateway qualification. Host logs are written to
 ignored `.checks/invitation-*.log` and are scanned for the token and secret.
+
+Last run on 3 October 2026 against the current interface: passed.
 
 ## Automatic saving, two tabs and connection loss
 
@@ -321,6 +337,8 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-autosave-postgr
 saved states; set `DELPHYR_QA_AUTOSAVE_MS` to change that host. This remains a
 narrow tested scenario on one browser, not an offline editor.
 
+Last run on 3 October 2026 against the current interface: passed.
+
 ## Study management: review, readiness, enrollment and withdrawal
 
 `browser-management-postgres.R` starts its own manager host and passed on
@@ -343,6 +361,8 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-management-post
 
 This script covers the round lifecycle controls. Analysis, feedback, export and
 study completion in the browser are recorded separately.
+
+Last run on 3 October 2026 against the current interface: passed.
 
 ## Documentation, comparability, export profiles, history and participant download
 
@@ -372,6 +392,8 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-governance-post
 
 Downloads are fetched inside the page from the Shiny download link and unpacked
 for inspection; this checks the delivered bytes, not a browser's save dialog.
+
+Last run on 3 October 2026 against the current interface: passed.
 
 ## A complete two-round study through the interface
 
@@ -419,6 +441,8 @@ Two defects found by this run were repaired with regression tests: round
 preparation used the study information read when the section was opened, and
 empty recipient and version lists rendered an output error.
 
+Last run on 3 October 2026 against the current interface: passed.
+
 ## Exploratory round, released feedback content and correction
 
 `browser-exploratory-postgres.R` passed on 2 October 2026 in Chromium against
@@ -449,6 +473,8 @@ The free-text round itself is conducted through the services. In the browser:
   last to the correction, and all three releases were made by a different
   account than the edits.
 
+Last run on 3 October 2026 against the current interface: passed.
+
 ## Campaign rules, send time and uncertain delivery
 
 `browser-communications-postgres.R` passed on 2 October 2026 in Chromium against
@@ -470,6 +496,8 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-communications-
   with rationale and confirmation it was abandoned and recorded.
 - The status of background work listed message states without contacts or
   account references. No external message was sent at any point.
+
+Last run on 3 October 2026 against the current interface: passed.
 
 ## Hostile text, failure references and process logs
 
@@ -498,3 +526,148 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-security-postgr
   entry with that reference: operation, refusal and condition class.
 - The standard error output of both application processes contained no marked
   text, contact address, study or account identifier.
+
+Last run on 3 October 2026 against the current interface: passed.
+
+## Rights revoked during an open session and a foreign questionnaire
+
+`browser-revocation-postgres.R` passed on 3 October 2026 in Chromium against
+PostgreSQL under the restricted runtime role (scenario 7 of the specification;
+the forged identity header of that scenario is part of the
+[gateway qualification](../../../../docs/authentication.md)):
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-revocation-postgres.R
+```
+
+- An analyst requested the summary export and downloaded it. The study lead
+  then revoked the analyst's two rights in the interface, with a rationale.
+- In the analyst's still open page the next request was refused with a
+  reference and created no job; the log of the process held one entry with
+  that reference: operation, refusal and condition class.
+- The export produced before the revocation was no longer delivered, and the
+  audit trail still counted exactly one download. After a reload no export
+  profile was offered.
+- A panel member's page then asked for the questionnaire of another member by
+  its known identifier. The request was refused as not found, nothing of the
+  other member was shown, and the log named the refused operation.
+- What was already on screen before the revocation cannot be recalled and is
+  not claimed to be.
+
+## Keyboard, names, contrast and reflow
+
+`browser-accessibility-postgres.R` passed on 3 October 2026 in Chromium against
+PostgreSQL:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-accessibility-postgres.R
+```
+
+- A panel member answered a second round of six items in two dimensions and
+  submitted it with real key events only: Tab, digits, Space and Enter. No
+  element was clicked and no value was set by script. All twelve answers and
+  the submission were found stored.
+- Every stop of the Tab sequence was visible and had an identifier. Opening
+  the next block moved the focus to its heading. The save status of a field
+  is a polite live region. A focused control is visibly marked.
+- With every collapsible section open, every visible control of the
+  participant view (English and German) and of study management had a name,
+  no heading skipped a level, every table had header cells and the lowest
+  contrast between text and its background was 4.75 to 1.
+- Item text carries the language of its content; the language attribute of
+  the page follows the chosen interface language, and changing it left the
+  entered answers in place.
+- At a width of 320 CSS pixels and at 200 percent zoom neither view needed
+  sideways scrolling; wide tables scroll within their own frame.
+
+This is what a script can establish. It is not a test with a screen reader
+or with people who use one, and no statement of conformance with a standard.
+The check found and closed four defects: the list of rounds started with the
+first instead of the open round, the focus did not reach the heading of the
+next block, the read-only field that shows a chosen file had no name, and a
+checksum of 64 characters forced sideways scrolling on a narrow screen.
+
+## A second browser engine
+
+`browser-firefox-postgres.R` passed on 3 October 2026 in Firefox 157.0, driven
+through geckodriver, against PostgreSQL:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-firefox-postgres.R
+```
+
+- Consent, twelve ratings entered by key presses with a confirmed save each,
+  the change to the second block with the focus on its heading, submission
+  and its receipt.
+- After a reload the committed answers were shown and could no longer be
+  changed.
+- Study management showed the round, its instrument and the history; no
+  account reference of the panel member appeared.
+- No output reported an error; at a window width of 500 pixels neither view
+  needed sideways scrolling.
+
+Safari and mobile browsers were not tested.
+
+## Scenario 1 at its specified size
+
+`browser-scenario1-postgres.R` passed on 3 October 2026 in Chromium against
+PostgreSQL. The application ran as one process under the restricted runtime
+role and resolved every session from identity headers, as behind a gateway;
+the script stands in for the gateway and this is not OIDC:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-scenario1-postgres.R
+```
+
+Thirty synthetic members in two groups of fifteen, twelve items with a
+relevance rating and an optional comment, two rounds, the example rule of the
+protocol (70 percent agreement and less than 15 percent disagreement in every
+group, at least ten valid ratings). The operator steps were the first account
+and the worker; the database was read only to verify.
+
+- The lead created the study from the protocol file, published the study
+  information, granted a second manager the right to review, imported thirty
+  contacts, issued thirty invitations bound to the accounts, prepared the
+  round from the item file, reviewed and approved the instrument, enrolled
+  the panel and opened the round, all in the interface.
+- Each of the thirty members opened the hand-over link with the own account,
+  accepted with a confirmed action, consented, answered in the blocks of the
+  questionnaire and submitted, in thirty browser sessions at the same time.
+- A round-start message to all thirty was approved and recorded thirty times
+  in the local sink; nothing was sent.
+- After closing, freezing and the analysis, three comments were taken over
+  as sources. The lead wrote a summary, the second manager released it, and
+  only that summary reached the feedback: a member of the second round saw the
+  own previous rating, the panel result and the released summary, and nothing
+  of another member's comment.
+- Twenty-eight members submitted the second round. Decisions were recorded
+  for every item in both rounds, the round was finalized and the study
+  completed.
+- The ratings were planned so that the classification of every item follows
+  by hand: three items in, one out and eight without consensus in the first
+  round; four, one and seven in the second, where one item crosses the
+  threshold in one group. The offline reproduction of the research export
+  gave exactly these, the hand-computed cell counts, 28 and 27 paired members,
+  and participation of 30 and 28.
+- The research export held no contact, account or unreviewed comment; the
+  report named rounds, participation and decisions.
+- The audit trail held every step with the expected counts, among them 723
+  saves by thirty different members, and nothing was repaired by hand.
+
+The run found and closed four defects: the management section of a study
+without any round did not render, an input that was not ready could show a
+failure message, the editorial section did not notice a round frozen in
+another section, and a helper of the check itself evaluated a query inside an
+open statement.
+
+## Load: fifty sessions on a round of specification size
+
+`load-fixture-postgres.R` builds the study, `load-browser-postgres.R` runs the
+sessions; method, results and limits are in
+[load qualification](../../../../docs/load.md).
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/load-fixture-postgres.R
+DELPHYR_TEST_DB=true DELPHYR_LOAD_SESSIONS=50 DELPHYR_LOAD_PROCESSES=6 \
+  Rscript packages/delphyrApp/inst/qa/load-browser-postgres.R
+```

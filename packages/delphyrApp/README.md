@@ -42,17 +42,23 @@ a directly supplied repository remains the caller's responsibility. Factory
 errors or missing identities close the session before service access. Browser
 fields and URL parameters never establish identity or authority.
 
-Local OIDC evidence is documented separately. The stock Shiny Server OSS
-identity-header path and production deployment remain unqualified. No external
-mail transport is enabled.
+`run_app(sign_out_url = )` adds a sign-out link that ends every session of
+the account in the process and then follows the gateway's sign-out address.
+Behind a gateway that routes each account to one process, several processes
+can serve one study. The local OIDC evidence, with one to three processes, is
+documented separately. The stock Shiny Server OSS identity-header path and
+production deployment remain unqualified. No external mail transport is
+enabled.
 
 ## Participant workflow
 
-1. Choose a study and load an assigned round.
+1. Choose a study; the list of rounds starts with the round that is due.
 2. Read the stored study information and explicitly record consent.
 3. Select a response or allowed special category. A settled, complete entry is
    saved automatically after a short pause; **Save now** saves it at once.
-4. Review the confirmed field count and submit deliberately.
+   A round with more than `block_fields` fields (ten by default) is shown in
+   blocks; the focus moves to the heading of each new block.
+4. Review the overview of answered and open fields and submit deliberately.
 
 A field reads *Unsaved change* until its own commit returns. A failed save keeps
 the typed value and does not advance its confirmed revision. A revision conflict
@@ -102,7 +108,8 @@ Read the [workflow vignette](vignettes/synthetic-workflow.Rmd) and
 testthat::test_local("packages/delphyrApp")
 ```
 
-Specific Chromium/PostgreSQL checks do not certify every browser, assistive
-technology, or mobile device. Formal accessibility, complete cross-browser
-acceptance, autosave, the complete invitation browser journey, real mail, and
-production operations remain distinct gates. Licensed under [MIT](LICENSE).
+The browser checks run in Chromium against PostgreSQL, the core path also in
+Firefox; keyboard operation, names, headings, contrast and reflow are checked
+by script. They do not certify every browser, assistive technology or mobile
+device. A test with a screen reader, real mail and production operation remain
+distinct gates. Licensed under [MIT](LICENSE).

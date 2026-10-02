@@ -142,6 +142,13 @@ sends again; `requeue` sends again and accepts a possible duplicate, after the
 eligibility checks; `abandon` stops the message. Resolutions are append-only
 and appear in the audit trail with their rationale.
 
+After a restore from a backup the operator runs `hold_pending_messages()`
+(`scripts/hold-messages.R`) before the worker starts. Every message that was
+queued or in flight becomes an uncertain delivery with the cause
+`restored_from_backup`, because it may have been delivered between the backup
+and the loss; the coordinator decides as above. The interface states the
+cause of each uncertain delivery in words.
+
 `get_operations_status()` gives study management and coordination the counts
 of jobs and messages by state, the age of the oldest waiting entry, error
 codes and the number of uncertain deliveries, without any content.

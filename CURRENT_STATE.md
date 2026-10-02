@@ -1,106 +1,47 @@
 # Current state
 
-Live verification: **2026-09-25 12:05 UTC**. Repository `CTTIR/delphyR`, branch `main`.
-Workspace: `/data/GitHub/CTTIR/public/delphyR`.
-Code baseline: `eb42fb6293f12cf052b990b46163623d80bd1a90`, matched `origin/main`
-at inspection with a clean working tree. The subsequent handover commit changes
-documentation only; use `git log -1` for its actual hash.
-`admin/` remains ignored; the original specifications are archived in `docs/spec/`.
-Current English guides document the implementation and its limitations.
+As of **3 October 2026**. Repository `CTTIR/delphyR`, branch `main`, workspace
+`/data/GitHub/CTTIR/public/delphyR`. Use `git log -1` for the current commit;
+the evidence below names the commits it was recorded against.
 
-## Verified synthetic implementation
+## Where the project stands
 
-The core package, PostgreSQL services, worker, and Shiny interface support round
-release, consent, confirmed saves, submission, snapshots, analysis, feedback,
-and exports. Additional services cover versioned protocol amendments,
-qualitative editorial review with independent approval, campaigns using a local
-sink, panel CSV preview and atomic import, account-bound single-use tokens,
-participation withdrawal, and stakeholder group history. Quarto reports and
-private export supplements support offline reproduction.
+The roadmap of the specification is implemented up to and including phase 6
+("report and operation"): every P1 requirement has its technical component
+and evidence on synthetic data, and each of the twelve technical gates of
+P1 has its evidence ([implementation status](docs/IMPLEMENTATION_STATUS.md),
+[requirements matrix](docs/requirements-matrix.md),
+[release report](docs/validation/2026-10-03.md)). The acceptance decision has
+not been taken. Phase 7, a pilot and the release for a real study, depends on
+decisions of the responsible organisation that the software does not make:
+hosting, identity provider, message provider, retention and removal policy,
+consent texts, recovery objectives.
 
-The interface supports English, French, and German, with English as the default.
-The French interface contains 274 translation keys. The synthetic demonstration
-covers all three locales; stored study and instrument wording remains explicitly
-authored rather than automatically translated. Package guides and vignettes are
-English, and both vignettes have been rendered and visually inspected.
+## Evidence of the latest step
 
-The current combined PostgreSQL suite and two-round service scenario passed;
-the latter confirms 720 responses from 30 synthetic participants. Twelve
-migrations are checksummed and frozen; do not edit applied SQL files. Both package
-checks report `Status: OK`. The direct app suite passed 145 assertions, the
-offline suite passed 81 (48 explicit database skips), and the PostgreSQL suite
-passed 350 without failures, warnings or skips. Real EN/FR/DE panel switching,
-French save/submission, independent receipt verification and manager language
-checks passed. See the current implementation-status record for exact scope.
+- Offline 407, PostgreSQL 1 346, application 657 assertions; both packages
+  `Status: OK`; 17 migrations on an empty database and as an upgrade of a
+  database holding data; the two-round service scenario. Hosted CI passed for `27a2aeb` ([run](https://github.com/CTTIR/delphyR/actions/runs/37075501075)).
+- Browser checks in Chromium against PostgreSQL, the core path also in
+  Firefox, among them scenario 1 at its specified size through the interface,
+  keyboard-only rating and submission, and rights revoked in an open page.
+- The local OIDC gateway with one, two and three application processes,
+  session lifetimes and sign-out; stock Shiny Server OSS stays unqualified.
+- Load: 50 browser sessions on a round of 150 items in two dimensions; the
+  two-second target is met with six application processes.
+- Restore rehearsal including the use of the restored database through the
+  services.
 
-Historical baseline: 338 PostgreSQL assertions without failures, warnings, or
-skips; 77 offline assertions with 47 explicit database skips; and 115 Shiny
-assertions. Real Chromium paths checked panel submission, connection loss,
-editorial review, campaigns, protocol amendments, panel import, and
-permission-filtered navigation. Both package checks passed locally and in hosted
-CI for `0f03ae6`:
-https://github.com/CTTIR/delphyR/actions/runs/36123381681.
-Current code CI **passed** for `eb42fb6293f12cf052b990b46163623d80bd1a90`:
-https://github.com/CTTIR/delphyR/actions/runs/36128911932.
-This is hosted technical validation, not deployment or P1 acceptance.
+## Local environment
 
-## Authentication and limitations
-
-A real Keycloak/OAuth2 Proxy login with a direct Shiny backend passed twelve
-checks. Stock Shiny Server OSS discards the required identity headers and is
-explicitly not qualified for that deployment path. Both outcomes are documented
-separately in `docs/authentication.md`. Invitation acceptance is tested as a core
-service but is not yet integrated as a complete browser workflow.
-
-The complete P1 platform has not been accepted. Institutional governance,
-production hosting, invitation screens, additional export profiles, reminder
-scheduling, full management/browser/assistive-technology acceptance, and
-scientific author metadata remain tracked in `docs/IMPLEMENTATION_STATUS.md`
-and `docs/requirements-matrix.md`.
-
-## Local environment and continuation
-
-PostgreSQL runs in `delphyr-dev-postgres`, exclusively on 127.0.0.1:55439,
-database `delphyr`. The app and worker use `delphyr_runtime`; migrations use a
-separate owner connection. Private files remain in `.local/`, `.checks/`,
-`.artifacts/`, and `.R-library/`. The local authentication path uses
-127.0.0.1:4189 and an isolated Docker backend network.
-
-`HANDOVER.md` lists reproducible commands. Inspect current processes and Git
-status before continuing; do not rely on old process IDs. No external email or
-production use has been authorized.
-
-## Live runtime snapshot
-
-Recheck process identity and ports before changing anything; these PIDs are
-observations, not durable service identifiers.
-
-| Component | Observed state |
+| Component | State |
 |---|---|
-| Manager demo | PID 1686791, `Rscript scripts/start-demo.R manager`, listening on `127.0.0.1:3849` |
-| Local job/sink worker | PID 1751858, `Rscript scripts/worker.R` |
-| PostgreSQL | `delphyr-dev-postgres`, up, `127.0.0.1:55439` |
-| Authentication sandbox | `delphyr-auth-app`, `-gateway`, `-proxy`, `-keycloak` up; proxy `127.0.0.1:4189`, Keycloak `127.0.0.1:4190` |
-| Panel/QA previews | No listener on 3850 or 3868; trilingual QA server stopped after independent receipt verification |
+| PostgreSQL | container `delphyr-dev-postgres`, `127.0.0.1:55439`, database `delphyr`; app and worker use `delphyr_runtime` |
+| Authentication fixture | `delphyr-auth-keycloak` (`127.0.0.1:4190`), `-proxy` (`127.0.0.1:4189`), `-gateway`, `-app` with the direct backend and one application process, image built from the current packages |
+| Demo applications and worker | not running; start them as described in [operations](docs/operations.md) |
+| Load fixture | study `QA-LOAD-a05e07d2` with 300 members (`.local/load-fixture.rds`); five load runs and earlier experiments used most of its members, so a further run needs a new fixture from `load-fixture-postgres.R` |
 
-The authentication containers were not rebuilt for the language/branding commit;
-their running state does not establish that they contain current sources.
-The manager script uses source loading and reuses `.local/demo-fixture.rds`.
-That older fixture may display German titles or lack French instrument wording;
-its approved content is intentionally unchanged. Fresh `demo_study()` fixtures
-include EN/FR/DE. Do not delete fixtures or rewrite approved data to change the UI.
-The local installed package library was built before the final logo replacement;
-reinstall before checking installed-asset identity. Hosted CI checked the final commit.
-
-## Latest user decisions and completed work
-
-- Exact repository/brand spelling: `delphyR`; technical packages: `delphyr` and
-  `delphyrApp`. Documentation is English; UI is EN/FR/DE with English default.
-- Match brainwritR petrol `#0e6e78` and red `#b3372b`. Dolphin badge uses the CTTIR
-  dark hex, restrained illustration and external monospaced wordmark.
-  Canonical shipped asset: `packages/delphyrApp/inst/www/delphyR-hex.png`.
-- Repository description and topics have been updated and verified on GitHub.
-- The language, documentation, metadata and logo requests are implemented and
-  pushed. No code operation remains in progress. Local demo services remain up.
-- The current request is a durable takeover checkpoint. Future product work
-  should start from the open gates, not repeat the completed re-audit.
+Private files stay in the ignored `.local/`, `.checks/`, `.artifacts/` and
+`.R-library/`; credentials of the fixture are in `.local/auth/` and are never
+printed or copied. `admin/` stays local and ignored. No external message has
+been sent and no production system has been touched.

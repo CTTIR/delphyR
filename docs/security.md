@@ -20,22 +20,23 @@ browser against the application under the restricted database role.
 | Known artifact of another person | `test-study-export.R` (an export is delivered only to its requester with the current right of its profile); `test-jobs.R` (right checked again at download, tampered file refused) | passed |
 | Forged identity header | `test-authentication.R`; real gateway run (forged and spoofed subject headers) | passed |
 | Direct access to the application port | Real gateway run (no published port, direct forgery rejected) | passed |
-| Right revoked during a session | `test-service-contracts.R` (a blocked save rechecks the right after the lock); `test-jobs.R` (revocation after queueing stops the worker); real gateway run (principal disabled during a session) | passed |
+| Right revoked during a session | `test-service-contracts.R` (a blocked save rechecks the right after the lock); `test-jobs.R` (revocation after queueing stops the worker); `browser-revocation-postgres.R` (rights revoked in the interface: the next request and the download of an earlier export are refused in the open page); real gateway run (a right revoked and the account disabled during a session; an expired identity) | passed |
 | Expired invitation | `test-invitations.R` (expiry and revocation deny acceptance) | passed |
 | Reused invitation token | `test-invitations.R` (single use, retry safe, concurrent consumers create one membership) | passed |
-| Link opened by a mail scanner | `test-invitations.R` (the preview reads only and discloses no contact); `browser-invitation-postgres.R` (acceptance needs a confirmed action after login) | passed |
-| Script in free text | `browser-security-postgres.R`: markup in every free-text field is shown literally in all views of study management and of a panel member; no element is created and no script runs. `test-reporting.R` (reports) | passed |
+| Link opened by a mail scanner | `test-invitations.R` (the preview reads only and discloses no contact); `browser-invitation-postgres.R` (acceptance needs a confirmed action after login); real gateway run (a visit without a session is sent to the sign-in, the code is never part of a request, opening and checking create nothing) | passed |
+| Script in free text | `browser-security-postgres.R`: markup in every free-text field is shown literally in all views of study management and of a panel member; no element is created and no script runs. `test-reporting.R`: in rendered reports study text cannot become markup, a link, an image, formatting, a shortcode or code | passed |
 | Statement payload | `test-security.R`: payloads in text are stored literally and change nothing else; malformed identifiers are refused before any statement is bound, for every identifier argument of every service | passed |
 | Spreadsheet formula | `test-security.R`: no cell of any CSV file of any export profile, round export, round report or participant download starts like a formula | passed |
 | Oversized input | `test-security.R`: text of 2 MiB is refused by every service and never bound to a statement; `test-security.R` of the application and `browser-security-postgres.R` (files beyond 1 MiB and beyond the request limit) | passed |
 | Marked values in logs | `test-logging.R`, `test-security.R` and `browser-security-postgres.R`, see below | passed |
 
 The real gateway run is the local Keycloak, OAuth2 Proxy and nginx chain with
-the directly served application. It was last executed on 25 September 2026,
-before the changes of October; its repetition with the current sources is
-listed as open in the [implementation status](IMPLEMENTATION_STATUS.md). Stock
-Shiny Server OSS drops the identity headers and stays unqualified, see
-[authentication](authentication.md).
+the directly served application, with one, two and three application
+processes. It was repeated with the current sources on 3 October 2026; all
+of its checks passed. It also covers the acceptance of an invitation by the invited
+account only, the lifetime of an identity and of the gateway session, and
+signing out; see [authentication](authentication.md). Stock Shiny Server OSS
+drops the identity headers and stays unqualified.
 
 ## Marked values in logs
 
@@ -139,6 +140,18 @@ input.
 Three services accepted a rationale of any length and one bound an unchecked
 code to a statement before the checks of 2 October 2026; the central limit and
 the test over all services close this.
+
+## Reports
+
+A rendered report shows study text as text only. Until 2 October 2026 the
+report templates wrote table cells where the renderer still interpreted
+Markdown: a study text such as `[label](javascript:…)` became an active link
+and `![x](http://…)` an image that the renderer fetched while building the
+report. Angle brackets were already escaped, so no script element could be
+written. The templates now write every table, list and block as final markup
+that the renderer passes through unchanged, and escape the characters that
+could end such a block or start a shortcode. Reports rendered before that date
+from untrusted text should be rendered again.
 
 ## Not covered
 
