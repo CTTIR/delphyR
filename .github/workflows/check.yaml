@@ -29,6 +29,8 @@ jobs:
       - name: PostgreSQL contracts
         env:
           DELPHYR_TEST_DB: 'true'
+          # The security contracts read the server log of the service container.
+          DELPHYR_DB_LOG_COMMAND: docker logs ${{ job.services.postgres.id }}
         run: Rscript scripts/integration.R
       - name: Empty migration
         run: Rscript scripts/migration-empty.R

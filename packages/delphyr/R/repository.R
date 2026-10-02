@@ -33,6 +33,11 @@ one <- function(x) {
 uid <- function() uuid::UUIDgenerate()
 valid_id <- function(x) ensure(scalar_text(x) && grepl("^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$", x), "object", "DEL_NOT_FOUND")
 transaction <- function(repo, code) {
+  # A service evaluates its arguments before its transaction opens: an
+  # argument that is itself a service call must not start a second
+  # transaction inside this one.
+  caller <- parent.frame()
+  for (name in setdiff(ls(caller, all.names = TRUE), "...")) get(name, envir = caller, inherits = FALSE)
   tryCatch(DBI::dbWithTransaction(repo$con, code()), error = function(e) {
     if (inherits(e, "delphyr_error")) stop(e)
     del_abort("DEL_STORAGE", "transaction")
@@ -133,6 +138,9 @@ audit <- function(repo, actor, study, action, object, reason = NULL, detail = NU
 }
 command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, detail = NULL) {
   ensure(scalar_text(key) && nchar(key) <= 200, "command_id")
+  # One limit for every recorded rationale, whatever the service checked.
+  ensure(is.null(reason) || (is.character(reason) && length(reason) == 1L && (is.na(reason) || nchar(reason, type = "bytes") <= 10000L)), "reason")
+  ensure(is.null(detail) || (is.character(detail) && length(detail) == 1L && (is.na(detail) || nchar(detail, type = "bytes") <= 2000L)), "detail")
   # Serialize retries of one command without blocking independent participants.
   lock <- paste(study, actor$principal_id, type, key, sep = ":")
   query(repo, "SELECT pg_advisory_xact_lock(hashtextextended($1,0))", lock)
@@ -180,6 +188,7 @@ create_study <- function(repo, actor, protocol, command_id) {
     p <- identity_check(repo, actor)
     ensure(isTRUE(p$can_create), "create", "DEL_FORBIDDEN")
     protocol <- new_protocol(protocol)
+    protocol_size(protocol)
     query(repo, "SELECT pg_advisory_xact_lock(hashtextextended($1,0))", paste0("study:", protocol$study$code))
     old <- query(repo, "SELECT id FROM research.studies WHERE code=$1", protocol$study$code)
     if (nrow(old)) {

@@ -197,8 +197,17 @@ Use only synthetic data in the demonstration. Local gateway checks do not qualif
 the stock Shiny Server OSS transport or production operations. Institutional
 approvals and real messages are separate from software tests.
 
+## When something fails
+
+A failure message never repeats what you entered and never confirms a success
+that did not happen. It ends with `Reference:` and a short code. Quote that code
+to the study team: it identifies one entry of the technical log, which holds
+the operation, the time and the kind of failure and nothing about content. A
+background operation that did not succeed shows its operation ID in the same
+way. See [security](security.md).
+
 ## Report a reproducible problem
 
-Include package version, function or screen, error code, and a synthetic minimal
-example. Do not include credentials, tokens, real answers, or participant
+Include package version, function or screen, error code, the reference shown
+with the failure, and a synthetic minimal example. Do not include credentials, tokens, real answers, or participant
 identifiers in issues or logs.

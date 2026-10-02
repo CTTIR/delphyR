@@ -151,7 +151,7 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
     shiny::observeEvent(input$poll, attempt(function() {
       shiny::req(operation())
       r <- call("get_operation", operation())
-      status(paste(tr(lang(), "Auftrag:", "Operation:"), state_label(r$state, lang())))
+      status(operation_status(r, lang()))
       if (identical(r$state, "succeeded")) {
         if (job_type() == "export") artifact(r$result_ref) else analysis(call("get_analysis", r$result_ref))
         refresh()

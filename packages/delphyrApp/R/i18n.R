@@ -32,6 +32,12 @@ tr <- function(lang, de, en) {
 # Preserve opaque receipt identifiers and timestamps after the translated prefix.
 localize_status <- function(value, lang) {
   if (!length(value) || !nzchar(value)) return(value)
+  # A trailing reference to the technical log keeps its ID in every language.
+  reference <- regmatches(value, regexpr("[[:space:]](Referenz:|Reference:|R\u00e9f\u00e9rence :) [0-9a-f]{8}[0-9a-f-]{4,28}$", value))
+  if (length(reference)) {
+    body <- substring(value, 1L, nchar(value) - nchar(reference))
+    return(paste(localize_status(body, lang), reference_text(sub("^.* ", "", reference), lang)))
+  }
   english <- ls(translation_sources, all.names = TRUE)
   german <- vapply(english, function(key) translation_sources[[key]], character(1))
   french <- unname(translation_catalog()[english])

@@ -106,8 +106,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     session_actor <- if (is.null(actor_factory)) {
       actor
     } else {
+      # A refused identity is recorded by its class only, never by its headers.
       tryCatch(
-        actor_factory(session, session_repo),
+        delphyr::log_operation("session_identity", function() actor_factory(session, session_repo), component = "app"),
         error = function(e) NULL
       )
     }
@@ -116,7 +117,21 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       session$close()
       return(invisible(NULL))
     }
-    call <- function(name, ...) services[[name]](session_repo, session_actor, ...)
+    # Every service call leaves one entry in the technical log; a refusal or
+    # failure carries its correlation ID into the message shown to the person.
+    # Arguments are evaluated first, so that a pending input is not a failure.
+    call <- function(name, ...) {
+      arguments <- list(...)
+      tryCatch(
+        delphyr::log_operation(name, function() do.call(services[[name]], c(list(session_repo, session_actor), arguments)), component = "app"),
+        error = function(e) {
+          if (inherits(e, "delphyr_error")) stop(e)
+          # The message of any other condition may quote a value. Only its
+          # reference leaves the service boundary, also when nothing catches it.
+          stop(structure(list(message = "DEL_STORAGE service", call = NULL, code = "DEL_STORAGE", path = "service", correlation_id = e$correlation_id), class = c("DEL_STORAGE", "delphyr_error", "error", "condition")))
+        }
+      )
+    }
     lang <- shiny::reactive(if (is.null(input$language)) language else input$language)
     shiny::observeEvent(lang(), {
       session$sendCustomMessage("delphyr-language", lang())
@@ -197,5 +212,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     invitations_server("invitations", study, lang, call, services, default_issuer = if (verified) session_actor$issuer else "", changed = changed)
     invitation_accept_server("invitation_accept", lang, call, services, verified, on_accepted = load_studies)
   }
-  shiny::shinyApp(ui, server)
+  # An output that fails unexpectedly shows a generic notice, not its message.
+  shiny::shinyApp(ui, server, onStart = function() {
+    previous <- options(shiny.sanitize.errors = TRUE)
+    shiny::onStop(function() options(previous))
+  })
 }

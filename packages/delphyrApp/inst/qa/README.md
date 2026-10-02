@@ -470,3 +470,31 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-communications-
   with rationale and confirmation it was abandoned and recorded.
 - The status of background work listed message states without contacts or
   account references. No external message was sent at any point.
+
+## Hostile text, failure references and process logs
+
+`browser-security-postgres.R` passed on 2 October 2026 in Chromium against
+PostgreSQL under the restricted runtime role:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-security-postgres.R
+```
+
+- Every free-text field of a synthetic study carried markup with a script, an
+  image with an error handler and a styled element: study title and rationale,
+  a group name, study information, item text, answers, a released and a pending
+  editorial version, rationales, a decision, documentation and contact names.
+- Study management showed each text literally in the instrument review, the
+  approval history, item decisions, the original and the pending version, a
+  campaign preview typed in the browser, the history, the documentation, the
+  study information, the panel list, the stored protocol and the preview of an
+  uploaded contact file. A panel member saw item text and released feedback
+  content literally. No element was created from any text and no script ran.
+- Markup typed into an answer was stored and restored exactly.
+- A contact file beyond 1 MiB was refused with a reference; a file beyond the
+  request limit was refused by the upload itself. Nothing was imported.
+- After the round was closed, a late entry was refused with the closed-round
+  message and a reference. The log of the application process held exactly one
+  entry with that reference: operation, refusal and condition class.
+- The standard error output of both application processes contained no marked
+  text, contact address, study or account identifier.

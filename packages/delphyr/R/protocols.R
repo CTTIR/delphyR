@@ -28,6 +28,7 @@ amend_protocol <- function(repo, actor, study_id, protocol, expected_hash, reaso
     authorize(repo, actor, study_id, "manage")
     one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active') FOR UPDATE", study_id))
     protocol <- new_protocol(protocol)
+    protocol_size(protocol)
     ensure(scalar_text(expected_hash) && scalar_text(reason) && nchar(reason, type = "bytes") <= 10000L, "protocol.amendment")
     command(repo, actor, study_id, "amend_protocol", command_id, list(protocol, expected_hash, reason), function() {
       old <- one(query(repo, "SELECT id,version,hash,config::text FROM research.protocol_versions WHERE study_id=$1 ORDER BY version DESC LIMIT 1", study_id))

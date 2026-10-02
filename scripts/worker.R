@@ -7,8 +7,20 @@ if (!nzchar(Sys.getenv("DELPHYR_GIT_COMMIT"))) {
 }
 if (!nzchar(Sys.getenv("DELPHYR_LOCKFILE_SHA256")) && file.exists("renv.lock")) Sys.setenv(DELPHYR_LOCKFILE_SHA256 = digest::digest(file = "renv.lock", algo = "sha256"))
 r <- delphyr::connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "delphyr_runtime", environment = "development", artifact_root = file.path(getwd(), ".artifacts"))
+# Each job and message leaves one entry in the technical log. An unexpected
+# failure is recorded by its class only and ends the process, so that the
+# supervisor restarts it with a fresh connection.
 repeat {
-  result <- delphyr::worker_step(r)
-  message_result <- delphyr::process_campaign_sink(r)
-  if (identical(result, FALSE) && identical(message_result, FALSE)) Sys.sleep(1)
+  idle <- tryCatch(
+    {
+      result <- delphyr::worker_step(r)
+      message_result <- delphyr::process_campaign_sink(r)
+      identical(result, FALSE) && identical(message_result, FALSE)
+    },
+    error = function(e) {
+      delphyr::log_event("worker.loop", error = e, component = "worker")
+      quit(save = "no", status = 1L)
+    }
+  )
+  if (idle) Sys.sleep(1)
 }

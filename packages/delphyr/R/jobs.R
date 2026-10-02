@@ -199,6 +199,7 @@ reproduce_export <- function(path) {
 #' @return FALSE when idle, otherwise a safe operation state.
 #' @export
 worker_step <- function(repo, study_id = NULL) {
+  started <- Sys.time()
   j <- claim_job(repo, study_id = study_id)
   if (!nrow(j)) {
     return(FALSE)
@@ -235,6 +236,7 @@ worker_step <- function(repo, study_id = NULL) {
     path <- file.path(repo$artifact_root, out$id)
     if (dir.exists(path)) unlink(path, recursive = TRUE)
   }
+  log_work(paste0("job.", j$type, if (j$type == "export") paste0(".", j$profile)), started, result$state, j$id, error_class = result$error_code)
   result
 }
 #' Resolve a private artifact only after a fresh rights check

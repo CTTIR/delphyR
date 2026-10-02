@@ -99,7 +99,7 @@ get_study_documentation <- function(repo, actor, study_id) {
 record_item_comparability <- function(repo, actor, study_id, item_code, dimension_code, previous_version, current_version, comparable, reason, command_id) {
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
-    ensure(scalar_text(item_code) && grepl("^[A-Za-z0-9_-]{1,80}$", item_code) && scalar_text(dimension_code), "comparability.item")
+    ensure(scalar_text(item_code) && grepl("^[A-Za-z0-9_-]{1,80}$", item_code) && scalar_text(dimension_code) && nchar(dimension_code, type = "bytes") <= 200L, "comparability.item")
     ensure(whole(previous_version) && length(previous_version) == 1L && previous_version > 0 && whole(current_version) && length(current_version) == 1L && current_version > 0 && previous_version != current_version, "comparability.versions")
     ensure(is.logical(comparable) && length(comparable) == 1L && !is.na(comparable), "comparability.decision")
     ensure(scalar_text(reason) && nchar(reason, type = "bytes") <= 10000L, "comparability.reason")

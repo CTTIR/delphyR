@@ -146,6 +146,17 @@ Measured on 2026-10-02 against the current sources; each entry names its evidenc
   Migration 016, `test-delivery.R` and `browser-communications-postgres.R`.
   No production provider adapter is shipped or approved.
 
+- **Security checks and the technical log**
+  ([ADR-025](adr/025-technical-log-and-references.md), [security](security.md)):
+  one log entry of fixed tokens per operation, a reference in every failure
+  message, marked values searched for in the technical log, conditions, audit
+  trail, command receipts, the database server log and the process output;
+  every service called with malformed identifiers, oversized text and the
+  identities of another study; spreadsheet formulas in every export; hostile
+  markup in every view. The checks found and closed three services without a
+  limit on the rationale and one unchecked code. `test-logging.R`,
+  `test-security.R` in both packages and `browser-security-postgres.R`.
+
 Hosted CI failed for commit `5bf26c7` at the package check (non-ASCII source
 characters in `R/invitations.R`); the following commit repaired it and both
 packages carry a source-level ASCII test.
@@ -159,7 +170,6 @@ packages carry a source-level ASCII test.
   qualification predates the changes listed above and has to be repeated.
 - A production provider adapter with an approved sender and contact policy. No
   external dispatch is approved.
-- The complete log canary matrix and correlation IDs in user-visible errors.
 - Systematic tab-order/assistive-technology/cross-browser acceptance, current
   en/fr/de evidence for every screen and end-to-end load tests at specification
   scale.

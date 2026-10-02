@@ -127,6 +127,26 @@ measures the local service/database path, excluding browsers, internet latency,
 TLS, OIDC and assistive technology. Results apply to the measured environment;
 they are not a general capacity promise.
 
+## Technical log and references
+
+Application and worker write one JSON line per refused or failed operation to
+standard error; see [security](security.md) for the fields and levels. Keep
+that output with ordinary operational access: it contains no content, contact,
+account or study identifier. A person who reports a failure quotes the
+reference at the end of the message:
+
+```sh
+grep '"correlation_id":"dc8e1fe1f892"' app.log
+```
+
+The entry names the operation, the time and the condition class. A failed
+background operation shows its operation ID; search for it as `"reference"` in
+the worker's output. `DELPHYR_LOG_LEVEL=info` also records every successful
+operation with its duration.
+
+The worker ends with status 1 after an unexpected failure, having logged its
+class. Run it under a supervisor that restarts it.
+
 ## Failure handling
 
 On database failure, never report an unconfirmed save as successful. Check

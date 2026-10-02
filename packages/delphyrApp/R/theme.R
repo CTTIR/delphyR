@@ -42,15 +42,25 @@ footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 '
 status_ui <- function(id) shiny::tags$div(class = "del-status", role = "status", `aria-live` = "polite", shiny::textOutput(id))
 command_id <- function() uuid::UUIDgenerate()
+# The message never repeats what the server refused; the reference links it to
+# one entry of the technical log, which holds no content either.
 safe_error <- function(e, lang) {
-  if (inherits(e, "DEL_CONFLICT")) {
-    return(tr(lang, "Konflikt: Bitte Seite neu laden und den gespeicherten Stand pr\u00fcfen. Ihre Eingabe ist noch sichtbar.", "Conflict: reload and review the saved version. Your input remains visible."))
+  text <- if (inherits(e, "DEL_CONFLICT")) {
+    tr(lang, "Konflikt: Bitte Seite neu laden und den gespeicherten Stand pr\u00fcfen. Ihre Eingabe ist noch sichtbar.", "Conflict: reload and review the saved version. Your input remains visible.")
+  } else if (inherits(e, "DEL_ROUND_CLOSED")) {
+    tr(lang, "Die Runde ist geschlossen oder die Frist abgelaufen. Speichern ist nicht m\u00f6glich.", "The round is closed or its deadline has passed. Saving is unavailable.")
+  } else {
+    tr(lang, "Aktion fehlgeschlagen. Bitte Angaben, Berechtigung und Rundenstatus pr\u00fcfen. Es wurde kein Erfolg best\u00e4tigt.", "Action failed. Check your entries, permissions and round state. No success was confirmed.")
   }
-  if (inherits(e, "DEL_ROUND_CLOSED")) {
-    return(tr(lang, "Die Runde ist geschlossen oder die Frist abgelaufen. Speichern ist nicht m\u00f6glich.", "The round is closed or its deadline has passed. Saving is unavailable."))
-  }
-  tr(lang, "Aktion fehlgeschlagen. Bitte Angaben, Berechtigung und Rundenstatus pr\u00fcfen. Es wurde kein Erfolg best\u00e4tigt.", "Action failed. Check your entries, permissions and round state. No success was confirmed.")
+  paste(text, reference_text(error_reference(e), lang))
 }
+# A failure outside a service call gets its own entry, so that every failure
+# message quotes a reference.
+error_reference <- function(e) {
+  id <- if (is.list(e)) e$correlation_id else NULL
+  if (is.character(id) && length(id) == 1L && grepl("^[0-9a-f]{12}$", id)) id else delphyr::log_event("interface", error = e, component = "app")
+}
+reference_text <- function(id, lang) paste(tr(lang, "Referenz:", "Reference:"), id)
 state_label <- function(state, lang) {
   en <- c(draft = "Draft", review = "In review", approved = "Approved", open = "Open", closed = "Closed", frozen = "Frozen", analysed = "Analysed", released = "Feedback released", finalized = "Finalized", eligible = "Eligible", in_progress = "In progress", submitted = "Submitted")
   de <- c(draft = "Entwurf", review = "In Pr\u00fcfung", approved = "Freigegeben", open = "Offen", closed = "Geschlossen", frozen = "Eingefroren", analysed = "Ausgewertet", released = "Feedback freigegeben", finalized = "Abgeschlossen", eligible = "Teilnahme m\u00f6glich", in_progress = "In Bearbeitung", submitted = "Abgegeben")

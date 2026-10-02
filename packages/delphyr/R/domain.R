@@ -260,6 +260,8 @@ validate_protocol <- function(protocol) {
   })
   structure(list(valid = nrow(issues) == 0, issues = issues, schema_version = "1.0"), class = "delphyr_validation")
 }
+# A stored protocol is a reviewed document of limited size, not a data store.
+protocol_size <- function(protocol) ensure(nchar(json(protocol), type = "bytes") <= 1000000L, "protocol.size")
 #' Construct a protocol
 #' @param config Complete declarative configuration.
 #' @return delphyr_protocol; invalid inputs raise DEL_VALIDATION.

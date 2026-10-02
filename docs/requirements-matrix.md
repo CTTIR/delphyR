@@ -37,7 +37,7 @@ As of 2026-10-02. `implemented_tested` denotes the evidenced synthetic technical
 | EXP-01 | implemented_tested | Research, summary, audit and contact profiles with separate rights; canary tests for originals, contacts and account references; released redactions only. Public release is refused by design. |
 | EXP-02 | implemented_tested | Study report across rounds with versions, hashes, limitations and versioned author-supplied documentation; offline reproduction of analyses and comparisons. Institutional content of the documentation remains the study team's. |
 | SEC-01 | in_progress | Direct Shiny gateway passed twelve real checks; stock OSS drops headers and remains unqualified. |
-| SEC-02 | in_progress | Minimal errors/audit data; complete canary matrix remains open. |
+| SEC-02 | implemented_tested | Technical log of fixed tokens with a reference in every failure message; marked values absent from the technical log, conditions, audit trail, command receipts, the database server log of the application role and the process output in a browser run ([security](security.md)). |
 | SEC-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | AUD-01 | implemented_tested | Actor, time, object, action, detail and rationale for every command; History view and audit export; panel account references withheld ([audit](audit.md)). |
 | OPS-01 | in_progress | Database and selected study artifact restore with offline reproduction passed; production recovery remains open. |

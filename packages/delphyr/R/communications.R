@@ -156,11 +156,13 @@ cancel_campaign <- function(repo, actor, campaign_id, reason, command_id) {
   })
 }
 claim_campaign_message <- function(repo, study_id = NULL, lease_seconds = 30L) {
-  transaction(repo, function() {
+  started <- Sys.time()
+  expired <- character()
+  claim <- transaction(repo, function() {
     ensure(repo$environment %in% c("development", "test"), "communications.sink_only", "DEL_FORBIDDEN")
     if (!is.null(study_id)) valid_id(study_id) else study_id <- NA_character_
     ensure(whole(lease_seconds) && length(lease_seconds) == 1 && lease_seconds > 0 && lease_seconds <= 300, "message.lease")
-    execute(repo, "UPDATE ops.message_delivery d SET state='delivery_unknown',reason='expired_in_flight_lease',lease_token=NULL,lease_until=NULL,updated_at=clock_timestamp() FROM ops.message_outbox o WHERE d.message_id=o.id AND d.state='running' AND d.lease_until<=clock_timestamp() AND ($1::uuid IS NULL OR o.study_id=$1)", study_id)
+    expired <<- query(repo, "UPDATE ops.message_delivery d SET state='delivery_unknown',reason='expired_in_flight_lease',lease_token=NULL,lease_until=NULL,updated_at=clock_timestamp() FROM ops.message_outbox o WHERE d.message_id=o.id AND d.state='running' AND d.lease_until<=clock_timestamp() AND ($1::uuid IS NULL OR o.study_id=$1) RETURNING d.message_id", study_id)$message_id
     # A message waits for its approved send time, outside the quiet hours of
     # the study's timezone, and for its retry time after a transient failure.
     j <- query(repo, "SELECT o.* FROM ops.message_outbox o JOIN ops.message_delivery d ON d.message_id=o.id LEFT JOIN ops.campaign_schedules s ON s.campaign_id=o.campaign_id
@@ -177,6 +179,9 @@ claim_campaign_message <- function(repo, study_id = NULL, lease_seconds = 30L) {
     j$lease_token <- token
     j
   })
+  # An uncertain delivery needs a person; the technical log names the message.
+  for (id in expired) log_work("message.deliver", started, "delivery_unknown", id, reason = "expired_in_flight_lease")
+  claim
 }
 campaign_recipient_reason <- function(repo, c, enrollment_id) {
   if (nrow(query(repo, "SELECT id FROM ops.campaign_cancellations WHERE campaign_id=$1", c$id))) {
@@ -279,6 +284,12 @@ new_message_adapter <- function(name, send) {
 #' @return FALSE when idle, or message id, state and reason.
 #' @export
 process_campaign_message <- function(repo, adapter = sink_adapter(), study_id = NULL, lease_seconds = 30L) {
+  started <- Sys.time()
+  result <- deliver_campaign_message(repo, adapter, study_id, lease_seconds)
+  if (!identical(result, FALSE)) log_work("message.deliver", started, result$state, result$id, reason = result$reason)
+  result
+}
+deliver_campaign_message <- function(repo, adapter, study_id, lease_seconds) {
   ensure(inherits(adapter, "delphyr_message_adapter"), "adapter")
   j <- claim_campaign_message(repo, study_id, lease_seconds)
   if (!nrow(j)) {

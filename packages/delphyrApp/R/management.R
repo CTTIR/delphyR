@@ -320,6 +320,12 @@ readiness_label <- function(code, lang) {
   unname(ifelse(code %in% names(labels), labels[code], code))
 }
 
+# A background operation that did not succeed quotes its ID; the worker's
+# entry in the technical log carries the same reference.
+operation_status <- function(operation, lang) {
+  text <- paste(tr(lang, "Auftrag:", "Operation:"), operation_state_label(operation$state, lang))
+  if (operation$state %in% c("retry_wait", "dead_letter")) paste(text, reference_text(operation$id, lang)) else text
+}
 operation_state_label <- function(state, lang) {
   labels <- tr(lang, c(queued = "Eingereiht", running = "In Bearbeitung", succeeded = "Erfolgreich", retry_wait = "Wartet auf Wiederholung", dead_letter = "Endg\u00fcltig fehlgeschlagen"), c(queued = "Queued", running = "Processing", succeeded = "Succeeded", retry_wait = "Waiting to retry", dead_letter = "Permanently failed"))
   unname(ifelse(state %in% names(labels), labels[state], state))

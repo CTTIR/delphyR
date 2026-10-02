@@ -312,7 +312,7 @@ exports_server <- function(id, study, lang, call, services, changed = NULL) {
     shiny::observeEvent(input$poll, attempt(function() {
       shiny::req(operation())
       r <- call("get_operation", operation()$id)
-      status(paste(tr(lang(), "Auftrag:", "Operation:"), state_label(r$state, lang())))
+      status(operation_status(r, lang()))
       if (identical(r$state, "succeeded")) artifact(r$result_ref)
     }))
     output$download <- shiny::downloadHandler(
