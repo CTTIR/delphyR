@@ -94,9 +94,12 @@ http {{
 files={'realm.json':json.dumps(realm,indent=2),'proxy.cfg':proxy,'nginx.conf':nginx,
  'gateway.secret':gateway,'credentials.json':json.dumps({'username':'synthetic-manager','password':password,'subject':subject}),
  'second-credentials.json':json.dumps(second)}
+# Each file is created private; the containers need to read four of them,
+# while the directory .local/auth stays 0700.
+readable=['realm.json','proxy.cfg','nginx.conf','gateway.secret']
 for name,value in files.items():
- p=private/name;p.write_text(value);os.chmod(p,0o600)
-# Container daemons need to read these specific files; parent directory stays0700.
-for name in ['realm.json','proxy.cfg','nginx.conf','gateway.secret']:
- os.chmod(private/name,0o644)
+ descriptor=os.open(private/name,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+ os.fchmod(descriptor,0o600)
+ with os.fdopen(descriptor,'w') as stream: stream.write(value)
+ os.chmod(private/name,0o644 if name in readable else 0o600)
 print('Private synthetic auth fixture prepared in .local/auth; credentials were not printed.')

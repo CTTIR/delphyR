@@ -108,12 +108,13 @@ try:
         raise RuntimeError("Source read-only snapshot session failed")
     holder = None
     # No host port and no network: restore access is only via docker exec and
-    # the local socket, whose directory lies inside the private result directory.
+    # the local socket. Its directory lies inside the private result
+    # directory (0700), so only the invoking user reaches it; the database
+    # image sets the permissions it needs on the directory itself.
     socket = out / "s"
     if len(str(socket / ".s.PGSQL.5432")) > 100:
         raise RuntimeError("The repository path is too long for a local database socket")
-    socket.mkdir()
-    os.chmod(socket, 0o777)
+    socket.mkdir(mode=0o700)
     run(["docker", "run", "--detach", "--name", name, "--network=none",
          "--label", "delphyr.purpose=synthetic-restore-check", "--env", "POSTGRES_DB=" + database,
          "--env", "POSTGRES_HOST_AUTH_METHOD=trust", "--volume", str(socket) + ":/var/run/postgresql", image], capture_output=True)

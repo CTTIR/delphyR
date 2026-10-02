@@ -13,6 +13,13 @@ import json,os,secrets,sys,uuid
 count=int(sys.argv[1]) if len(sys.argv)==2 and sys.argv[1].isdigit() else 0
 if not 1<=count<=24: raise SystemExit(__doc__)
 private=Path(__file__).resolve().parents[2]/'.local/auth'
+def write(path,text,mode):
+    """Create or replace a private file without a moment of wider access."""
+    descriptor=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+    os.fchmod(descriptor,0o600)
+    with os.fdopen(descriptor,'w') as stream: stream.write(text)
+    # Files a container reads keep 0644; the directory .local/auth stays 0700.
+    os.chmod(path,mode)
 realm_path=private/'realm.json';target=private/'routing-credentials.json'
 realm=json.loads(realm_path.read_text())
 accounts=json.loads(target.read_text()) if target.exists() else []
@@ -26,6 +33,6 @@ for account in accounts:
      'email':account['username']+'@example.invalid','emailVerified':True,'enabled':True,
      'firstName':'Synthetic','lastName':'Routing',
      'credentials':[{'type':'password','value':account['password'],'temporary':False}]})
-realm_path.write_text(json.dumps(realm,indent=2));os.chmod(realm_path,0o644)
-target.write_text(json.dumps(accounts));os.chmod(target,0o600)
+write(realm_path,json.dumps(realm,indent=2),0o644)
+write(target,json.dumps(accounts),0o600)
 print(f'{len(accounts)} routing account(s) in the private realm fixture; credentials were not printed.')
