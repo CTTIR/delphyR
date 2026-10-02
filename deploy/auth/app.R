@@ -4,11 +4,15 @@ config <- delphyr::new_authentication_config(
   issuer='http://127.0.0.1:4190/realms/delphyr',
   gateway_secret=gateway_secret,
   trusted_proxy_addresses=strsplit(Sys.getenv('DELPHYR_AUTH_PEERS','127.0.0.1,::1'),',',fixed=TRUE)[[1]],
-  max_session_seconds=900L)
+  # The identity of one session; a new page load passes the gateway again.
+  max_session_seconds=as.integer(Sys.getenv('DELPHYR_AUTH_MAX_SESSION','900')))
+# Signing out leaves the page, which ends the application session, and asks the
+# gateway to end its own session and that of the identity provider.
 delphyrApp::run_app(
+  sign_out_url='/oauth2/sign_out',
   repo_factory=function() delphyr::connect_repository(
     host='delphyr-auth-db',port=5432,dbname='delphyr',user='delphyr_runtime',
-    environment='development',artifact_root='/tmp/delphyr-auth-artifacts'),
+    environment='development',artifact_root='/var/lib/delphyr-artifacts'),
   actor_factory=function(session,repo) tryCatch(
     delphyr::authenticated_actor(repo,session$request,config),
     delphyr_error=function(e) {

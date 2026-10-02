@@ -29,9 +29,15 @@ services:
     build: {context: ../.., dockerfile: deploy/auth/Dockerfile}
     image: delphyr-auth-app:local
     container_name: delphyr-auth-app
-    volumes: ["../../.local/auth/gateway.secret:/run/delphyr-auth/gateway.secret:ro"]
+    volumes:
+      - "../../.local/auth/gateway.secret:/run/delphyr-auth/gateway.secret:ro"
+      # Exports: one private directory for every application process and the worker.
+      - "artifacts:/var/lib/delphyr-artifacts"
     networks:
       back: {ipv4_address: 172.30.247.3}
+volumes:
+  artifacts:
+    name: delphyr-auth-artifacts
 networks:
   front:
     name: delphyr-auth-front

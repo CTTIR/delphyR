@@ -36,7 +36,10 @@ on.exit(if (host$is_alive()) host$kill(), add = TRUE)
 worker <- qa_connection(Sys.getenv("DELPHYR_DB_RUNTIME", "delphyr_runtime"))
 work <- function() while (!identical(process_campaign_sink(worker, study), FALSE)) NULL
 settle <- function(seconds = .45) Sys.sleep(seconds)
-value <- function(sql, ...) DBI::dbGetQuery(admin$con, sql, params = list(...))
+value <- function(sql, ...) {
+  params <- list(...)
+  DBI::dbGetQuery(admin$con, sql, params = params)
+}
 states <- function(campaign) value("SELECT d.state FROM ops.message_delivery d JOIN ops.message_outbox o ON o.id=d.message_id WHERE o.campaign_id=$1 ORDER BY o.enrollment_id", campaign)$state
 m <- qa_session()
 qa_open(m, sprintf("http://127.0.0.1:%d", port))

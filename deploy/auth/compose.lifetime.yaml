@@ -1,0 +1,11 @@
+# Short lifetimes for `verify-browser.py --lifetime` only: the identity of an
+# application session ends after 20 seconds and the session of the gateway
+# after 60. Prepare the gateway file with `python3 deploy/auth/sessions.py`.
+# Use together with compose.yaml and compose.direct.yaml and return to the
+# usual lifetimes afterwards by starting both services without this file.
+services:
+  proxy:
+    volumes: ["../../.local/auth/proxy-lifetime.cfg:/run/auth/proxy.cfg:ro"]
+  app:
+    environment:
+      DELPHYR_AUTH_MAX_SESSION: "20"

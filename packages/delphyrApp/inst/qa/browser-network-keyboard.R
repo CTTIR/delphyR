@@ -3,24 +3,29 @@ b<-chromote::ChromoteSession$new();b$Page$navigate('http://127.0.0.1:3868');Sys.
 js<-function(code){r<-b$Runtime$evaluate(code);if(!is.null(r$exceptionDetails))stop(r$exceptionDetails$text);r$result$value}
 key<-function(key,code,number){b$Input$dispatchKeyEvent(type='keyDown',key=key,code=code,windowsVirtualKeyCode=number,text=if(key=='Enter') '\r' else if(key==' ') ' ' else '');b$Input$dispatchKeyEvent(type='keyUp',key=key,code=code,windowsVirtualKeyCode=number)}
 focus<-function(id)js(sprintf("document.getElementById('%s').focus()",id))
-select_text<-function(id,text){js(sprintf("document.getElementById('%s').selectize.focus()",id));b$Input$insertText(text=text);Sys.sleep(.2);key('Enter','Enter',13);Sys.sleep(.3)}
-focus('panel-load');key('Enter','Enter',13);Sys.sleep(.6)
+wait<-function(code){for(attempt in 1:150){if(isTRUE(tryCatch(js(code),error=function(e)FALSE)))return(invisible(TRUE));Sys.sleep(.1)};stop('Browser condition was not met: ',code)}
+# The round is opened with the keyboard once the list of rounds has arrived.
+open_round<-function(){wait("document.getElementById('panel-load')!==null&&!!document.getElementById('panel-enrollment')&&document.getElementById('panel-enrollment').value!==''");focus('panel-load');key('Enter','Enter',13);wait("document.getElementById('panel-item_1_1-value')!==null")}
+# A choice in the browser's own list control: focus it and type the first
+# character of the option, as a person does with the keyboard.
+select_text<-function(id,text){focus(id);ch<-substr(text,1,1);code<-utf8ToInt(toupper(ch));b$Input$dispatchKeyEvent(type='keyDown',key=ch,text=ch,windowsVirtualKeyCode=code,nativeVirtualKeyCode=code);b$Input$dispatchKeyEvent(type='keyUp',key=ch,windowsVirtualKeyCode=code,nativeVirtualKeyCode=code);Sys.sleep(.3)}
+open_round()
 focus('panel-consent_check');key(' ','Space',32);key('Tab','Tab',9);key('Enter','Enter',13);Sys.sleep(.4)
 select_text('panel-item_1_1-kind','Give a response');select_text('panel-item_1_1-value','7')
 x<-js("JSON.stringify({kind:document.getElementById('panel-item_1_1-kind').value,value:document.getElementById('panel-item_1_1-value').value})");print(x);stopifnot(length(x)==1,grepl('"kind":"answered"',x,fixed=TRUE),grepl('"value":"7"',x,fixed=TRUE))
 focus('panel-item_1_1-save');key('Enter','Enter',13);Sys.sleep(.4)
-x<-js("document.getElementById('panel-item_1_1-status').innerText");print(x);stopifnot(length(x)==1,grepl('Saved:',x,fixed=TRUE))
+x<-js("document.getElementById('panel-slot_1-status').innerText");print(x);stopifnot(length(x)==1,grepl('Saved:',x,fixed=TRUE))
 select_text('panel-item_1_1-value','8')
-x<-js("document.getElementById('panel-item_1_1-status').innerText");print(x);stopifnot(length(x)==1,grepl('Unsaved change',x,fixed=TRUE),!grepl('Saved:',x,fixed=TRUE))
+x<-js("document.getElementById('panel-slot_1-status').innerText");print(x);stopifnot(length(x)==1,grepl('Unsaved change',x,fixed=TRUE),!grepl('Saved:',x,fixed=TRUE))
 b$Network$enable();b$Network$emulateNetworkConditions(offline=TRUE,latency=0,downloadThroughput=0,uploadThroughput=0)
 js("Shiny.shinyapp.$socket.close()")
 Sys.sleep(.4)
 x<-js("document.getElementById('panel-connection').innerText");print(x);stopifnot(length(x)==1,grepl('Connection lost. Changes are not being saved.',x,fixed=TRUE))
-stopifnot(isTRUE(js("document.getElementById('panel-item_1_1-status').parentElement.hidden")))
+stopifnot(isTRUE(js("document.getElementById('panel-slot_1-status').parentElement.hidden")))
 focus('panel-item_1_1-save');key('Enter','Enter',13)
 b$screenshot(file.path(tempdir(),'delphyr-network-disconnected.png'))
 b$Network$emulateNetworkConditions(offline=FALSE,latency=0,downloadThroughput=-1,uploadThroughput=-1);b$Page$reload();Sys.sleep(2)
-focus('panel-load');key('Enter','Enter',13);Sys.sleep(.5)
+open_round()
 x<-js("document.getElementById('panel-item_1_1-value').value");print(x);stopifnot(identical(x,'7'))
 labels<-js("JSON.stringify(Array.from(document.querySelectorAll('input,select,textarea')).filter(e=>e.offsetWidth>0&&e.type!=='hidden').map(e=>({id:e.id,label:!!document.querySelector('label[for=\"'+e.id+'\"]')||!!e.closest('label')||!!e.getAttribute('aria-label')||!!e.getAttribute('aria-labelledby')})))")
 print(labels);stopifnot(!grepl('"label":false',labels,fixed=TRUE))

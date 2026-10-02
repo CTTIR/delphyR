@@ -17,9 +17,9 @@ revisions <- function() qa_count(admin, "SELECT count(*) FROM research.response_
 load_round <- function(s) {
   s$wait_for("document.getElementById('panel-load') !== null && document.getElementById('panel-enrollment').value !== ''")
   s$click("panel-load")
-  s$wait_for("document.getElementById('panel-item_1_1-value') !== null && document.getElementById('panel-item_1_1-value').selectize !== undefined")
+  s$wait_for("document.getElementById('panel-item_1_1-value') !== null")
 }
-saved <- function(s, item) s$wait_for(sprintf("document.querySelector('#panel-item_1_%d-save_status .del-status--saved') !== null && document.getElementById('panel-item_1_%d-status').innerText.startsWith('Saved:')", item, item))
+saved <- function(s, item) s$wait_for(sprintf("document.querySelector('#panel-slot_%d-save_status .del-status--saved') !== null && document.getElementById('panel-slot_%d-status').innerText.startsWith('Saved:')", item, item))
 
 # 1. A rating alone is an answer and is saved without any button.
 a <- qa_session()
@@ -32,7 +32,7 @@ a$wait_text("panel-status", "Consent saved.")
 stopifnot(identical(a$value("panel-item_1_1-kind"), "not_answered"), identical(a$value("panel-item_1_1-value"), ""))
 a$select("panel-item_1_1-value", "7")
 a$wait_for("document.getElementById('panel-item_1_1-kind').value === 'answered'")
-a$wait_text("panel-item_1_1-status", "Unsaved change")
+a$wait_text("panel-slot_1-status", "Unsaved change")
 stopifnot(revisions() == 0L)
 saved(a, 1)
 x <- current(1)
@@ -40,8 +40,8 @@ stopifnot(x$revision == 1L, x$status == "answered", x$value_int == 7L)
 
 # 2. A changed rating is unsaved until its own commit is confirmed.
 a$select("panel-item_1_1-value", "8")
-a$wait_text("panel-item_1_1-status", "Unsaved change")
-stopifnot(!grepl("Saved:", a$text("panel-item_1_1-status"), fixed = TRUE), current(1)$value_int == 7L)
+a$wait_text("panel-slot_1-status", "Unsaved change")
+stopifnot(!grepl("Saved:", a$text("panel-slot_1-status"), fixed = TRUE), current(1)$value_int == 7L)
 saved(a, 1)
 stopifnot(current(1)$revision == 2L, current(1)$value_int == 8L)
 
@@ -67,18 +67,18 @@ stopifnot(current(1)$revision == 3L, current(1)$value_int == 5L)
 # 5. The first tab's stale entry is refused, not merged or overwritten.
 before <- revisions()
 a$select("panel-item_1_1-value", "9")
-a$wait_text("panel-item_1_1-status", "Conflict")
+a$wait_text("panel-slot_1-status", "Conflict")
 a$wait_for("document.getElementById('panel-item_1_1-reload') !== null")
 stopifnot(
-  isTRUE(a$js("document.querySelector('#panel-item_1_1-save_status .del-status--attention') !== null")),
+  isTRUE(a$js("document.querySelector('#panel-slot_1-save_status .del-status--attention') !== null")),
   identical(a$value("panel-item_1_1-value"), "9"), revisions() == before, current(1)$value_int == 5L
 )
 a$select("panel-item_1_1-value", "6")
 Sys.sleep(2.5)
-stopifnot(revisions() == before, grepl("Conflict", a$text("panel-item_1_1-status"), fixed = TRUE))
+stopifnot(revisions() == before, grepl("Conflict", a$text("panel-slot_1-status"), fixed = TRUE))
 a$click("panel-item_1_1-reload")
 a$wait_for("document.getElementById('panel-item_1_1-value').value === '5'")
-a$wait_text("panel-item_1_1-status", "Saved response loaded.")
+a$wait_text("panel-slot_1-status", "Saved response loaded.")
 Sys.sleep(2.5)
 stopifnot(revisions() == before, current(1)$revision == 3L, !a$exists("panel-item_1_1-reload"))
 
@@ -87,7 +87,7 @@ a$select("panel-item_1_1-value", "4")
 a$offline(TRUE)
 a$js("Shiny.shinyapp.$socket.close()")
 a$wait_text("panel-connection", "Connection lost. Changes are not being saved.")
-stopifnot(isTRUE(a$js("document.getElementById('panel-item_1_1-status').parentElement.hidden")))
+stopifnot(isTRUE(a$js("document.getElementById('panel-slot_1-status').parentElement.hidden")))
 Sys.sleep(2.5)
 stopifnot(revisions() == before, current(1)$value_int == 5L)
 a$offline(FALSE)

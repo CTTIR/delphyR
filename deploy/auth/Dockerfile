@@ -9,6 +9,7 @@ COPY deploy/auth/shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY deploy/auth/app.R /srv/shiny-server/delphyr/app.R
 # The image's prebuilt fs package links to the system libuv runtime.
 RUN apt-get update && apt-get install -y --no-install-recommends libuv1t64 && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /srv/shiny-server/delphyr/app_cache \
-    && chown shiny:shiny /srv/shiny-server/delphyr/app_cache
+    && mkdir -p /srv/shiny-server/delphyr/app_cache /var/lib/delphyr-artifacts \
+    && chown shiny:shiny /srv/shiny-server/delphyr/app_cache /var/lib/delphyr-artifacts \
+    && chmod 0700 /var/lib/delphyr-artifacts
 COPY deploy/auth/run-direct.R /srv/shiny-server/delphyr/run-direct.R

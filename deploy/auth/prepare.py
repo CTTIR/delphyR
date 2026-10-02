@@ -35,6 +35,7 @@ redeem_url = "http://keycloak:8080/realms/delphyr/protocol/openid-connect/token"
 oidc_jwks_url = "http://keycloak:8080/realms/delphyr/protocol/openid-connect/certs"
 profile_url = "http://keycloak:8080/realms/delphyr/protocol/openid-connect/userinfo"
 redirect_url = "http://127.0.0.1:4189/oauth2/callback"
+backend_logout_url = "http://keycloak:8080/realms/delphyr/protocol/openid-connect/logout?id_token_hint={{id_token}}"
 client_id = "delphyr-local"
 client_secret = "{client}"
 cookie_secret = "{base64.urlsafe_b64encode(secrets.token_bytes(32)).decode()}"
@@ -65,12 +66,18 @@ nginx=f'''events {{}}
 http {{
   access_log off;
   map $http_upgrade $connection_upgrade {{ default upgrade; '' close; }}
+  # A session lives in one application process. Every request of one verified
+  # account therefore reaches the same process; scale.py adds further ones.
+  upstream delphyr_app {{
+    hash $http_x_forwarded_user consistent;
+    server 172.30.247.3:3860;
+  }}
   server {{
     listen 8080;
     allow 172.30.246.2;
     deny all;
     location / {{
-      proxy_pass http://app:3860;
+      proxy_pass http://delphyr_app;
       proxy_http_version 1.1;
       proxy_set_header Host $http_host;
       proxy_set_header X-Forwarded-User $http_x_forwarded_user;

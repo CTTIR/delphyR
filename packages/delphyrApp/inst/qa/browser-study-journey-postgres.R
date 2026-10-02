@@ -59,7 +59,10 @@ as_user <- function(subject, gateway = secret, fragment = "") {
   s
 }
 settle <- function(seconds = .45) Sys.sleep(seconds)
-value <- function(sql, ...) DBI::dbGetQuery(admin$con, sql, params = list(...))
+value <- function(sql, ...) {
+  params <- list(...)
+  DBI::dbGetQuery(admin$con, sql, params = params)
+}
 
 # 0. Identity boundary: no headers, a wrong gateway secret and an unknown
 #    account receive no session.
@@ -231,7 +234,7 @@ open_round(1L)
 
 # 7. The panel consents, rates with automatic saving and submits.
 enrollment <- function(subject, number) value("SELECT e.id FROM research.enrollments e JOIN research.rounds r ON r.id=e.round_id JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN identity.memberships m ON m.id=l.membership_id JOIN identity.principals p ON p.id=m.principal_id WHERE e.study_id=$1 AND r.number=$2 AND r.state<>'cancelled' AND p.subject=$3", study, number, subject)$id
-saved <- function(s, item) s$wait_for(sprintf("document.querySelector('#panel-item_1_%d-save_status .del-status--saved') !== null && document.getElementById('panel-item_1_%d-status').innerText.startsWith('Saved:')", item, item))
+saved <- function(s, item) s$wait_for(sprintf("document.querySelector('#panel-slot_%d-save_status .del-status--saved') !== null && document.getElementById('panel-slot_%d-status').innerText.startsWith('Saved:')", item, item))
 answer_round <- function(i, number, answers, submit = TRUE, prior = NULL) {
   s <- panel[[i]]
   invisible(s$b$Page$reload())
@@ -240,14 +243,14 @@ answer_round <- function(i, number, answers, submit = TRUE, prior = NULL) {
   s$select("panel-enrollment", id)
   settle()
   s$click("panel-load")
-  s$wait_for("document.getElementById('panel-item_1_2-value') !== null && document.getElementById('panel-item_1_2-value').selectize !== undefined")
+  s$wait_for("document.getElementById('panel-item_1_2-value') !== null")
   if (number == 1L) {
     s$click("panel-consent_check")
     settle(.3)
     s$click("panel-consent")
     s$wait_text("panel-status", "Consent saved.")
   }
-  if (!is.null(prior)) for (item in seq_along(prior)) s$wait_text(sprintf("panel-item_1_%d-prior", item), paste("Your previous response:", prior[item]))
+  if (!is.null(prior)) for (item in seq_along(prior)) s$wait_text(sprintf("panel-slot_%d-prior", item), paste("Your previous response:", prior[item]))
   for (item in seq_along(answers)) {
     if (identical(answers[[item]], "unable")) s$select(sprintf("panel-item_1_%d-kind", item), "unable_to_judge") else s$select(sprintf("panel-item_1_%d-value", item), as.character(answers[[item]]))
     saved(s, item)
@@ -318,7 +321,7 @@ answer_round(2, 2L, list(8, 7), prior = c("answered 7", "answered 3"))
 answer_round(3, 2L, list(9, 8), prior = c("answered 9", "answered 8"))
 # The fourth member rates but does not submit; such answers are not research data.
 answer_round(4, 2L, list(5, 5), submit = FALSE, prior = c("unable_to_judge", "answered 9"))
-feedback_text <- panel[[1]]$text("panel-item_1_1-feedback")
+feedback_text <- panel[[1]]$text("panel-slot_1-feedback")
 stopifnot(grepl("I001", feedback_text, fixed = TRUE), !grepl("public_contributors", feedback_text, fixed = TRUE))
 
 # 10. Final round, decisions, finalization and completion.

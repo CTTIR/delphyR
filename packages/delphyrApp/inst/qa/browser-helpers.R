@@ -60,7 +60,8 @@ qa_session <- function() {
     b = b, js = js, wait_for = wait_for,
     # Text inputs: set the value and raise the events Shiny listens for.
     type = function(id, value) invisible(js(sprintf("(function(){var x=document.getElementById(%s);x.value=%s;x.dispatchEvent(new Event('input',{bubbles:true}));x.dispatchEvent(new Event('change',{bubbles:true}));return true;})()", quote_js(id), quote_js(value)))),
-    select = function(id, value) invisible(js(sprintf("(function(){document.getElementById(%s).selectize.setValue(%s);return true;})()", quote_js(id), quote_js(value)))),
+    # A choice in a list with search, or in a plain list such as a rating.
+    select = function(id, value) invisible(js(sprintf("(function(){var x=document.getElementById(%s);if(x.selectize){x.selectize.setValue(%s);}else{x.value=%s;x.dispatchEvent(new Event('change',{bubbles:true}));}return true;})()", quote_js(id), quote_js(value), quote_js(value)))),
     click = function(id) invisible(js(sprintf("(function(){document.getElementById(%s).click();return true;})()", quote_js(id)))),
     value = function(id) js(sprintf("document.getElementById(%s).value", quote_js(id))),
     text = function(id) js(sprintf("(function(){var x=document.getElementById(%s);return x?x.innerText:'';})()", quote_js(id))),
@@ -130,7 +131,12 @@ qa_open <- function(s, url) {
   stop("Application did not start: ", url)
 }
 
-qa_count <- function(repo, sql, ...) as.integer(DBI::dbGetQuery(repo$con, sql, params = list(...))[[1]])
+# Arguments are evaluated before the statement is sent: one of them may run a
+# query of its own.
+qa_count <- function(repo, sql, ...) {
+  params <- list(...)
+  as.integer(DBI::dbGetQuery(repo$con, sql, params = params)[[1]])
+}
 
 # Unpacks downloaded zip bytes into a fresh private directory.
 qa_unzip <- function(bytes) {
@@ -196,4 +202,115 @@ qa_two_round_study <- function(admin) {
   for (item in c("I001", "I002")) delphyr::record_item_decision(admin, manager, two$analysis, item, "finalize", "Final synthetic decision", paste("final", item))
   delphyr::transition_round(admin, manager, second$id, "finalized", second$hash, "Final round", "finalize")
   list(code = code, study_id = study, manager = manager, panel = panel, rounds = list(first, second), snapshots = c(one$snapshot, two$snapshot), analyses = c(one$analysis, two$analysis), feedback = feedback$id)
+}
+
+# A script that answers a round inside the page as a person would: it opens
+# the round with the given number, consents if asked to, enters every answer
+# after a pause, waits for each confirmed save, moves through the blocks and
+# submits. Progress and timings are left in `window.__participant`.
+#   answers  NULL for a random rating in every rating field; or a list named
+#            by the position of a field in the round, each entry a rating as
+#            text, a longer text for a free-text field, or the code of a
+#            special response such as "unable_to_judge". Fields without an
+#            entry are left untouched.
+#   think    shortest and longest pause before an entry, in seconds.
+#   limit    stop after this many entries without submitting; 0 for all.
+qa_participant_script <- function(round_number, answers = NULL, think = c(0.3, 0.6), consent = FALSE, submit = TRUE, limit = 0L) {
+  special <- c("unable_to_judge", "abstained", "not_applicable")
+  sprintf("
+(function(){
+  if (window.__participant) return;
+  var L = window.__participant = {phase: 'start', saves: [], blocks: [], errors: [], done: false};
+  var answers = %s, special = %s, consent = %s, submit = %s, limit = %d, thinkMin = %f, thinkSpan = %f, round = %d;
+  var sleep = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); };
+  var until = async function(test, ms){ var end = performance.now() + ms; while (performance.now() < end) { try { var v = test(); if (v) return v; } catch (e) {} await sleep(50); } return null; };
+  var fields = function(){ return Array.from(document.querySelectorAll('#panel-block section.del-item')); };
+  var control = function(section){ return section.querySelector('[id$=\"-value\"]'); };
+  // A block is ready when every field has its control and its status line.
+  var ready = function(previous){
+    var s = fields();
+    if (!s.length) return false;
+    var first = control(s[0]);
+    if (!first || first.id === previous) return false;
+    return s.every(function(x){ return !!(control(x) && x.querySelector('[id$=\"-status\"]')); }) ? first.id : false;
+  };
+  var fire = function(el, name){ el.dispatchEvent(new Event(name, {bubbles: true})); };
+  (async function(){
+    var navigation = performance.now();
+    var ok = await until(function(){ var x = document.getElementById('panel-enrollment'); return x && x.selectize && Object.values(x.selectize.options).some(function(o){ return new RegExp('\\\\b' + round + '\\\\b').test(o.label); }); }, 300000);
+    if (!ok) { L.errors.push('round not offered'); L.done = true; return; }
+    L.connect_ms = performance.now() - navigation;
+    var list = document.getElementById('panel-enrollment').selectize;
+    list.setValue(Object.values(list.options).filter(function(o){ return new RegExp('\\\\b' + round + '\\\\b').test(o.label); })[0].value);
+    await sleep(300);
+    var opened = performance.now();
+    document.getElementById('panel-load').click();
+    L.phase = 'loading';
+    var shown = await until(function(){ return ready(null); }, 600000);
+    if (!shown) { L.errors.push('questionnaire not ready'); L.done = true; return; }
+    L.ready_ms = performance.now() - opened;
+    if (consent) {
+      document.getElementById('panel-consent_check').click();
+      await sleep(300);
+      document.getElementById('panel-consent').click();
+      var given = await until(function(){ return document.getElementById('panel-status').innerText.indexOf('Consent saved.') >= 0; }, 60000);
+      if (!given) { L.errors.push('consent not saved: ' + document.getElementById('panel-status').innerText); L.done = true; return; }
+    }
+    L.phase = 'rating';
+    var entered = 0, complete = true;
+    while (true) {
+      var sections = fields();
+      for (var i = 0; i < sections.length; i++) {
+        var section = sections[i], input = control(section);
+        var row = parseInt(input.id.replace(/^.*_([0-9]+)-value$/, '$1'), 10);
+        var answer = answers === null ? (input.tagName === 'SELECT' ? String(1 + Math.floor(Math.random() * 9)) : null) : (answers[String(row)] === undefined ? null : String(answers[String(row)]));
+        if (answer === null) continue;
+        if (limit > 0 && entered >= limit) { complete = false; break; }
+        await sleep(thinkMin + Math.random() * thinkSpan);
+        var t0 = performance.now();
+        if (special.indexOf(answer) >= 0) {
+          var kind = section.querySelector('[id$=\"-kind\"]');
+          kind.value = answer; fire(kind, 'change');
+        } else {
+          input.value = answer; fire(input, input.tagName === 'SELECT' ? 'change' : 'input');
+          if (input.tagName !== 'SELECT') fire(input, 'change');
+        }
+        var state = await until(function(){
+          var s = section.querySelector('[id$=\"-status\"]');
+          if (!s) return null;
+          if (s.innerText.indexOf('Saved:') >= 0) return 'saved';
+          if (s.innerText.indexOf('Reference:') >= 0) return 'failed: ' + s.innerText;
+          return null;
+        }, 120000);
+        var entry = {row: row, value: answer, ms: performance.now() - t0, state: state === null ? 'timeout' : state};
+        L.saves.push(entry);
+        entered++;
+        if (entry.state !== 'saved') L.errors.push('field ' + row + ' ' + entry.state);
+      }
+      if (!complete) break;
+      var choice = document.getElementById('panel-block_choice');
+      if (!choice || parseInt(choice.value, 10) >= choice.options.length) break;
+      var t1 = performance.now();
+      document.getElementById('panel-block_next').click();
+      shown = await until(function(){ return ready(shown); }, 300000);
+      if (!shown) { L.errors.push('next block not ready: ' + document.getElementById('panel-status').innerText); complete = false; break; }
+      L.blocks.push(performance.now() - t1);
+    }
+    if (complete && submit) {
+      L.phase = 'submitting';
+      document.getElementById('panel-confirm').click();
+      await sleep(400);
+      var t2 = performance.now();
+      document.getElementById('panel-submit').click();
+      var receipt = await until(function(){ var r = document.getElementById('panel-receipt'); return r && r.innerText.indexOf('Submission confirmed:') >= 0; }, 120000);
+      L.submit_ms = receipt ? performance.now() - t2 : null;
+      if (!receipt) L.errors.push('submission not confirmed: ' + document.getElementById('panel-status').innerText);
+    }
+    L.phase = 'done';
+    L.done = true;
+  })();
+})();",
+    if (is.null(answers)) "null" else as.character(jsonlite::toJSON(answers, auto_unbox = TRUE)), as.character(jsonlite::toJSON(special)),
+    if (isTRUE(consent)) "true" else "false", if (isTRUE(submit)) "true" else "false", as.integer(limit), think[1] * 1000, (think[2] - think[1]) * 1000, as.integer(round_number)
+  )
 }

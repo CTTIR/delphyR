@@ -61,7 +61,10 @@ open_study <- function(port) {
   s
 }
 settle <- function(seconds = .45) Sys.sleep(seconds)
-value <- function(sql, ...) DBI::dbGetQuery(admin$con, sql, params = list(...))
+value <- function(sql, ...) {
+  params <- list(...)
+  DBI::dbGetQuery(admin$con, sql, params = params)
+}
 
 # 1. The editor takes over the frozen proposals as sources.
 l <- open_study(ports[["lead"]])
@@ -207,12 +210,12 @@ load_second <- function() {
   m$wait_for("document.getElementById('panel-item_1_2-value') !== null")
 }
 load_second()
-m$wait_text("panel-item_1_1-prior", "Moderated summary (not a quotation): Most members reject covering shared decision making.")
+m$wait_text("panel-slot_1-prior", "Moderated summary (not a quotation): Most members reject covering shared decision making.")
 m$wait_text("panel-round_feedback", "Redacted contribution: Cost should not decide.")
 page <- m$js("document.documentElement.outerHTML")
-stopifnot(!grepl("ORIGINAL-PROPOSAL-2", page, fixed = TRUE), !grepl("ORIGINAL-PROPOSAL-4", page, fixed = TRUE), !grepl("named colleague", m$text("panel-item_1_1-prior"), fixed = TRUE), !grepl("This feedback was corrected", page, fixed = TRUE))
+stopifnot(!grepl("ORIGINAL-PROPOSAL-2", page, fixed = TRUE), !grepl("ORIGINAL-PROPOSAL-4", page, fixed = TRUE), !grepl("named colleague", m$text("panel-slot_1-prior"), fixed = TRUE), !grepl("This feedback was corrected", page, fixed = TRUE))
 m$select("panel-item_1_1-value", "3")
-m$wait_for("document.querySelector('#panel-item_1_1-save_status .del-status--saved') !== null")
+m$wait_for("document.querySelector('#panel-slot_1-save_status .del-status--saved') !== null")
 
 # 7. The summary reversed the proposals. It is corrected by a new version.
 right_summary <- create_version(1, "summary", "Most members propose covering shared decision making.", "The earlier summary reversed the direction of the proposals")
@@ -244,7 +247,7 @@ l$wait_text("management-operations-published", "replaced")
 invisible(m$b$Page$reload())
 load_second()
 m$wait_text("panel-round_feedback", "This feedback was corrected. The summary of round one was wrong")
-m$wait_text("panel-item_1_1-prior", "Moderated summary (not a quotation): Most members propose covering shared decision making.")
+m$wait_text("panel-slot_1-prior", "Moderated summary (not a quotation): Most members propose covering shared decision making.")
 stopifnot(!grepl("Most members reject", m$js("document.documentElement.outerHTML"), fixed = TRUE), identical(m$value("panel-item_1_1-value"), "3"))
 feedback <- value("SELECT f.id,f.hash,f.state,f.content::text AS content FROM research.feedback f WHERE f.study_id=$1 ORDER BY (f.id=$2) DESC", study, old_feedback$id)
 correction <- value("SELECT feedback_id,replacement_id,reason FROM research.feedback_corrections WHERE study_id=$1", study)

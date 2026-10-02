@@ -1,0 +1,37 @@
+# Further application processes behind the same local gateway, for the direct
+# backend only. Use together with compose.yaml and compose.direct.yaml, after
+# `python3 deploy/auth/scale.py N`. Each process serves its own sessions; the
+# gateway sends every request of one verified account to the same process.
+# Their addresses leave the low end of the private network to other local
+# services such as the development database.
+x-app: &app
+  image: delphyr-auth-app:local
+  entrypoint: ["Rscript", "/srv/shiny-server/delphyr/run-direct.R"]
+  command: []
+  user: shiny
+  working_dir: /srv/shiny-server/delphyr
+  environment:
+    DELPHYR_AUTH_PEERS: "172.30.247.2"
+    DELPHYR_AUTH_MAX_SESSION: "${DELPHYR_AUTH_MAX_SESSION:-900}"
+    DELPHYR_LOG_LEVEL: "${DELPHYR_LOG_LEVEL:-warning}"
+  volumes:
+    - "../../.local/auth/gateway.secret:/run/delphyr-auth/gateway.secret:ro"
+    - "artifacts:/var/lib/delphyr-artifacts"
+services:
+  app2:
+    <<: *app
+    container_name: delphyr-auth-app2
+    networks:
+      back: {ipv4_address: 172.30.247.12}
+  app3:
+    <<: *app
+    container_name: delphyr-auth-app3
+    profiles: ["three", "four"]
+    networks:
+      back: {ipv4_address: 172.30.247.13}
+  app4:
+    <<: *app
+    container_name: delphyr-auth-app4
+    profiles: ["four"]
+    networks:
+      back: {ipv4_address: 172.30.247.14}

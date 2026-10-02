@@ -107,10 +107,16 @@ try:
     if holder.returncode:
         raise RuntimeError("Source read-only snapshot session failed")
     holder = None
-    # No host port and no network: restore access is only via docker exec/local socket.
+    # No host port and no network: restore access is only via docker exec and
+    # the local socket, whose directory lies inside the private result directory.
+    socket = out / "s"
+    if len(str(socket / ".s.PGSQL.5432")) > 100:
+        raise RuntimeError("The repository path is too long for a local database socket")
+    socket.mkdir()
+    os.chmod(socket, 0o777)
     run(["docker", "run", "--detach", "--name", name, "--network=none",
          "--label", "delphyr.purpose=synthetic-restore-check", "--env", "POSTGRES_DB=" + database,
-         "--env", "POSTGRES_HOST_AUTH_METHOD=trust", image], capture_output=True)
+         "--env", "POSTGRES_HOST_AUTH_METHOD=trust", "--volume", str(socket) + ":/var/run/postgresql", image], capture_output=True)
     created = True
     for _ in range(120):
         ready = subprocess.run(["docker", "exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", database], capture_output=True)
@@ -146,14 +152,23 @@ try:
         code = '.libPaths(c(normalizePath(".R-library"),.libPaths()));pkgload::load_all("packages/delphyr",quiet=TRUE);delphyr::reproduce_export(commandArgs(TRUE)[1]);cat("OFFLINE RESTORED ARTIFACT PASS\\n")'
         with (out / ("artifact-" + key + ".log")).open("wb") as log:
             run(["Rscript", "-e", code, str(restored_dir)], cwd=root, stdout=log, stderr=log)
+    # The restored database in use: schema state, application role, messages
+    # held before any worker starts, a member's and a staff read, and every
+    # frozen snapshot of one study verified and analysed again.
+    verify = subprocess.run(["Rscript", "scripts/restore-verify.R", str(socket)] + ([artifact_study] if artifact_study else []), cwd=root, capture_output=True, text=True)
+    (out / "function-check.log").write_text(verify.stdout + verify.stderr)
+    lines = [line for line in verify.stdout.splitlines() if line.startswith("{")]
+    function_check = json.loads(lines[-1]) if lines else {"passed": False}
+    if verify.returncode != 0 or not function_check.get("passed"):
+        raise RuntimeError("Function check of the restored database failed: " + json.dumps(function_check.get("checks", {})))
     digest = hashlib.sha256((out / "database.dump").read_bytes()).hexdigest()
     summary = dict(status="PASS", scope=("synthetic PostgreSQL and selected-study artifact recovery" if artifact_study else "synthetic PostgreSQL database recovery only"), source_container=source,
         restore_container=name, image_id=image, exported_snapshot=snapshot, dump_sha256=digest,
         compared=list(checks), table_count=len(expected["tables"].splitlines()),
         frozen_snapshot_count=len(expected["snapshots"].splitlines()), migrations_verified=migration_checks,
-        artifact_study=artifact_study or None, restored_artifacts=len(artifact_records),
+        artifact_study=artifact_study or None, restored_artifacts=len(artifact_records), function_check=function_check,
         elapsed_seconds=round(time.monotonic()-started, 3),
-        exclusions=(["private artifact bytes"] if not artifact_study else ["artifacts of other studies"]) + ["OIDC", "SMTP", "production permissions", "PITR", "production RPO/RTO"])
+        exclusions=(["private artifact bytes"] if not artifact_study else ["artifacts of other studies"]) + ["OIDC sign-in on the restored instance", "SMTP", "production permissions", "PITR", "production RPO/RTO"])
     (out / "result.json").write_text(json.dumps(summary, indent=2) + "\n")
     print("RESTORE PASS: " + str(out), flush=True)
 finally:
@@ -164,5 +179,11 @@ finally:
             holder.kill()
             holder.wait()
     if created:
+        # The database server took over the socket directory; hand it back
+        # before the instance is removed, so that nothing is left that the
+        # invoking user cannot delete.
+        subprocess.run(["docker", "exec", "--user", "root", name, "sh", "-c",
+            "rm -f /var/run/postgresql/.s.PGSQL.5432 /var/run/postgresql/.s.PGSQL.5432.lock; chown %d:%d /var/run/postgresql; chmod 0700 /var/run/postgresql" % (os.getuid(), os.getgid())], capture_output=True)
         run(["docker", "rm", "--force", "--volumes", name], capture_output=True)
+    shutil.rmtree(out / "s", ignore_errors=True)
 PY
