@@ -81,28 +81,47 @@ get_analysis <- function(repo, actor, analysis_id) {
   valid_id(analysis_id)
   x <- one(query(repo, "SELECT study_id,content::text FROM research.analyses WHERE id=$1", analysis_id))
   authorize(repo, actor, x$study_id, "analyse")
-  structure(jsonlite::fromJSON(x$content), class = "delphyr_analysis")
+  a <- jsonlite::fromJSON(x$content)
+  # A round without rating scales has no distributions; JSON stores that
+  # empty table as an empty array.
+  if (!is.data.frame(a$distributions)) a$distributions <- data.frame()
+  structure(a, class = "delphyr_analysis")
 }
 #' Create a reviewed feedback candidate from a frozen analysis
+#'
+#' Qualitative content enters participant feedback only as an editorial
+#' version that another person has released. The service reads the released
+#' text itself; text supplied by the caller is not accepted. A version whose
+#' source is linked to item codes is shown beside those items.
 #' @param repo Repository.
 #' @param actor Actor with analyse capability.
 #' @param analysis_id Analysis UUID.
-#' @param qualitative Reviewed summaries.
+#' @param qualitative Must be empty; use released_edits.
 #' @param command_id Idempotency key.
+#' @param released_edits UUIDs of released editorial versions of this study.
 #' @return Feedback UUID and hash, requiring separate release.
 #' @export
-create_feedback <- function(repo, actor, analysis_id, qualitative = list(), command_id) {
+create_feedback <- function(repo, actor, analysis_id, qualitative = list(), command_id, released_edits = character()) {
   transaction(repo, function() {
     a <- get_analysis(repo, actor, analysis_id)
     x <- one(query(repo, "SELECT study_id,snapshot_id FROM research.analyses WHERE id=$1", analysis_id))
     s <- get_snapshot(repo, actor, x$snapshot_id)
+    ensure(is.list(qualitative) && !length(qualitative), "feedback.qualitative_requires_released_edits")
+    ensure(is.character(released_edits) && length(released_edits) <= 200L && !anyDuplicated(released_edits), "feedback.released_edits")
+    for (id in released_edits) valid_id(id)
+    released_edits <- sort(released_edits)
+    entries <- lapply(released_edits, function(id) {
+      e <- one(query(repo, "SELECT e.id,e.kind,e.redacted_text,e.hash,q.source_ref,q.id AS source_id FROM research.qualitative_edits e JOIN research.qualitative_releases r ON r.study_id=e.study_id AND r.edit_id=e.id JOIN research.qualitative_sources q ON q.study_id=e.study_id AND q.id=e.source_id WHERE e.study_id=$1 AND e.id=$2", x$study_id, id))
+      codes <- query(repo, "SELECT DISTINCT v.item_code FROM research.qualitative_item_sources s JOIN research.item_provenance_versions v ON v.study_id=s.study_id AND v.id=s.item_id WHERE s.study_id=$1 AND s.source_id=$2 ORDER BY v.item_code", x$study_id, e$source_id)$item_code
+      list(text = e$redacted_text, reviewed = TRUE, source_ref = e$source_ref, kind = e$kind, edit_id = e$id, content_hash = e$hash, item_codes = as.list(codes))
+    })
     policy <- s$protocol$feedback[c("group_statistics", "minimum_display_cell_n", "complementary_suppression")]
-    f <- prepare_feedback(a, qualitative, policy)
-    command(repo, actor, x$study_id, "feedback_draft", command_id, list(analysis_id, qualitative), function() {
+    f <- prepare_feedback(a, entries, policy)
+    command(repo, actor, x$study_id, "feedback_draft", command_id, list(analysis_id, released_edits), function() {
       id <- uid()
       execute(repo, "INSERT INTO research.feedback(id,study_id,analysis_id,content,hash) VALUES($1,$2,$3,$4::jsonb,$5)", id, x$study_id, analysis_id, json(f), f$hash)
       list(id = id, hash = f$hash)
-    })
+    }, detail = paste(length(released_edits), "released editorial versions"))
   })
 }
 #' Release an exact reviewed feedback candidate
@@ -151,8 +170,10 @@ assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
 #' @param repo Repository.
 #' @param actor Panel actor.
 #' @param enrollment_id Own target enrollment.
-#' @return Aggregate feedback, own prior response table and the effective
-#'   comparability decisions for revised items, or NULL.
+#' @return Aggregate feedback, own prior response table, the effective
+#'   comparability decisions for revised items, the released qualitative
+#'   content and, where the feedback was corrected, the note for participants;
+#'   or NULL.
 #' @export
 get_feedback <- function(repo, actor, enrollment_id) {
   transaction(repo, function() {
@@ -162,6 +183,15 @@ get_feedback <- function(repo, actor, enrollment_id) {
     if (!nrow(f)) {
       return(NULL)
     }
+    # A corrected feedback replaces the assigned one for every later view.
+    correction <- NULL
+    repeat {
+      next_version <- query(repo, "SELECT c.replacement_id,c.participant_note,c.recorded_at::text AS corrected_at,f.content::text AS content FROM research.feedback_corrections c JOIN research.feedback f ON f.study_id=c.study_id AND f.id=c.replacement_id WHERE c.study_id=$1 AND c.feedback_id=$2 AND f.state='released'", e$study_id, f$id)
+      if (!nrow(next_version)) break
+      f$id <- next_version$replacement_id
+      f$content <- next_version$content
+      correction <- list(participant_note = next_version$participant_note, corrected_at = next_version$corrected_at)
+    }
     s <- read_snapshot(f$snapshot)
     own <- s$data[s$data$panelist_id == e$panelist_id, c("item_code", "item_version", "dimension_code", "answer_status", "value_integer", "value_text"), drop = FALSE]
     if (!isTRUE(s$protocol$feedback$own_previous_rating)) own <- own[FALSE, , drop = FALSE]
@@ -170,7 +200,7 @@ get_feedback <- function(repo, actor, enrollment_id) {
     # study team's recorded decision, shown without its internal rationale.
     decided <- comparability_history(repo, e$study_id)
     decided <- decided[decided$effective, c("item_code", "dimension_code", "previous_version", "current_version", "comparable"), drop = FALSE]
-    list(id = f$id, aggregate = jsonlite::fromJSON(f$content), own = own, comparability = decided)
+    list(id = f$id, aggregate = jsonlite::fromJSON(f$content), own = own, comparability = decided, qualitative = feedback_qualitative(from_json(f$content)$qualitative), correction = correction)
   })
 }
 #' List study round states and frozen result references
@@ -252,4 +282,11 @@ complete_study <- function(repo, actor, study_id, reason, command_id) {
       list(id = study_id, state = "completed")
     }, reason = reason)
   })
+}
+# Released qualitative content of a feedback as a table for display.
+feedback_qualitative <- function(entries) {
+  text <- function(key) vapply(entries, function(q) if (is.null(q[[key]])) NA_character_ else as.character(q[[key]]), character(1))
+  x <- data.frame(text = text("text"), kind = text("kind"), source_ref = text("source_ref"), stringsAsFactors = FALSE)
+  x$item_codes <- lapply(entries, function(q) as.character(unlist(q$item_codes)))
+  x
 }

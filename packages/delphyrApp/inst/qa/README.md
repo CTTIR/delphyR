@@ -418,3 +418,33 @@ verify results.
 Two defects found by this run were repaired with regression tests: round
 preparation used the study information read when the section was opened, and
 empty recipient and version lists rendered an output error.
+
+## Exploratory round, released feedback content and correction
+
+`browser-exploratory-postgres.R` passed on 2 October 2026 in Chromium against
+PostgreSQL with separate hosts for the editor, an independent reviewer and a
+panel member under the restricted runtime role:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-exploratory-postgres.R
+```
+
+The free-text round itself is conducted through the services. In the browser:
+
+- The editor took over four frozen proposals as sources, created a summary and
+  a redaction, read the unchanged original, and linked two derived items to
+  three proposals. The author was offered no version for release.
+- The reviewer, who never saw an original, previewed and released the exact
+  versions. The feedback preview contained only released text. The rating
+  round was prepared with the derived items, the feedback assigned, and the
+  round reviewed, approved and opened.
+- The panel member saw the summary labelled "Moderated summary (not a
+  quotation)" beside the derived item and the redaction above the items, and no
+  other member's original text anywhere in the page.
+- The summary had reversed the proposals. A corrected version was released by
+  the reviewer and published as a correction with rationale, effect and note.
+  After reloading, the panel member saw the corrected summary with the note and
+  kept the rating already saved. The earlier feedback row and its hash were
+  unchanged, the first display event referred to the earlier version and the
+  last to the correction, and all three releases were made by a different
+  account than the edits.

@@ -74,6 +74,10 @@ qa_session <- function() {
       invisible(TRUE)
     },
     exists = function(id) isTRUE(js(sprintf("document.getElementById(%s) !== null", quote_js(id)))),
+    # A section is rendered again after a confirmed change. `mark` tags the
+    # current element; `replaced` waits until the new rendering has arrived.
+    mark = function(id) invisible(js(sprintf("(function(){var x=document.getElementById(%s);if(x){x.setAttribute('data-qa-stale','1');}return true;})()", quote_js(id)))),
+    replaced = function(id) wait_for(sprintf("(function(){var x=document.getElementById(%s);return !!x && !x.hasAttribute('data-qa-stale');})()", quote_js(id))),
     # Opens the collapsible section that contains a control, as a person would.
     expand = function(id) invisible(js(sprintf("(function(){var d=document.getElementById(%s).closest('details');if(d){d.open=true;}return true;})()", quote_js(id)))),
     viewport = function(mobile) invisible(b$Emulation$setDeviceMetricsOverride(width = if (mobile) 390 else 1280, height = if (mobile) 844 else 900, deviceScaleFactor = 1, mobile = mobile)),

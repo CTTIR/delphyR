@@ -17,6 +17,15 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
     setup <- shiny::reactiveVal(NULL)
     items <- shiny::reactiveVal(NULL)
     decisions <- shiny::reactiveVal(data.frame())
+    editorial_versions <- shiny::reactiveVal(data.frame())
+    released_feedback <- shiny::reactiveVal(data.frame())
+    correction <- shiny::reactiveVal(NULL)
+    composing <- "list_released_edits" %in% names(services)
+    correcting <- all(c("list_released_edits", "list_released_feedback", "release_feedback_correction") %in% names(services))
+    load_editorial <- function() {
+      if (composing) editorial_versions(call("list_released_edits", study()))
+      if (correcting) released_feedback(call("list_released_feedback", study()))
+    }
     deciding <- all(c("record_item_decision", "list_item_decisions") %in% names(services))
     status <- shiny::reactiveVal("")
     needed <- c("freeze_round", "request_analysis", "get_operation", "get_analysis", "create_feedback", "get_feedback_candidate", "release_feedback", "assign_feedback", "request_export", "download_artifact", "get_study_setup", "prepare_round")
@@ -31,6 +40,10 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
       items(NULL)
       setup(NULL)
       decisions(data.frame())
+      editorial_versions(data.frame())
+      released_feedback(data.frame())
+      correction(NULL)
+      if (ready && allowed()) attempt(load_editorial)
       if (ready && allowed()) attempt(function() setup(call("get_study_setup", study())))
       if (ready && deciding && allowed()) attempt(function() decisions(call("list_item_decisions", study())))
     })
@@ -65,11 +78,33 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
         },
         shiny::tags$details(
           shiny::tags$summary(tr(lang(), "Feedback pr\u00fcfen und freigeben", "Review and release feedback")),
+          if (composing) {
+            shiny::tagList(
+              shiny::tags$p(tr(lang(), "Qualitative Inhalte gelangen nur als Fassung ins Feedback, die eine andere Person freigegeben hat. Zusammenfassungen werden als solche gekennzeichnet, nie als Zitat.", "Qualitative content enters feedback only as a version that another person has released. Summaries are labelled as such, never as quotations.")),
+              shiny::uiOutput(ns("released_choice")),
+              shiny::actionButton(ns("released_refresh"), tr(lang(), "Freigegebene Fassungen aktualisieren", "Refresh released versions"))
+            )
+          },
           shiny::actionButton(ns("draft"), tr(lang(), "Feedback erstellen", "Create feedback")), shiny::verbatimTextOutput(ns("preview")),
           shiny::checkboxInput(ns("reviewed"), tr(lang(), "Ich habe dieses Feedback gepr\u00fcft", "I reviewed this feedback"), FALSE),
           shiny::actionButton(ns("release"), tr(lang(), "Feedback freigeben", "Release feedback")),
           shiny::actionButton(ns("assign"), tr(lang(), "Der ausgew\u00e4hlten Folgerunde zuweisen", "Assign to selected subsequent round"))
         ),
+        if (correcting) {
+          shiny::tags$details(
+            shiny::tags$summary(tr(lang(), "Freigegebenes Feedback korrigieren", "Correct released feedback")),
+            shiny::tags$p(tr(lang(), "Freigegebenes Feedback wird nie ge\u00e4ndert. Eine Korrektur gibt eine neue Fassung frei, die sp\u00e4tere Ansichten ersetzt; fr\u00fchere Anzeigen bleiben der alten Fassung zugeordnet. Beurteilen Sie die Auswirkung auf bereits abgegebene Bewertungen.", "Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.")),
+            shiny::tableOutput(ns("published")),
+            shiny::uiOutput(ns("correction_choice")),
+            shiny::actionButton(ns("correction_draft"), tr(lang(), "Korrigierte Fassung erstellen", "Create corrected version")),
+            shiny::verbatimTextOutput(ns("correction_preview")),
+            shiny::textAreaInput(ns("correction_reason"), tr(lang(), "Begr\u00fcndung der Korrektur (intern)", "Rationale for the correction (internal)"), value = field("correction_reason"), width = "100%"),
+            shiny::textAreaInput(ns("correction_impact"), tr(lang(), "Auswirkung auf bereits abgegebene Bewertungen (intern)", "Effect on ratings already given (internal)"), value = field("correction_impact"), width = "100%"),
+            shiny::textAreaInput(ns("correction_note"), tr(lang(), "Hinweis f\u00fcr Teilnehmende", "Note for participants"), value = field("correction_note"), width = "100%"),
+            shiny::checkboxInput(ns("correction_confirm"), tr(lang(), "Ich habe die korrigierte Fassung und alle drei Texte gepr\u00fcft.", "I reviewed the corrected version and all three texts."), FALSE),
+            shiny::actionButton(ns("correction_release"), tr(lang(), "Korrektur freigeben", "Release correction"))
+          )
+        },
         shiny::tags$details(
           shiny::tags$summary(tr(lang(), "Neue Runde vorbereiten", "Prepare a new round")),
           shiny::tags$p("CSV: item_code, item_version, locale, text, dimension_code, scale_code, source_ref, required, display_order. UTF-8; required: TRUE/FALSE."),
@@ -168,10 +203,66 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
       shiny::updateTextAreaInput(session, "decision_reason", value = "")
       status(paste(tr(lang(), "Itementscheidung gespeichert:", "Item decision saved:"), input$decision_code))
     }))
+    released_choices <- function() {
+      x <- editorial_versions()
+      if (!nrow(x)) {
+        return(character())
+      }
+      label <- paste0(ifelse(x$kind == "summary", tr(lang(), "Zusammenfassung", "Summary"), tr(lang(), "Redigierter Beitrag", "Redacted contribution")), " \u00b7 ", x$source_ref, " \u00b7 ", substr(x$text, 1L, 70L))
+      stats::setNames(x$edit_id, label)
+    }
+    output$released_choice <- shiny::renderUI({
+      shiny::selectizeInput(session$ns("released_edits"), tr(lang(), "Freigegebene Fassungen f\u00fcr dieses Feedback", "Released versions for this feedback"), released_choices(), selected = shiny::isolate(input$released_edits), multiple = TRUE, width = "100%")
+    })
+    output$correction_choice <- shiny::renderUI({
+      p <- released_feedback()
+      r <- round()
+      current <- if (nrow(p) && nrow(r) == 1) p[p$round_number == r$number & is.na(p$replacement_id), , drop = FALSE] else p[FALSE, , drop = FALSE]
+      shiny::tagList(
+        shiny::selectInput(session$ns("correction_target"), tr(lang(), "Zu ersetzendes Feedback der ausgew\u00e4hlten Runde", "Feedback of the selected round to replace"), if (nrow(current)) stats::setNames(current$feedback_id, paste(tr(lang(), "Runde", "Round"), current$round_number, "\u00b7", substr(current$hash, 1L, 12L))) else character(), selected = shiny::isolate(input$correction_target)),
+        shiny::selectizeInput(session$ns("correction_edits"), tr(lang(), "Freigegebene Fassungen der korrigierten Fassung", "Released versions of the corrected version"), released_choices(), selected = shiny::isolate(input$correction_edits), multiple = TRUE, width = "100%")
+      )
+    })
+    output$published <- shiny::renderTable({
+      p <- released_feedback()
+      shiny::req(nrow(p) > 0)
+      out <- data.frame(p$round_number, substr(p$hash, 1L, 12L), ifelse(is.na(p$replacement_id), ifelse(p$is_correction, tr(lang(), "Korrektur, g\u00fcltig", "Correction, current"), tr(lang(), "g\u00fcltig", "current")), tr(lang(), "ersetzt", "replaced")), ifelse(is.na(p$reason), "", p$reason), stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("Runde", "Pr\u00fcfsumme", "Stand", "Korrekturgrund"), c("Round", "Checksum", "Status", "Reason for correction"))
+      out
+    })
+    shiny::observeEvent(input$released_refresh, attempt(load_editorial))
+    shiny::observeEvent(input$correction_draft, attempt(function() {
+      r <- selected()
+      shiny::req(correcting, !is.na(r$analysis_id), input$correction_target)
+      f <- call("create_feedback", r$analysis_id, list(), command_id(), released_edits = if (length(input$correction_edits)) sort(input$correction_edits) else character())
+      correction(list(target = input$correction_target, feedback = f, preview = call("get_feedback_candidate", f$id)))
+      shiny::updateCheckboxInput(session, "correction_confirm", value = FALSE)
+      status(tr(lang(), "Korrigierte Fassung zur Pr\u00fcfung erstellt.", "Corrected version created for review."))
+    }))
+    output$correction_preview <- shiny::renderPrint({
+      x <- correction()
+      shiny::req(x)
+      print(x$preview)
+    })
+    shiny::observeEvent(input$correction_release, attempt(function() {
+      x <- correction()
+      shiny::req(correcting, x)
+      texts <- vapply(list(input$correction_reason, input$correction_impact, input$correction_note), function(v) if (is.null(v)) "" else trimws(v), character(1))
+      if (!isTRUE(input$correction_confirm) || any(!nzchar(texts))) {
+        status(tr(lang(), "Begr\u00fcndung, Auswirkung, Hinweis und Best\u00e4tigung sind erforderlich.", "Rationale, effect, note and confirmation are required."))
+        return()
+      }
+      if (!identical(input$correction_target, x$target) || !identical(x$preview$hash, x$feedback$hash)) stop("Corrected version changed; create it again")
+      call("release_feedback_correction", x$target, x$feedback$id, x$feedback$hash, texts[1], texts[2], texts[3], command_id())
+      correction(NULL)
+      load_editorial()
+      shiny::updateCheckboxInput(session, "correction_confirm", value = FALSE)
+      status(tr(lang(), "Korrektur freigegeben. Sp\u00e4tere Ansichten zeigen die korrigierte Fassung.", "Correction released. Later views show the corrected version."))
+    }))
     shiny::observeEvent(input$draft, attempt(function() {
       r <- selected()
       shiny::req(!is.na(r$analysis_id))
-      f <- call("create_feedback", r$analysis_id, list(), command_id())
+      f <- if (composing) call("create_feedback", r$analysis_id, list(), command_id(), released_edits = if (length(input$released_edits)) sort(input$released_edits) else character()) else call("create_feedback", r$analysis_id, list(), command_id())
       feedback(f)
       preview(call("get_feedback_candidate", f$id))
       shiny::updateCheckboxInput(session, "reviewed", value = FALSE)
@@ -188,6 +279,7 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
       if (!identical(preview()$hash, f$hash)) stop("preview hash mismatch")
       call("release_feedback", f$id, f$hash, command_id())
       refresh()
+      if (correcting) load_editorial()
       status(tr(lang(), "Feedback freigegeben.", "Feedback released."))
     }))
     shiny::observeEvent(input$assign, attempt(function() {

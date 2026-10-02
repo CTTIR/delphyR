@@ -104,6 +104,20 @@ with the previous version, and explicit approval. They apply to future rounds;
 existing instruments and snapshots retain their frozen protocol. Interface
 visibility never substitutes for service-level authority checks.
 
+## Run an exploratory free-text round
+
+Use a protocol with a free-text dimension and prepare the first round with
+open questions. After freezing it, an editor takes over the answers as original
+sources in **Editorial review**, creates redactions or summaries, and links the
+derived item codes to their sources; a different person releases each version.
+When the feedback is created, select the released versions it should contain.
+Participants see a summary labelled as a moderated summary, never as a
+quotation, beside the items it led to. If a released feedback turns out to be
+wrong, create a corrected version under *Correct released feedback* with a
+rationale, an assessment of the effect on ratings already given, and a note
+for participants. The earlier version stays unchanged; later views show the
+correction and its note.
+
 ## Review sources and item provenance
 
 Editors preserve synthetic originals and create separate redactions or summaries

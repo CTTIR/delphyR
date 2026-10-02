@@ -556,3 +556,38 @@ Change of rights confirmed.	Modification des droits confirmée.
 Stakeholder group changed. Earlier rounds are unchanged.	Groupe de parties prenantes modifié. Les tours antérieurs restent inchangés.
 Setup	Configuration
 Publish the study information under Setup first.	Publiez d’abord l’information sur l’étude dans Configuration.
+Take over free-text contributions of a frozen round	Reprendre les contributions en texte libre d’un tour figé
+Each submitted free-text answer is preserved as an immutable original source, without a pseudonym. Answers already taken over are skipped. Participants see only versions that another person has released.	Chaque réponse en texte libre soumise est conservée comme source originale immuable, sans pseudonyme. Les réponses déjà reprises sont ignorées. Les participants ne voient que les versions publiées par une autre personne.
+Frozen round	Tour figé
+Take over contributions as sources	Reprendre les contributions comme sources
+Free-text answers	Réponses en texte libre
+Preserved as sources	Conservées comme sources
+Contributions taken over:	Contributions reprises :
+Qualitative content enters feedback only as a version that another person has released. Summaries are labelled as such, never as quotations.	Un contenu qualitatif n’entre dans le retour que sous la forme d’une version publiée par une autre personne. Les synthèses sont signalées comme telles, jamais comme des citations.
+Refresh released versions	Actualiser les versions publiées
+Correct released feedback	Corriger un retour publié
+Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.	Un retour publié n’est jamais modifié. Une correction publie une nouvelle version qui le remplace pour les consultations ultérieures ; les affichages antérieurs restent attribués à l’ancienne version. Évaluez l’effet sur les évaluations déjà données.
+Create corrected version	Créer la version corrigée
+Rationale for the correction (internal)	Justification de la correction (interne)
+Effect on ratings already given (internal)	Effet sur les évaluations déjà données (interne)
+Note for participants	Note destinée aux participants
+I reviewed the corrected version and all three texts.	J’ai examiné la version corrigée et les trois textes.
+Release correction	Publier la correction
+Summary	Synthèse
+Redacted contribution	Contribution révisée
+Released versions for this feedback	Versions publiées pour ce retour
+Feedback of the selected round to replace	Retour du tour sélectionné à remplacer
+Released versions of the corrected version	Versions publiées de la version corrigée
+Correction, current	Correction, en vigueur
+current	en vigueur
+replaced	remplacé
+Checksum	Somme de contrôle
+Status	Statut
+Reason for correction	Motif de la correction
+Corrected version created for review.	Version corrigée créée pour examen.
+Rationale, effect, note and confirmation are required.	La justification, l’effet, la note et la confirmation sont requis.
+Correction released. Later views show the corrected version.	Correction publiée. Les consultations ultérieures affichent la version corrigée.
+This feedback was corrected.	Ce retour a été corrigé.
+Released contributions of the previous round	Contributions publiées du tour précédent
+Moderated summary (not a quotation):	Synthèse modérée (pas une citation) :
+Redacted contribution:	Contribution révisée :

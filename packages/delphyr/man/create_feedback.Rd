@@ -4,7 +4,14 @@
 \alias{create_feedback}
 \title{Create a reviewed feedback candidate from a frozen analysis}
 \usage{
-create_feedback(repo, actor, analysis_id, qualitative = list(), command_id)
+create_feedback(
+  repo,
+  actor,
+  analysis_id,
+  qualitative = list(),
+  command_id,
+  released_edits = character()
+)
 }
 \arguments{
 \item{repo}{Repository.}
@@ -13,13 +20,18 @@ create_feedback(repo, actor, analysis_id, qualitative = list(), command_id)
 
 \item{analysis_id}{Analysis UUID.}
 
-\item{qualitative}{Reviewed summaries.}
+\item{qualitative}{Must be empty; use released_edits.}
 
 \item{command_id}{Idempotency key.}
+
+\item{released_edits}{UUIDs of released editorial versions of this study.}
 }
 \value{
 Feedback UUID and hash, requiring separate release.
 }
 \description{
-Create a reviewed feedback candidate from a frozen analysis
+Qualitative content enters participant feedback only as an editorial
+version that another person has released. The service reads the released
+text itself; text supplied by the caller is not accepted. A version whose
+source is linked to item codes is shown beside those items.
 }

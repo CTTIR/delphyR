@@ -30,6 +30,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .del-note {color:#5b6b7a;font-size:.95rem;}
 .del-actions {display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}
 .del-consent {white-space:pre-wrap;max-width:75ch;}
+.del-qualitative {padding-left:1.2rem;max-width:75ch;}
+.del-qualitative li {margin:6px 0;line-height:1.5;}
 .del-review {border-top:1px solid var(--del-line);border-bottom:1px solid var(--del-line);padding:8px 0 16px;margin:16px 0;}
 .del-review h4 {font-size:1.05rem;margin-top:18px;}
 .del-code {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;overflow-wrap:anywhere;resize:none;}

@@ -3,8 +3,25 @@
 The package provides a restricted editorial service layer. It preserves original
 contributions, separate redactions and summaries, independent review, versioned
 theme definitions, coding decisions, item-source links, and complete split/merge
-events. It is not a complete qualitative-analysis editor or a qualified production
-workflow. All development examples must remain synthetic.
+events. It manages qualitative work and its provenance; it does not replace the
+choice of a qualitative method or a qualified production workflow. All
+development examples must remain synthetic.
+
+## From an exploratory round to rating items
+
+A free-text dimension uses a scale of type `free_text`, which needs no anchors.
+After the round is frozen, `import_round_contributions()` or *Take over
+free-text contributions of a frozen round* preserves every submitted answer as
+an original source without a pseudonym. Editors create redactions and
+summaries, define themes, code sources and link the derived item codes to
+their sources. A different person releases each exact version. The rating
+round is then prepared with the derived items as new item identities.
+
+Participant feedback takes its qualitative content only from released
+versions: `create_feedback(..., released_edits = ...)` reads the released text
+itself and refuses anything else. A released feedback that contains an error
+is replaced by `release_feedback_correction()`; it is never edited. See
+[ADR-023](adr/023-exploratory-rounds-and-feedback-content.md).
 
 ## Editorial sequence
 
@@ -28,9 +45,10 @@ workflow. All development examples must remain synthetic.
 
 Coding rows count decisions. Source rows count contributions. Neither count is a
 participant count. This layer does not impose a qualitative research method,
-resolve coder disagreements, perform automatic summarization, or publish text to
-participants. Segmentation, coding adjudication, and a full editorial interface
-remain separate work.
+resolve coder disagreements or perform automatic summarization. A contribution
+with several proposals is segmented by creating one editorial version per
+segment of its source. Coding adjudication remains a human task outside the
+software.
 
 ## Item derivation
 

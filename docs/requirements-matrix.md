@@ -11,7 +11,7 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | PAN-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | PAN-03 | in_progress | Synthetic withdrawal stops new activity; save/withdraw race tested. Production data/deletion policy remains open. |
 | PAN-04 | implemented_tested | Recorded group changes apply only to new rounds; previous enrollment groups unchanged. |
-| ITM-01 | in_progress | Source reference per item, source links and lineage are exported; the free-text origin path through the interface remains open. |
+| ITM-01 | implemented_tested | Free-text answers become sources, derived items are linked to them, and source reference, links and lineage are exported; PostgreSQL contracts and Chromium journey (ADR-023). |
 | ITM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | ITM-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | ITM-04 | implemented_tested | Split/merge lineage and explicit, superseding comparability decisions; both exported and used for comparisons between rounds (ADR-021). |
@@ -30,8 +30,8 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | FDB-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | FDB-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | FDB-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
-| QUA-01 | in_progress | Services and actual PostgreSQL editorial browser path with independent approval tested. |
-| QUA-02 | in_progress | Multiple links tested; complete exploratory UI path remains open. |
+| QUA-01 | implemented_tested | Original, redaction, summary and release are separate and immutable; only independently released versions reach feedback and exports; released feedback is corrected by a new version. |
+| QUA-02 | implemented_tested | Several sources per item and several items per source; the exploratory path from free-text round to rating round runs through the interface. |
 | COM-01 | in_progress | Exact approval/outbox tested in local sink; provider/contact integration remains open. |
 | COM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | EXP-01 | implemented_tested | Research, summary, audit and contact profiles with separate rights; canary tests for originals, contacts and account references; released redactions only. Public release is refused by design. |

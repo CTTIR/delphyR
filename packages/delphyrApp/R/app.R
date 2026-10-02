@@ -49,7 +49,8 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       "preview_panel_invitation", "accept_panel_invitation", "get_round_instrument", "get_round_readiness", "enroll_panel",
       "list_audit_events", "get_study_documentation", "record_study_documentation", "record_item_comparability", "get_item_comparability",
       "request_study_export", "write_participant_feedback", "get_account_rights", "create_study", "publish_consent", "list_study_staff",
-      "register_staff_account", "set_capability", "list_panel", "set_panel_group", "record_item_decision", "list_item_decisions"
+      "register_staff_account", "set_capability", "list_panel", "set_panel_group", "record_item_decision", "list_item_decisions",
+      "list_contribution_rounds", "import_round_contributions", "list_released_edits", "list_released_feedback", "release_feedback_correction"
     )
     services <- stats::setNames(lapply(n, function(x) getExportedValue("delphyr", x)), n)
   }
@@ -58,7 +59,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
   shiny::addResourcePath("delphyr-brand", system.file("www", package = "delphyrApp"))
   ui <- shiny::fluidPage(
     theme = bslib::bs_theme(version = 5, bg = "#eceff2", fg = "#22303c", primary = "#0e6e78", success = "#0e6e78", danger = "#b3372b", base_font = "system-ui"),
-    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){window.delphyrAccepted=true;document.documentElement.lang=lang;});Shiny.addCustomMessageHandler('delphyr-clear-hash',function(x){history.replaceState(null,'',location.pathname+location.search);});}); $(document).on('shiny:disconnected',function(){var box=document.getElementById('unregistered');if(box && !window.delphyrAccepted){box.hidden=false;}});", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
+    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){window.delphyrAccepted=true;document.documentElement.lang=lang;});Shiny.addCustomMessageHandler('delphyr-clear-hash',function(x){history.replaceState(null,'',location.pathname+location.search);});}); $(document).on('shiny:disconnected',function(){var box=document.getElementById('unregistered');if(box && !window.delphyrAccepted){box.hidden=false;}}); (function(){var open={};function key(d){var host=d.closest('.shiny-html-output');var s=d.querySelector('summary');return (host?host.id:'')+'|'+(s?s.textContent:'');}document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.tagName==='DETAILS'){open[key(d)]=d.open;}},true);function restore(node){if(!node||node.nodeType!==1)return;var list=node.tagName==='DETAILS'?[node]:node.querySelectorAll('details');Array.prototype.forEach.call(list,function(d){if(open[key(d)]&&!d.open){d.open=true;}});}document.addEventListener('DOMContentLoaded',function(){new MutationObserver(function(changes){changes.forEach(function(c){Array.prototype.forEach.call(c.addedNodes,restore);});}).observe(document.body,{childList:true,subtree:true});});})();", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
       shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-hex.png")),
     shiny::tags$div(
       class = "del-wrap",

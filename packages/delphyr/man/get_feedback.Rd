@@ -14,8 +14,10 @@ get_feedback(repo, actor, enrollment_id)
 \item{enrollment_id}{Own target enrollment.}
 }
 \value{
-Aggregate feedback, own prior response table and the effective
-  comparability decisions for revised items, or NULL.
+Aggregate feedback, own prior response table, the effective
+  comparability decisions for revised items, the released qualitative
+  content and, where the feedback was corrected, the note for participants;
+  or NULL.
 }
 \description{
 Read released aggregate feedback plus only the actor's prior answers

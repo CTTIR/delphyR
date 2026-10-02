@@ -148,7 +148,8 @@ command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, 
     qualitative_theme = "edit", qualitative_code = "edit", qualitative_item_source = "edit",
     qualitative_lineage = "manage", campaign_prepare = "coordinate",
     campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_account = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage", enroll_panel = "manage",
-    study_documentation = "manage", item_comparability = "manage", staff_account = "manage"
+    study_documentation = "manage", item_comparability = "manage", staff_account = "manage",
+    qualitative_import = "edit", correct_feedback = "manage"
   )
   # Export requests are admitted by the capability of their profile.
   capability <- if (startsWith(type, "request_export:")) export_capability(sub("^request_export:", "", type)) else capability[[type]]

@@ -119,11 +119,28 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
         if (feedback_download_available && !is.null(z$feedback)) shiny::downloadButton(ns("feedback_download"), tr(l, "Mein Feedback herunterladen", "Download my feedback")),
         shiny::tags$p(class = "del-note", shiny::textOutput(ns("save_note"))),
         shiny::tags$p(class = "del-note", shiny::textOutput(ns("content_note"))),
+        shiny::uiOutput(ns("round_feedback")),
         lapply(z$module_ids, function(x) rating_ui(ns(x))),
         shiny::tags$div(class = "del-progress", shiny::uiOutput(ns("progress"))),
         shiny::checkboxInput(ns("confirm"), tr(l, "Ich habe meine Antworten gepr\u00fcft. Die Abgabe beendet die Bearbeitung.", "I reviewed my answers. Submission ends editing."), FALSE),
         shiny::actionButton(ns("submit"), tr(l, "Verbindlich abgeben", "Submit final responses"), class = "btn-primary"),
         status_ui(ns("receipt"))
+      )
+    })
+    # Released qualitative content that is not attached to a displayed item,
+    # and the note that accompanies a corrected feedback.
+    output$round_feedback <- shiny::renderUI({
+      z <- q()
+      shiny::req(z, z$feedback)
+      general <- qualitative_for(z$feedback$qualitative, NULL, unique(z$items$item_code))
+      note <- z$feedback$correction
+      if (is.null(note) && !nrow(general)) {
+        return(NULL)
+      }
+      shiny::tags$div(
+        class = "del-feedback",
+        if (!is.null(note)) shiny::tags$p(class = "del-banner", paste(tr(lang(), "Dieses Feedback wurde korrigiert.", "This feedback was corrected."), note$participant_note)),
+        if (nrow(general)) shiny::tagList(shiny::tags$h4(tr(lang(), "Freigegebene Beitr\u00e4ge der Vorrunde", "Released contributions of the previous round")), qualitative_list(general, lang()))
       )
     })
     output$round_heading <- shiny::renderText({
@@ -277,6 +294,7 @@ rating_server <- function(id, q, item, lang, call, autosave_ms = 1500) {
       shiny::tagList(
         shiny::tags$p(tr(lang(), "Freigegebenes Feedback der Vorrunde:", "Released previous-round feedback:")),
         if (nrow(own)) shiny::tags$p(paste(tr(lang(), "Ihre vorherige Antwort:", "Your previous response:"), own$answer_status, own$value_integer, own$value_text)),
+        qualitative_list(qualitative_for(f$qualitative, item$item_code), lang()),
         if (nrow(own) && any(own$item_version != item$item_version)) {
           decided <- f$comparability
           comparable <- is.data.frame(decided) && nrow(decided) && any(decided$item_code == item$item_code & decided$dimension_code == item$dimension_code & decided$previous_version %in% own$item_version & decided$current_version == item$item_version & decided$comparable)
@@ -449,4 +467,27 @@ response_choices <- function(scale, lang) {
   missing <- unlist(scale$missing_options)
   labels <- tr(lang, c(unable_to_judge = "Kann ich nicht beurteilen", abstained = "Enthaltung", not_applicable = "Nicht zutreffend"), c(unable_to_judge = "Unable to judge", abstained = "Abstain", not_applicable = "Not applicable"))
   c(opts, stats::setNames(missing, labels[missing]))
+}
+
+# Released qualitative entries for one item, or (item NULL) those attached to
+# no item displayed in this round.
+qualitative_for <- function(entries, item, displayed = character()) {
+  if (!is.data.frame(entries) || !nrow(entries)) {
+    return(data.frame(text = character(), kind = character(), source_ref = character(), stringsAsFactors = FALSE))
+  }
+  codes <- lapply(entries$item_codes, function(x) as.character(unlist(x)))
+  keep <- if (is.null(item)) vapply(codes, function(x) !any(x %in% displayed), logical(1)) else vapply(codes, function(x) item %in% x, logical(1))
+  entries[keep, c("text", "kind", "source_ref"), drop = FALSE]
+}
+# A summary is labelled as a summary; it is never presented as a quotation.
+qualitative_list <- function(entries, lang) {
+  if (!nrow(entries)) {
+    return(NULL)
+  }
+  shiny::tags$ul(class = "del-qualitative", lapply(seq_len(nrow(entries)), function(i) {
+    shiny::tags$li(
+      shiny::tags$span(class = "del-note", if (identical(entries$kind[i], "summary")) tr(lang, "Moderierte Zusammenfassung (kein Zitat):", "Moderated summary (not a quotation):") else tr(lang, "Redigierter Beitrag:", "Redacted contribution:")),
+      " ", entries$text[i]
+    )
+  }))
 }

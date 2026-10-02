@@ -1,6 +1,7 @@
 #' Prepare disclosure-controlled feedback
 #' @param analysis A delphyr_analysis.
-#' @param qualitative List of reviewed summaries, each with text, reviewed and source_ref.
+#' @param qualitative List of reviewed summaries, each with text, reviewed and
+#'   source_ref, and optionally kind, edit_id, content_hash and item_codes.
 #' @param policy List group_statistics, minimum_display_cell_n, complementary_suppression.
 #' @return delphyr_feedback_draft. Suppressed data are removed, not hidden in markup.
 #' @export
@@ -17,7 +18,8 @@ prepare_feedback <- function(analysis, qualitative = list(), policy = list(group
   ensure(whole(policy$minimum_display_cell_n) && length(policy$minimum_display_cell_n) == 1 && policy$minimum_display_cell_n > 0, "policy.minimum_display_cell_n")
   ensure(isTRUE(policy$complementary_suppression) && is.logical(policy$group_statistics) && length(policy$group_statistics) == 1 && !is.na(policy$group_statistics), "policy")
   for (q in qualitative) {
-    known_keys(q, c("text", "reviewed", "source_ref"), "qualitative")
+    known_keys(q, c("text", "reviewed", "source_ref", "kind", "edit_id", "content_hash", "item_codes"), "qualitative", required = c("text", "reviewed", "source_ref"))
+    if (!is.null(q$kind)) ensure(length(q$kind) == 1L && q$kind %in% c("redaction", "summary"), "qualitative.kind")
     ensure(isTRUE(q$reviewed) && scalar_text(q$text) && scalar_text(q$source_ref), "qualitative.review")
   }
   r <- analysis$results

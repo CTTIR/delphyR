@@ -132,6 +132,13 @@ Measured on 2026-10-02 against the current sources; each entry names its evidenc
   and `browser-study-journey-postgres.R`, a complete two-round study conducted
   through the interface with five separate identities.
 
+- **Exploratory rounds and feedback content**
+  ([ADR-023](adr/023-exploratory-rounds-and-feedback-content.md),
+  [qualitative](qualitative.md)): free-text answers become sources, feedback
+  takes qualitative content only from independently released versions, and
+  released feedback is corrected by a new version. Migration 015,
+  `test-exploratory.R` and `browser-exploratory-postgres.R`.
+
 Hosted CI failed for commit `5bf26c7` at the package check (non-ASCII source
 characters in `R/invitations.R`); the following commit repaired it and both
 packages carry a source-level ASCII test.

@@ -8,6 +8,8 @@ editorial_server <- function(id, study, lang, call, services) {
     reviewed <- shiny::reactiveVal(NULL)
     lineage <- shiny::reactiveVal(NULL)
     comparability <- shiny::reactiveVal(data.frame())
+    contributions <- shiny::reactiveVal(data.frame())
+    importing <- all(c("list_contribution_rounds", "import_round_contributions") %in% names(services))
     comparable_ready <- all(c("record_item_comparability", "get_item_comparability") %in% names(services))
     status <- shiny::reactiveVal("")
     needed <- c("get_capabilities", "get_qualitative_provenance", "list_qualitative_reviews", "record_qualitative_source", "redact_qualitative_source", "release_qualitative_edit", "create_qualitative_theme", "code_qualitative_source", "link_item_source", "record_item_lineage")
@@ -18,6 +20,7 @@ editorial_server <- function(id, study, lang, call, services) {
       records(if ("edit" %in% caps()) call("get_qualitative_provenance", study()) else NULL)
       reviews(if ("manage" %in% caps()) call("list_qualitative_reviews", study()) else data.frame())
       comparability(if (comparable_ready && "manage" %in% caps()) call("get_item_comparability", study()) else data.frame())
+      contributions(if (importing && "edit" %in% caps()) call("list_contribution_rounds", study()) else data.frame())
     }
     shiny::observeEvent(study(), {
       reviewed(NULL)
@@ -25,6 +28,7 @@ editorial_server <- function(id, study, lang, call, services) {
       records(NULL)
       reviews(data.frame())
       comparability(data.frame())
+      contributions(data.frame())
       caps(character())
       if (ready) attempt(refresh)
     })
@@ -45,6 +49,17 @@ editorial_server <- function(id, study, lang, call, services) {
         shiny::tags$p(tr(l, "Originale bleiben erhalten. Redaktionelle Fassungen und Zusammenfassungen werden getrennt gespeichert; eine andere Person muss die genaue Fassung freigeben.", "Originals are preserved. Redactions and summaries are stored separately; another person must release the exact version.")),
         if ("edit" %in% caps()) {
           shiny::tagList(
+            if (importing) {
+              rounds <- contributions()
+              rounds <- if (nrow(rounds)) rounds[rounds$contributions > 0, , drop = FALSE] else rounds
+              shiny::tags$details(
+                shiny::tags$summary(tr(l, "Freitextbeitr\u00e4ge einer eingefrorenen Runde \u00fcbernehmen", "Take over free-text contributions of a frozen round")),
+                shiny::tags$p(tr(l, "Jede abgegebene Freitextantwort wird als unver\u00e4nderliche Originalquelle gesichert, ohne Pseudonym. Bereits \u00fcbernommene Antworten werden \u00fcbersprungen. Teilnehmende sehen nur Fassungen, die eine andere Person freigegeben hat.", "Each submitted free-text answer is preserved as an immutable original source, without a pseudonym. Answers already taken over are skipped. Participants see only versions that another person has released.")),
+                shiny::tableOutput(ns("contributions")),
+                shiny::selectInput(ns("contribution_round"), tr(l, "Eingefrorene Runde", "Frozen round"), if (nrow(rounds)) stats::setNames(rounds$snapshot_id, paste(tr(l, "Runde", "Round"), rounds$round_number)) else character(), selected = field("contribution_round", NULL)),
+                shiny::actionButton(ns("contribution_import"), tr(l, "Beitr\u00e4ge als Quellen \u00fcbernehmen", "Take over contributions as sources"))
+              )
+            },
             shiny::tags$details(
               shiny::tags$summary(tr(l, "Originalquelle erfassen", "Record an original source")),
               shiny::textInput(ns("source_ref"), tr(l, "Quellenreferenz", "Source reference"), value = field("source_ref")),
@@ -198,6 +213,19 @@ editorial_server <- function(id, study, lang, call, services) {
       shiny::req(x)
       rbind(data.frame(role = tr(lang(), "Ausgang", "Parent"), x$parents), data.frame(role = tr(lang(), "Neu", "New"), x$children))
     })
+    output$contributions <- shiny::renderTable({
+      x <- contributions()
+      shiny::req(nrow(x) > 0)
+      out <- data.frame(x$round_number, x$contributions, x$imported, stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("Runde", "Freitextantworten", "Als Quelle gesichert"), c("Round", "Free-text answers", "Preserved as sources"))
+      out
+    })
+    shiny::observeEvent(input$contribution_import, attempt(function() {
+      shiny::req(importing, "edit" %in% caps(), input$contribution_round)
+      result <- call("import_round_contributions", input$contribution_round, command_id())
+      refresh()
+      status(paste(tr(lang(), "\u00dcbernommene Beitr\u00e4ge:", "Contributions taken over:"), result$imported))
+    }))
     output$comparability <- shiny::renderTable({
       x <- comparability()
       shiny::req(nrow(x) > 0)

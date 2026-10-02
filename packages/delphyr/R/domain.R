@@ -193,9 +193,13 @@ check_protocol <- function(p) {
     !is.null(names(p$instrument$scales)) && !anyDuplicated(names(p$instrument$scales)) &&
     all(!is.na(names(p$instrument$scales)) & nzchar(names(p$instrument$scales))), "instrument.scales")
   for (s in p$instrument$scales) {
-    known_keys(s, c("type", "values", "anchors", "missing_options"), "scale")
-    known_keys(s$anchors, c("low", "high"), "scale.anchors")
-    ensure(scalar_text(s$anchors$low) && scalar_text(s$anchors$high), "scale.anchors")
+    # A free-text scale has no ordered categories and needs no anchors.
+    free_text <- identical(s$type, "free_text")
+    known_keys(s, c("type", "values", "anchors", "missing_options"), "scale", required = c("type", "values", "missing_options", if (!free_text) "anchors"))
+    if (!free_text || !is.null(s$anchors)) {
+      known_keys(s$anchors, c("low", "high"), "scale.anchors")
+      ensure(scalar_text(s$anchors$low) && scalar_text(s$anchors$high), "scale.anchors")
+    }
   }
   scales <- config_scales(p)
   validate_rule(p$analysis$consensus)

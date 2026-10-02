@@ -19,6 +19,7 @@
 - Audit trail with rationale and a History view; versioned author-supplied study documentation; explicit comparability decisions for revised items.
 - Study-level export profiles (research, summary, audit, contacts) with separate rights, a study report across rounds, offline reproduction and a participant feedback download.
 - Study creation from a reviewed protocol, study information, staff rights, the pseudonymous panel and item decisions in the interface; a study always keeps one manager.
+- Exploratory free-text rounds: answers become sources, feedback takes qualitative content only from independently released versions, and released feedback is corrected by a new version.
 
 This is a development version using synthetic data, not acceptance of the complete P1 platform.
 

@@ -14,7 +14,8 @@ prepare_feedback(
 \arguments{
 \item{analysis}{A delphyr_analysis.}
 
-\item{qualitative}{List of reviewed summaries, each with text, reviewed and source_ref.}
+\item{qualitative}{List of reviewed summaries, each with text, reviewed and
+source_ref, and optionally kind, edit_id, content_hash and item_codes.}
 
 \item{policy}{List group_statistics, minimum_display_cell_n, complementary_suppression.}
 }

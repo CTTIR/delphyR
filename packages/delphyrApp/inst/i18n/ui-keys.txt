@@ -52,6 +52,7 @@ Change stakeholder group
 Change state
 Check invitation
 Check operation
+Checksum
 Choose a rating
 Choose a rating or select another response type.
 Choose a study to see your available work areas.
@@ -84,16 +85,23 @@ Contact export
 Contact fields of imported panel contacts and their invitation state, without study pseudonyms.
 contacts imported;
 Content checksum:
+Contributions taken over:
 Coordination
+Correct released feedback
+Corrected version created for review.
+Correction released. Later views show the corrected version.
+Correction, current
 Count
 Course, instruments and aggregated results without individual responses. Statistics below the protocol’s display minimum are suppressed.
 Create a new study
 Create a separate version
+Create corrected version
 Create exact preview
 Create feedback
 Create study
 CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.
 CSV could not be parsed
+current
 Current documentation version:
 Data and software availability
 Deadline
@@ -124,6 +132,7 @@ Each event names its time, action, object and actor, and the rationale where the
 Each invitation is bound to exactly one verified account (identity-provider issuer and subject). An email address never selects an account. No email is sent.
 Each profile contains only the data of its purpose. The export is prepared in the background and stored privately. A downloaded file is no longer covered by this application’s access control.
 Each published version is immutable. A round refers to exactly one version; changed text is a new version.
+Each submitted free-text answer is preserved as an immutable original source, without a pseudonym. Answers already taken over are skipped. Participants see only versions that another person has released.
 Earlier item version
 Earlier version
 Edited text
@@ -133,6 +142,7 @@ Editorial review
 Editorial version created
 Editorial version released
 Editorial work
+Effect on ratings already given (internal)
 Eligible
 Eligible panel members are not yet enrolled in this round.
 Email already exists
@@ -166,6 +176,7 @@ Feedback created for review.
 Feedback displayed
 Feedback downloaded
 Feedback drafted
+Feedback of the selected round to replace
 Feedback released
 Feedback released.
 Fewer members are enrolled than the minimum valid n; results would be insufficient data.
@@ -175,8 +186,10 @@ File schema
 Finalize
 Finalized
 Finding
+Free-text answers
 Freeze round
 Frozen
+Frozen round
 Funding
 Give a response
 Grant
@@ -194,6 +207,7 @@ I independently reviewed this exact version.
 I reviewed both versions and confirm this decision.
 I reviewed my answers. Submission ends editing.
 I reviewed the account, the right and the change.
+I reviewed the corrected version and all three texts.
 I reviewed the item, its analysis and the decision.
 I reviewed the pseudonym and the new group.
 I reviewed the round and target state
@@ -277,6 +291,7 @@ Message suppressed
 Message type
 Methodological interpretation
 Minimum valid n
+Moderated summary (not a quotation):
 My participation
 New
 New items: one code,version per line
@@ -299,6 +314,7 @@ Not comparable
 Not yet issued
 Not yet saved
 Note
+Note for participants
 Object
 Open
 Operation:
@@ -329,6 +345,7 @@ Prepare a new round
 Prepare round
 Preserve original
 Preserve original sources and document separate editorial versions, coding decisions and item provenance.
+Preserved as sources
 Preview based on version
 Preview created. Approval is still required.
 Preview exact version
@@ -350,6 +367,7 @@ Pseudonymized research data
 Publish a new version
 Publish study information
 Publish the study information under Setup first.
+Qualitative content enters feedback only as a version that another person has released. Summaries are labelled as such, never as quotations.
 Qualitative editorial work
 Queued
 Rate again
@@ -357,30 +375,42 @@ Rating
 Rationale
 Rationale for the change of rights
 Rationale for the comparability decision
+Rationale for the correction (internal)
 Rationale for the group change
 Rationale for the item decision
 Rationale for this version
 Rationale or dissent
+Rationale, effect, note and confirmation are required.
 Read the history (audit)
 Readiness review
 Reason
 Reason for changes
+Reason for correction
 Receipt state
 Receipt:
 Record an item split or merge
 Record an original source
+Redacted contribution
+Redacted contribution:
 Redacted version
 Redaction
 Refresh editorial records
 Refresh invitation states
 Refresh receipt status
+Refresh released versions
 Register account and issue invitation
 Relationship
+Release correction
 Release feedback
 Release version
+Released contributions of the previous round
+Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.
 Released previous-round feedback:
+Released versions for this feedback
+Released versions of the corrected version
 Reminder
 Remove
+replaced
 Reports never invent statements on authorship, funding, conflicts of interest, approvals, interpretation or deviations. Enter the study team’s own statements here. Empty topics appear in reports as not documented. Recording a reference to an approval does not grant one.
 Request analysis
 Request export
@@ -465,6 +495,7 @@ Stakeholder group is not in the protocol
 Stakeholder groups
 State
 State change confirmed.
+Status
 Study
 Study code
 Study completed
@@ -496,12 +527,15 @@ Submit final responses
 Submitted
 Submitted. Further editing is unavailable.
 Succeeded
+Summary
 Summary (not a quotation)
 Suppressed
 Synthetic communications
 Synthetic contacts with .invalid addresses only. Import creates unbound invitation drafts. It does not create accounts, associate responses, or send email.
 Synthetic development environment. Do not enter real participant data. No email is sent.
 Synthetic panel import
+Take over contributions as sources
+Take over free-text contributions of a frozen round
 Template version
 Text
 The deadline has passed.
@@ -524,6 +558,7 @@ Theme version defined
 Themes and coding
 These actions use the round selected above. Analysis and exports are prepared in the background; use Check operation to see their progress.
 This does not import or approve an instrument item.
+This feedback was corrected.
 This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team.
 This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.
 This transition is not possible in the round’s current state, or the round has changed in the meantime.

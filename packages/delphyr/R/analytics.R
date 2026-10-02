@@ -132,6 +132,8 @@ analyse_round <- function(snapshot, rules = snapshot$protocol$analysis$consensus
       if (sc$type == "free_text") x <- numeric()
       counts <- list(n_valid = length(x), n_agree = sum(x %in% unlist(rules$agree_values)), n_disagree = sum(x %in% unlist(rules$disagree_values)))
       cl <- classify_consensus(counts, rules)
+      # Free text has no numeric result; it is never reported as lacking data.
+      if (sc$type == "free_text") cl$classification <- "not_rated"
       q <- if (length(x)) stats::quantile(x, c(.25, .5, .75), type = 7, names = FALSE) else rep(NA_real_, 3)
       result[[length(result) + 1L]] <- data.frame(
         round_number = snapshot$round_number, it, stratum = g,
@@ -154,6 +156,7 @@ analyse_round <- function(snapshot, rules = snapshot$protocol$analysis$consensus
   if (rules$group_policy == "all_required_groups") {
     for (i in seq_len(nrow(decisions))) {
       k <- decisions[i, ]
+      if (identical(k$classification, "not_rated")) next
       st <- res$classification[res$item_code == k$item_code & res$item_version == k$item_version & res$dimension_code == k$dimension_code & res$stratum %in% groups]
       decisions$classification[i] <- if (any(st == "insufficient_data")) "insufficient_data" else if (all(st == "consensus_in")) "consensus_in" else if (all(st == "consensus_out")) "consensus_out" else "no_consensus"
     }
@@ -165,7 +168,7 @@ analyse_round <- function(snapshot, rules = snapshot$protocol$analysis$consensus
     missingness = res[, c("item_code", "item_version", "dimension_code", "stratum", "n_not_answered", "n_unable", "n_abstained", "n_not_applicable")],
     settings = rules, provenance = list(
       snapshot_id = snapshot$snapshot_id, snapshot_hash = snapshot$content_hash,
-      rules_hash = content_hash(rules), software_version = "0.0.1", quantile_type = 7,
+      rules_hash = content_hash(rules), software_version = as.character(utils::packageVersion("delphyr")), quantile_type = 7,
       result_hash = content_hash(list(results = res, decisions = decisions, distributions = dist))
     ),
     warnings = character(), schema_version = "1.0"
@@ -220,7 +223,7 @@ compare_rounds <- function(previous, current, mapping = NULL) {
     n <- if (comparable) length(d) else 0L
     out[[i]] <- data.frame(
       item_code = it$item_code, dimension_code = it$dimension_code,
-      status = if (!comparable) "not_comparable" else if (!n) "insufficient_data" else "descriptive",
+      status = if (config_scales(current$protocol)[[it$scale_code]]$type == "free_text") "not_rated" else if (!comparable) "not_comparable" else if (!n) "insufficient_data" else "descriptive",
       reason = reason, n_paired = n, n_previous = nrow(a), n_current = nrow(b),
       n_lost = length(setdiff(a$panelist_id, b$panelist_id)), n_new = length(setdiff(b$panelist_id, a$panelist_id)),
       previous_mean = if (nrow(a)) mean(a$value_integer) else NA_real_, current_mean = if (nrow(b)) mean(b$value_integer) else NA_real_,

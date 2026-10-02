@@ -114,7 +114,9 @@ show_table(x$comparability, "No comparability decision recorded.")
 
 # Feedback provided
 
-Each released feedback is an immutable artifact identified by its hash.
+Each released feedback is an immutable artifact identified by its hash. A
+corrected feedback is a further artifact; "replaced_by" names the version that
+later views received instead.
 
 ```{r}
 #| results: asis
