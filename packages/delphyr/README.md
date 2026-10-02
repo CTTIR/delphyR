@@ -1,4 +1,4 @@
-# delphyr
+# delphyr <img src="man/figures/logo.png" align="right" width="150" alt="delphyr hex logo" />
 
 **Reproducible Delphi analysis, independent of the application.**
 

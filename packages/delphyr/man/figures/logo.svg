@@ -1,0 +1,123 @@
+<svg width="500" height="580" viewBox="0 0 500 580" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgdel" x1="0" y1="0" x2="0.15" y2="1">
+      <stop offset="0%"  stop-color="#1a1340"/>
+      <stop offset="100%" stop-color="#0c0820"/>
+    </linearGradient>
+    <!-- dolphin / consensus arc gradient -->
+    <linearGradient id="dolgrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#9F8CF5"/>
+      <stop offset="100%" stop-color="#6D28D9"/>
+    </linearGradient>
+    <clipPath id="hexdel">
+      <polygon points="250,30 455,145 455,375 250,490 45,375 45,145"/>
+    </clipPath>
+  </defs>
+
+  <polygon points="250,30 455,145 455,375 250,490 45,375 45,145" fill="url(#bgdel)"/>
+
+  <g clip-path="url(#hexdel)">
+
+    <!-- faint grid -->
+    <line x1="45" y1="210" x2="455" y2="210" stroke="#2a2060" stroke-width="0.4" opacity="0.4"/>
+    <line x1="45" y1="270" x2="455" y2="270" stroke="#2a2060" stroke-width="0.4" opacity="0.4"/>
+    <line x1="45" y1="330" x2="455" y2="330" stroke="#2a2060" stroke-width="0.4" opacity="0.4"/>
+    <line x1="150" y1="145" x2="150" y2="490" stroke="#2a2060" stroke-width="0.4" opacity="0.3"/>
+    <line x1="250" y1="145" x2="250" y2="490" stroke="#2a2060" stroke-width="0.4" opacity="0.3"/>
+    <line x1="350" y1="145" x2="350" y2="490" stroke="#2a2060" stroke-width="0.4" opacity="0.3"/>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- DELPHI CONSENSUS — three round distributions converging -->
+    <!-- Round 1 wide & flat, Round 2 narrower, Round 3 a tight  -->
+    <!-- consensus peak. Shown as stacked density curves.         -->
+    <!-- ══════════════════════════════════════════════════════ -->
+
+    <!-- Round 1 — wide, low, faint (disagreement) -->
+    <path d="M 95,330 C 150,322 180,312 250,312 C 320,312 350,322 405,330"
+      fill="none" stroke="#5B4A9E" stroke-width="2.4" opacity="0.5" stroke-linecap="round"/>
+    <!-- Round 2 — medium -->
+    <path d="M 110,330 C 170,326 210,286 250,286 C 290,286 330,326 390,330"
+      fill="none" stroke="#7C3AED" stroke-width="2.8" opacity="0.7" stroke-linecap="round"/>
+    <!-- Round 3 — tight consensus peak (bright) -->
+    <path d="M 150,330 C 205,328 232,236 250,236 C 268,236 295,328 350,330"
+      fill="none" stroke="#B9A6FF" stroke-width="3.4" opacity="0.98" stroke-linecap="round"/>
+
+    <!-- baseline axis -->
+    <line x1="90" y1="330" x2="410" y2="330" stroke="#4a3a8a" stroke-width="1" opacity="0.6"/>
+
+    <!-- consensus centre marker — vertical median line + dot -->
+    <line x1="250" y1="236" x2="250" y2="330" stroke="#B9A6FF" stroke-width="1" stroke-dasharray="4 3" opacity="0.55"/>
+    <circle cx="250" cy="236" r="5" fill="#E9E2FF"/>
+    <circle cx="250" cy="236" r="9" fill="#B9A6FF" opacity="0.25"/>
+
+    <!-- quartile ticks on the consensus curve (type-7 quartiles) -->
+    <line x1="214" y1="326" x2="214" y2="336" stroke="#9F8CF5" stroke-width="1.6" opacity="0.7"/>
+    <line x1="286" y1="326" x2="286" y2="336" stroke="#9F8CF5" stroke-width="1.6" opacity="0.7"/>
+
+    <!-- rating dots scattering toward consensus (participants) -->
+    <g fill="#C4B5F7">
+      <circle cx="160" cy="316" r="2.4" opacity="0.5"/>
+      <circle cx="195" cy="300" r="2.4" opacity="0.6"/>
+      <circle cx="225" cy="268" r="2.6" opacity="0.8"/>
+      <circle cx="250" cy="252" r="2.8" opacity="0.95"/>
+      <circle cx="275" cy="268" r="2.6" opacity="0.8"/>
+      <circle cx="305" cy="300" r="2.4" opacity="0.6"/>
+      <circle cx="340" cy="316" r="2.4" opacity="0.5"/>
+    </g>
+
+    <!-- round labels -->
+    <text font-family="monospace" font-size="8" fill="#7C6BC0" opacity="0.7" text-anchor="start" x="96" y="348">R1</text>
+    <text font-family="monospace" font-size="8" fill="#9F8CF5" opacity="0.8" text-anchor="middle" x="250" y="348">R2</text>
+    <text font-family="monospace" font-size="8" fill="#B9A6FF" opacity="0.9" text-anchor="end" x="404" y="348">R3 ✓</text>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- DOLPHIN — delphy→dolphin wordplay, leaping over the      -->
+    <!-- consensus peak, top area. Minimal silhouette.           -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- JUMPING DOLPHIN — traced from reference silhouette, leaping up-right -->
+    <g transform="translate(152.0,97.7) scale(0.6323)">
+      <g transform="translate(0.000000,292.000000) scale(0.100000,-0.100000)"
+      fill="url(#dolgrad)" stroke="none">
+      <path d="M1850 2833 c-215 -32 -420 -91 -552 -158 l-70 -36 -112 28 c-98 24
+-129 27 -271 27 -147 0 -167 -2 -242 -27 -110 -37 -270 -143 -182 -121 19 5
+70 9 114 9 62 -1 89 -6 121 -22 80 -43 132 -128 121 -200 -4 -20 -41 -88 -85
+-157 -167 -254 -278 -527 -328 -801 -20 -111 -30 -479 -16 -588 l10 -79 -87
+-86 c-72 -71 -96 -102 -130 -173 -47 -97 -63 -189 -51 -280 15 -105 21 -112
+40 -43 21 76 66 141 139 194 67 50 182 110 211 110 11 0 45 24 76 55 58 57
+185 129 250 141 43 8 49 17 29 48 -26 40 -107 86 -174 98 -73 14 -77 11 -120
+-77 -18 -36 -34 -65 -36 -65 -9 0 29 110 57 161 43 81 140 199 256 310 154
+149 288 245 607 439 94 57 239 150 324 207 84 57 156 101 160 98 14 -14 -64
+-138 -118 -186 l-56 -51 60 8 c207 25 371 165 437 374 11 36 27 71 36 78 24
+18 166 71 250 93 41 10 145 28 233 39 87 11 176 27 199 36 41 17 80 56 80 81
+0 11 -4 11 -27 -1 -30 -15 -110 -29 -263 -46 -196 -22 -349 -62 -545 -143
+-200 -82 -254 -113 -328 -193 -125 -133 -290 -225 -459 -257 -43 -8 -78 -12
+-78 -8 0 3 28 24 62 46 34 22 86 63 115 92 29 28 53 49 53 46 0 -10 -74 -97
+-103 -122 -15 -13 -26 -25 -24 -27 9 -9 129 35 189 69 184 104 318 279 358
+467 l17 75 6 -42 7 -42 73 45 c39 25 108 57 152 71 71 24 96 27 225 27 99 1
+198 -6 310 -22 187 -25 253 -23 248 11 -8 51 -134 87 -310 88 -107 0 -110 11
+-8 25 l50 7 -22 38 c-24 43 -105 127 -153 160 -90 61 -264 124 -395 144 -86
+14 -267 18 -330 8z m474 -308 c-16 -7 -35 -19 -43 -28 -26 -33 -61 -14 -41 22
+10 20 47 29 89 22 23 -4 23 -4 -5 -16z m-769 -515 c-37 -111 -139 -233 -275
+-329 l-75 -54 100 6 c55 4 115 11 134 17 19 5 36 8 38 7 1 -2 -32 -20 -75 -41
+-185 -92 -402 -224 -517 -315 -74 -59 -225 -215 -283 -293 -31 -42 -58 -75
+-60 -73 -7 7 79 191 126 268 159 261 361 453 667 634 61 36 121 75 134 87 32
+29 79 130 88 191 l8 50 3 -53 c2 -31 -4 -74 -13 -102z"/>
+      </g>
+    </g>
+
+    <!-- consensus / feedback-loop annotation -->
+    <text font-family="monospace" font-size="8" fill="#9F8CF5" opacity="0.55"
+      text-anchor="middle" x="250" y="418">consensus · rounds</text>
+
+  </g>
+
+  <!-- Hex border — statistics group purple -->
+  <polygon points="250,30 455,145 455,375 250,490 45,375 45,145"
+    fill="none" stroke="#534AB7" stroke-width="11" stroke-linejoin="round"/>
+  <polygon points="250,44 441,153 441,367 250,476 59,367 59,153"
+    fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-linejoin="round" opacity="0.6"/>
+
+  <!-- Package name -->
+  <text font-family="monospace" font-weight="700" font-size="27"
+    fill="#C4B5F7" text-anchor="middle" x="250" y="545" letter-spacing="1">delphyR</text>
+</svg>

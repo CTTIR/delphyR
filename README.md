@@ -1,4 +1,4 @@
-# delphyR <img src="packages/delphyrApp/inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR dolphin hex logo" />
+# delphyR <img src="packages/delphyrApp/inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR hex logo" />
 
 **A traceable workflow for round-based Delphi studies.**
 

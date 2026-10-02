@@ -1,4 +1,4 @@
-# delphyrApp <img src="inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR dolphin hex logo" />
+# delphyrApp <img src="inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR hex logo" />
 
 **A focused workspace for synthetic Delphi studies.**
 
