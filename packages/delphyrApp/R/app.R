@@ -48,7 +48,8 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       "list_panel_invitations", "register_invited_account", "issue_panel_invitation", "revoke_panel_invitation",
       "preview_panel_invitation", "accept_panel_invitation", "get_round_instrument", "get_round_readiness", "enroll_panel",
       "list_audit_events", "get_study_documentation", "record_study_documentation", "record_item_comparability", "get_item_comparability",
-      "request_study_export", "write_participant_feedback"
+      "request_study_export", "write_participant_feedback", "get_account_rights", "create_study", "publish_consent", "list_study_staff",
+      "register_staff_account", "set_capability", "list_panel", "set_panel_group", "record_item_decision", "list_item_decisions"
     )
     services <- stats::setNames(lapply(n, function(x) getExportedValue("delphyr", x)), n)
   }
@@ -78,8 +79,10 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
           class = "del-sheet",
           shiny::uiOutput("intro"), shiny::selectInput("study", tr(language, "Studie", "Study"), character()), status_ui("status")
         ),
+        study_create_ui("study_create"),
         shiny::uiOutput("navigation"),
         shiny::tags$div(id = "section-panel", panel_ui("panel")),
+        shiny::tags$div(id = "section-setup", study_setup_ui("study_setup")),
         shiny::tags$div(id = "section-protocols", protocols_ui("protocols")),
         shiny::tags$div(id = "section-management", management_ui("management")),
         shiny::tags$div(id = "section-editorial", editorial_ui("editorial")),
@@ -120,6 +123,11 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     })
     capabilities <- shiny::reactiveVal(character())
     studies <- shiny::reactiveVal(data.frame())
+    # Sections of one session share a signal: a confirmed change in one
+    # section lets the others read their lists again instead of showing
+    # stale rounds, drafts or rights. Services check every action regardless.
+    changed <- shiny::reactiveVal(0L)
+    touch <- function() changed(shiny::isolate(changed()) + 1L)
     status <- shiny::reactiveVal("")
     output$banner <- shiny::renderUI(shiny::tags$aside(class = "del-banner", tr(
       lang(),
@@ -154,6 +162,14 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         tryCatch(capabilities(call("get_capabilities", study())), error = function(e) status(safe_error(e, lang())))
       }
     })
+    shiny::observeEvent(changed(),
+      {
+        if ("get_capabilities" %in% names(services) && length(input$study) == 1L && nzchar(input$study)) {
+          tryCatch(capabilities(call("get_capabilities", input$study)), error = function(e) capabilities(character()))
+        }
+      },
+      ignoreInit = TRUE
+    )
     output$navigation <- shiny::renderUI({
       links <- workspace_sections(capabilities(), lang())
       if (!nrow(links)) {
@@ -165,16 +181,18 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       )
     })
     panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services), autosave_ms = autosave_ms, feedback_download_available = "write_participant_feedback" %in% names(services))
-    management_server("management", study, lang, call, services)
+    management_server("management", study, lang, call, services, changed = changed, touch = touch)
     editorial_server("editorial", study, lang, call, services)
-    communications_server("communications", study, lang, call, services)
+    communications_server("communications", study, lang, call, services, changed = changed)
     protocols_server("protocols", study, lang, call, services)
-    panel_import_server("panel_import", study, lang, call, services)
+    panel_import_server("panel_import", study, lang, call, services, touch = touch)
+    study_create_server("study_create", lang, call, services, on_created = load_studies)
+    study_setup_server("study_setup", study, lang, call, services, touch = touch)
     documentation_server("documentation", study, lang, call, services)
-    exports_server("exports", study, lang, call, services)
+    exports_server("exports", study, lang, call, services, changed = changed)
     audit_server("audit", study, lang, call, services)
     verified <- is.character(session_actor$issuer) && length(session_actor$issuer) == 1L && grepl("^https?://", session_actor$issuer)
-    invitations_server("invitations", study, lang, call, services, default_issuer = if (verified) session_actor$issuer else "")
+    invitations_server("invitations", study, lang, call, services, default_issuer = if (verified) session_actor$issuer else "", changed = changed)
     invitation_accept_server("invitation_accept", lang, call, services, verified, on_accepted = load_studies)
   }
   shiny::shinyApp(ui, server)

@@ -1,6 +1,6 @@
 panel_import_ui <- function(id) shiny::uiOutput(shiny::NS(id)("body"))
 
-panel_import_server <- function(id, study, lang, call, services) {
+panel_import_server <- function(id, study, lang, call, services, touch = function() NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     field <- function(name, default = "") {
       value <- shiny::isolate(input[[name]])
@@ -97,6 +97,7 @@ panel_import_server <- function(id, study, lang, call, services) {
       if (!identical(panel_upload_bytes(input$file), p$csv) || !identical(input$schema, p$schema_version) || !identical(input$delimiter, p$delimiter)) stop("File or interpretation changed after preview")
       result <- call("import_panel", study(), p, p$hash, input$reason, command_id())
       receipt(call("get_panel_import_receipt", result$id))
+      touch()
       preview(NULL)
       shiny::updateCheckboxInput(session, "confirm", value = FALSE)
       status(tr(lang(), "Import best\u00e4tigt. Die Einladungsentw\u00fcrfe sind weiterhin ungebunden; keine E-Mail wurde versendet.", "Import confirmed. Invitation drafts remain unbound; no email was sent."))

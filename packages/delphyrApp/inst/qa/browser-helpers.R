@@ -18,19 +18,23 @@ qa_connection <- function(user, environment = "development") {
 qa_admin <- function() qa_connection(Sys.getenv("DELPHYR_DB_ADMIN", "postgres"))
 
 # Starts one application host in a separate R process under the restricted
-# runtime role. `build` receives the runtime repository and returns the app.
+# runtime role. `build` receives the runtime repository, the data and, if it
+# takes a third argument, a function that opens a further runtime connection.
 qa_host <- function(name, port, build, data = list()) {
   callr::r_bg(
     function(root, libs, port, build, data, runtime_user) {
       .libPaths(libs)
       pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
       pkgload::load_all(file.path(root, "packages/delphyrApp"), quiet = TRUE)
-      repo <- delphyr::connect_repository(
-        host = Sys.getenv("DELPHYR_DB_HOST", "127.0.0.1"), port = as.integer(Sys.getenv("DELPHYR_DB_PORT", "55439")),
-        dbname = Sys.getenv("DELPHYR_DB_NAME", "delphyr"), user = runtime_user, environment = "development",
-        artifact_root = file.path(root, ".artifacts")
-      )
-      shiny::runApp(build(repo, data), host = "127.0.0.1", port = port, launch.browser = FALSE)
+      connect <- function() {
+        delphyr::connect_repository(
+          host = Sys.getenv("DELPHYR_DB_HOST", "127.0.0.1"), port = as.integer(Sys.getenv("DELPHYR_DB_PORT", "55439")),
+          dbname = Sys.getenv("DELPHYR_DB_NAME", "delphyr"), user = runtime_user, environment = "development",
+          artifact_root = file.path(root, ".artifacts")
+        )
+      }
+      app <- if (length(formals(build)) >= 3L) build(connect(), data, connect) else build(connect(), data)
+      shiny::runApp(app, host = "127.0.0.1", port = port, launch.browser = FALSE)
     },
     list(qa_root, .libPaths(), port, build, data, Sys.getenv("DELPHYR_DB_RUNTIME", "delphyr_runtime")),
     stderr = file.path(qa_root, ".checks", paste0(name, ".log")), stdout = "|"
@@ -60,13 +64,37 @@ qa_session <- function() {
     click = function(id) invisible(js(sprintf("(function(){document.getElementById(%s).click();return true;})()", quote_js(id)))),
     value = function(id) js(sprintf("document.getElementById(%s).value", quote_js(id))),
     text = function(id) js(sprintf("(function(){var x=document.getElementById(%s);return x?x.innerText:'';})()", quote_js(id))),
-    wait_text = function(id, text, tries = 150L) wait_for(sprintf("(function(){var x=document.getElementById(%s);return !!x && x.innerText.includes(%s);})()", quote_js(id), quote_js(text)), tries),
+    # Waits for text in an element and reports what was shown instead on failure.
+    wait_text = function(id, text, tries = 150L) {
+      found <- tryCatch(wait_for(sprintf("(function(){var x=document.getElementById(%s);return !!x && x.innerText.includes(%s);})()", quote_js(id), quote_js(text)), tries), error = function(e) FALSE)
+      if (identical(found, FALSE)) {
+        shown <- tryCatch(js(sprintf("(function(){var x=document.getElementById(%s);return x?x.innerText:'<element absent>';})()", quote_js(id))), error = function(e) "<unreadable>")
+        stop("Expected '", text, "' in #", id, " but it shows: '", shown, "'")
+      }
+      invisible(TRUE)
+    },
     exists = function(id) isTRUE(js(sprintf("document.getElementById(%s) !== null", quote_js(id)))),
     # Opens the collapsible section that contains a control, as a person would.
     expand = function(id) invisible(js(sprintf("(function(){var d=document.getElementById(%s).closest('details');if(d){d.open=true;}return true;})()", quote_js(id)))),
     viewport = function(mobile) invisible(b$Emulation$setDeviceMetricsOverride(width = if (mobile) 390 else 1280, height = if (mobile) 844 else 900, deviceScaleFactor = 1, mobile = mobile)),
     no_overflow = function() isTRUE(js("document.documentElement.scrollWidth <= innerWidth")),
-    output_errors = function() js("document.querySelectorAll('.shiny-output-error').length"),
+    # Visible output errors; a silently empty output is not an error.
+    output_errors = function() js("Array.from(document.querySelectorAll('.shiny-output-error')).filter(function(x){return !x.classList.contains('shiny-output-error-shiny.silent.error') && x.innerText.trim().length>0;}).length"),
+    output_error_ids = function() js("Array.from(document.querySelectorAll('.shiny-output-error')).map(function(x){return x.id+' ['+x.className+'] '+x.innerText.slice(0,80);}).join(' | ')"),
+    # Chooses a local file in a Shiny file input and waits for the upload.
+    upload = function(id, path) {
+      document <- b$DOM$getDocument()
+      node <- b$DOM$querySelector(nodeId = document$root$nodeId, selector = paste0("#", id))$nodeId
+      b$DOM$setFileInputFiles(files = list(normalizePath(path)), nodeId = node)
+      wait_for(sprintf("(function(){var p=document.querySelector('#%s_progress .progress-bar');return !!p && p.innerText.toLowerCase().includes('complete');})()", id))
+      invisible(TRUE)
+    },
+    # Sends the identity headers that a qualified gateway would set for this
+    # browser session. The script stands in for the gateway; this is not OIDC.
+    identity = function(headers) {
+      b$Network$enable()
+      invisible(b$Network$setExtraHTTPHeaders(headers = headers))
+    },
     # Fetches a Shiny download link inside the page and returns its bytes.
     download = function(id) {
       wait_for(sprintf("(function(){var a=document.getElementById(%s);return !!a && !!a.getAttribute('href') && a.getAttribute('href').length>0;})()", quote_js(id)))

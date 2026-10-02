@@ -124,6 +124,14 @@ Measured on 2026-10-02 against the current sources; each entry names its evidenc
   Migration 014, `test-audit-documentation.R`, `test-study-export.R` and
   `browser-governance-postgres.R`.
 
+- **Study administration in the interface**
+  ([ADR-022](adr/022-study-administration-in-the-interface.md),
+  [roles and rights](roles-and-rights.md)): study creation from a reviewed
+  protocol, study information, staff rights with a last-manager rule, the
+  pseudonymous panel and item decisions. `test-administration.R`, module tests
+  and `browser-study-journey-postgres.R`, a complete two-round study conducted
+  through the interface with five separate identities.
+
 Hosted CI failed for commit `5bf26c7` at the package check (non-ASCII source
 characters in `R/invitations.R`); the following commit repaired it and both
 packages carry a source-level ASCII test.

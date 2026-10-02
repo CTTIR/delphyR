@@ -109,12 +109,12 @@ connection_script <- function(banner_id, workspace_id) {
 
 workspace_sections <- function(capabilities, lang) {
   has <- function(...) any(c(...) %in% capabilities)
-  ids <- c("section-panel", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-invitations", "section-communications", "section-documentation", "section-exports", "section-audit")
+  ids <- c("section-panel", "section-setup", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-invitations", "section-communications", "section-documentation", "section-exports", "section-audit")
   labels <- tr(
-    lang, c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Einladungen", "Kommunikation", "Dokumentation", "Exporte", "Verlauf"),
-    c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Invitations", "Communications", "Documentation", "Exports", "History")
+    lang, c("Meine Teilnahme", "Einrichtung", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Einladungen", "Kommunikation", "Dokumentation", "Exporte", "Verlauf"),
+    c("My participation", "Setup", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Invitations", "Communications", "Documentation", "Exports", "History")
   )
-  show <- c(has("panel"), has("manage"), has("manage"), has("edit", "manage"), has("coordinate"), has("coordinate"), has("coordinate"), has("manage"), has("export", "analyse", "manage", "audit", "contacts_export"), has("audit", "manage"))
+  show <- c(has("panel"), has("manage"), has("manage"), has("manage"), has("edit", "manage"), has("coordinate"), has("coordinate"), has("coordinate"), has("manage"), has("export", "analyse", "manage", "audit", "contacts_export"), has("audit", "manage"))
   data.frame(id = ids[show], label = labels[show], stringsAsFactors = FALSE)
 }
 

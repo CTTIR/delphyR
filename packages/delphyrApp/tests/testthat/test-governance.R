@@ -195,3 +195,53 @@ test_that("comparability decisions need rationale and confirmation in the editor
     expect_match(output$comparability, "Clarified wording only", fixed = TRUE)
   })
 })
+
+test_that("a change in another section refreshes rounds, drafts and offered profiles", {
+  signal <- shiny::reactiveVal(0L)
+  available_rounds <- data.frame(id = character(), number = integer(), state = character())
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = "coordinate",
+      list_campaign_rounds = available_rounds,
+      list_campaign_enrollments = data.frame(enrollment_id = "e1", pseudonym = "p1", state = "eligible"),
+      stop("Unexpected service")
+    )
+  }
+  names <- c("get_capabilities", "list_campaign_rounds", "list_campaign_enrollments", "prepare_campaign", "preview_campaign", "release_campaign", "cancel_campaign")
+  shiny::testServer(delphyrApp:::communications_server, args = list(study = function() "study", lang = function() "en", call = call, services = governance_services(names), changed = function() signal()), {
+    session$flushReact()
+    expect_false(grepl("Round 1", output$body$html, fixed = TRUE))
+    available_rounds <<- data.frame(id = "round", number = 1L, state = "open")
+    signal(1L)
+    session$flushReact()
+    expect_match(output$body$html, "Round 1 Open", fixed = TRUE)
+  })
+  granted <- "analyse"
+  call <- function(name, ...) if (name == "get_capabilities") granted else stop("Unexpected service")
+  shiny::testServer(delphyrApp:::exports_server, args = list(study = function() "study", lang = function() "en", call = call, services = governance_services(c("get_capabilities", "request_study_export", "get_operation", "download_artifact")), changed = function() signal()), {
+    session$flushReact()
+    expect_identical(profiles(), "study_summary")
+    granted <<- c("analyse", "contacts_export")
+    signal(2L)
+    session$flushReact()
+    expect_identical(profiles(), c("study_summary", "contacts_restricted"))
+  })
+  draft_reads <- 0L
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = "coordinate",
+      list_panel_invitations = {
+        draft_reads <<- draft_reads + 1L
+        data.frame(draft_id = character(), external_ref = character(), display_name = character(), stakeholder_group = character(), locale = character(), invitation_id = character(), expires_at = character(), state = character())
+      },
+      stop("Unexpected service")
+    )
+  }
+  shiny::testServer(delphyrApp:::invitations_server, args = list(study = function() "study", lang = function() "en", call = call, services = governance_services(c("get_capabilities", "list_panel_invitations", "register_invited_account", "issue_panel_invitation", "revoke_panel_invitation")), changed = function() signal()), {
+    session$flushReact()
+    expect_identical(draft_reads, 1L)
+    signal(3L)
+    session$flushReact()
+    expect_identical(draft_reads, 2L)
+  })
+})

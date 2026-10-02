@@ -91,8 +91,10 @@ identity-header path and production deployment remain unqualified.
 - **Panel:** no preselected rating, automatic saving with per-field commit
   confirmation, revision conflict checks, deliberate submission, and a durable receipt. Released feedback includes only
   the participant's own previous responses alongside approved aggregates.
-- **Management:** exact instrument review, round transitions, future-round
-  protocol amendments, queued analysis and exports, and reviewed feedback releases.
+- **Management:** study creation from a reviewed protocol, study information,
+  staff rights, exact instrument review with readiness findings, round
+  transitions, future-round protocol amendments, queued analysis and exports,
+  item decisions, reviewed feedback releases, documentation and history.
 - **Editorial review:** preserved originals, separate redactions or summaries,
   independent review, theme coding, and version-specific item lineage.
 - **Coordination:** contact CSV previews with blocking duplicate review and
@@ -133,7 +135,8 @@ The manifest records the renderer and checksums every delivered file.
 - [Protocol amendments](docs/protocol-amendments.md), [panel import](docs/panel-import.md),
   [participation](docs/participation.md), and [synthetic communications](docs/communications.md).
 - [Authentication](docs/authentication.md), [invitations](docs/invitations.md),
-  [audit trail](docs/audit.md), and the [historical specification index](docs/spec/README.md).
+  [roles and rights](docs/roles-and-rights.md), [audit trail](docs/audit.md), and the
+  [historical specification index](docs/spec/README.md).
 
 Some detailed implementation documents and the historical specification remain
 in German. Current code and verified status take precedence over historical

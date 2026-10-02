@@ -463,3 +463,96 @@ Documentation	Documentation
 Exports	Exports
 Review the recorded history of this study. Response content and contacts are not part of this view.	Examinez l’historique enregistré de cette étude. Le contenu des réponses et les contacts ne font pas partie de cette vue.
 Request the exports your role permits. Every retrieval is checked and recorded.	Demandez les exports que votre rôle autorise. Chaque récupération est vérifiée et enregistrée.
+Item decisions	Décisions sur les items
+The rule outcome of the analysis is not a decision. Record the study team’s decision for each item with its rationale; no consensus is a legitimate result.	Le résultat de la règle d’analyse n’est pas une décision. Consignez pour chaque item la décision de l’équipe de l’étude avec sa justification ; l’absence de consensus est un résultat légitime.
+Study team’s decision	Décision de l’équipe de l’étude
+Rationale for the item decision	Justification de la décision sur l’item
+I reviewed the item, its analysis and the decision.	J’ai examiné l’item, son analyse et la décision.
+Save item decision	Enregistrer la décision sur l’item
+Item of the displayed analysis	Item de l’analyse affichée
+View the analysis of the selected round first.	Affichez d’abord l’analyse du tour sélectionné.
+Item decision saved:	Décision sur l’item enregistrée :
+Retain	Conserver
+Revise	Réviser
+Remove	Retirer
+Rate again	Évaluer de nouveau
+Finalize	Retenir définitivement
+agreement	accord
+disagreement	désaccord
+in every required group	dans chaque groupe requis
+in the pooled panel	dans l’ensemble du panel
+Study code	Code de l’étude
+Title	Titre
+Design	Plan d’étude
+Languages	Langues
+Timezone	Fuseau horaire
+Stakeholder groups	Groupes de parties prenantes
+Dimensions (scales)	Dimensions (échelles)
+Consensus for inclusion	Consensus pour l’inclusion
+Minimum valid n	n valide minimal
+Group rule	Règle de groupe
+Maximum number of rounds	Nombre maximal de tours
+Display minimum cell size	Taille minimale de cellule pour l’affichage
+Value	Valeur
+Create a new study	Créer une nouvelle étude
+Upload a complete study protocol as JSON. It is validated and displayed; only your confirmation creates the study with protocol version 1. Thresholds are methodological decisions of the study team. Only synthetic studies are permitted in this development environment.	Téléversez un protocole d’étude complet au format JSON. Il est validé et affiché ; seule votre confirmation crée l’étude avec la version 1 du protocole. Les seuils sont des décisions méthodologiques de l’équipe de l’étude. Seules les études synthétiques sont autorisées dans cet environnement de développement.
+Study protocol (JSON, maximum 1 MB)	Protocole d’étude (JSON, 1 Mo maximum)
+Validate protocol	Valider le protocole
+Protocol is valid. No study has been created yet.	Le protocole est valide. Aucune étude n’a encore été créée.
+Protocol is invalid. Field in question:	Le protocole n’est pas valide. Champ en cause :
+Complete protocol	Protocole complet
+I reviewed this exact protocol and create the study with it.	J’ai examiné ce protocole exact et je crée l’étude avec celui-ci.
+Create study	Créer l’étude
+Explicitly confirm the protocol first.	Confirmez d’abord explicitement le protocole.
+Study created:	Étude créée :
+Study leadership	Direction de l’étude
+Analysis	Analyse
+Research data export	Export des données de recherche
+Coordination	Coordination
+Editorial work	Travail éditorial
+Read the history (audit)	Consulter l’historique (audit)
+Contact export	Export des contacts
+Study setup	Configuration de l’étude
+Each published version is immutable. A round refers to exactly one version; changed text is a new version.	Chaque version publiée est immuable. Un tour renvoie à une seule version ; un texte modifié constitue une nouvelle version.
+Publish a new version	Publier une nouvelle version
+Study information and consent text	Texte d’information sur l’étude et de consentement
+Language of this text	Langue de ce texte
+I reviewed this exact text. It cannot be changed after publication.	J’ai examiné ce texte exact. Il ne peut plus être modifié après publication.
+Publish study information	Publier l’information sur l’étude
+Study team and rights	Équipe de l’étude et droits
+Rights apply to exactly one account with issuer and subject, never to an email address. Each change takes effect at the person’s next protected action and is recorded with its rationale. The last management right of a study cannot be revoked.	Les droits s’appliquent à un seul compte identifié par son émetteur et son sujet, jamais à une adresse électronique. Chaque modification prend effet à la prochaine action protégée de la personne et est consignée avec sa justification. Le dernier droit de direction d’une étude ne peut pas être retiré.
+Grant or revoke a right	Accorder ou retirer un droit
+Account	Compte
+Specify another account	Indiquer un autre compte
+Issuer of the other account	Émetteur de l’autre compte
+Subject of the other account	Sujet de l’autre compte
+Right	Droit
+Change	Modification
+Grant	Accorder
+Revoke	Retirer
+Rationale for the change of rights	Justification de la modification des droits
+I reviewed the account, the right and the change.	J’ai examiné le compte, le droit et la modification.
+Apply change of rights	Appliquer la modification des droits
+Panel	Panel
+The panel appears by study pseudonym only. A changed stakeholder group applies to rounds prepared in future; earlier rounds keep their assignment.	Le panel n’apparaît que sous pseudonyme d’étude. Un changement de groupe de parties prenantes s’applique aux tours préparés ultérieurement ; les tours antérieurs conservent leur attribution.
+Change a stakeholder group	Modifier un groupe de parties prenantes
+New stakeholder group	Nouveau groupe de parties prenantes
+Rationale for the group change	Justification du changement de groupe
+I reviewed the pseudonym and the new group.	J’ai examiné le pseudonyme et le nouveau groupe.
+Change stakeholder group	Modifier le groupe de parties prenantes
+Text	Texte
+active	actif
+disabled	désactivé
+Issuer	Émetteur
+Granted rights	Droits accordés
+Revoked rights	Droits retirés
+inactive	inactif
+Participation	Participation
+Rounds enrolled	Tours avec inscription
+Rounds submitted	Tours soumis
+A text and confirmation are required.	Un texte et une confirmation sont requis.
+Study information published.	Information sur l’étude publiée.
+Change of rights confirmed.	Modification des droits confirmée.
+Stakeholder group changed. Earlier rounds are unchanged.	Groupe de parties prenantes modifié. Les tours antérieurs restent inchangés.
+Setup	Configuration
+Publish the study information under Setup first.	Publiez d’abord l’information sur l’étude dans Configuration.

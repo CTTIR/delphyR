@@ -11,7 +11,8 @@ set_capability(
   principal_id,
   capability,
   enabled,
-  command_id
+  command_id,
+  reason = NULL
 )
 }
 \arguments{
@@ -29,9 +30,12 @@ audit or contacts_export. The contact export is never implied by a role.}
 \item{enabled}{Grant if TRUE; revoke otherwise.}
 
 \item{command_id}{Idempotency key.}
+
+\item{reason}{Optional rationale, recorded in the audit trail.}
 }
 \value{
-Membership id.
+Membership id. The last management right of a study cannot be
+  revoked: a study always keeps one person who can manage it.
 }
 \description{
 Assign or revoke a study capability

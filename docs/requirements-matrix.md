@@ -11,7 +11,7 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | PAN-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | PAN-03 | in_progress | Synthetic withdrawal stops new activity; save/withdraw race tested. Production data/deletion policy remains open. |
 | PAN-04 | implemented_tested | Recorded group changes apply only to new rounds; previous enrollment groups unchanged. |
-| ITM-01 | in_progress | Partial functionality; complete P1 gate remains open. |
+| ITM-01 | in_progress | Source reference per item, source links and lineage are exported; the free-text origin path through the interface remains open. |
 | ITM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | ITM-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | ITM-04 | implemented_tested | Split/merge lineage and explicit, superseding comparability decisions; both exported and used for comparisons between rounds (ADR-021). |

@@ -372,3 +372,49 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-governance-post
 
 Downloads are fetched inside the page from the Shiny download link and unpacked
 for inspection; this checks the delivered bytes, not a browser's save dialog.
+
+## A complete two-round study through the interface
+
+`browser-study-journey-postgres.R` passed on 2 October 2026 in Chromium against
+PostgreSQL. One application host resolved a separate identity and database
+connection for each of five browser sessions under the restricted runtime role:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-study-journey-postgres.R
+```
+
+The script stands in for the authentication gateway by sending the identity
+headers a qualified gateway would set; it qualifies the workflow and session
+isolation, not an OIDC deployment. The operator steps were provisioning the
+study lead's account and stepping the worker. The database was read only to
+verify results.
+
+- Sessions without identity headers, with a wrong gateway secret or with an
+  unknown account received the unregistered notice and no session.
+- The lead created the study from an uploaded protocol after validation and
+  confirmation, published the study information, imported four contacts and
+  issued four account-bound invitations.
+- Round one was prepared before anyone had joined. Four people accepted with
+  their own accounts; a code used by another account was refused. Opening was
+  refused with the finding that nobody was enrolled, then succeeded after
+  explicit enrollment and exact instrument review.
+- The panel consented, rated with automatic saving and submitted; one answer
+  was "unable to judge". The lead closed and froze the round, requested the
+  analysis, recorded item decisions, reviewed and released the feedback,
+  prepared round two and assigned the feedback.
+- In round two each person saw only the own previous answers beside the
+  released panel results; one member rated without submitting. The lead
+  finalized the round, completed the study, recorded documentation and
+  downloaded the research export.
+- The export was reproduced offline: the item with a single valid rating in
+  one group was `insufficient_data` under the group rule, three members were
+  paired for each item, round two held three submitted response sets, and no
+  account subject or contact address appeared in any file.
+- Independent reads confirmed 76 audit events with the expected counts per
+  action, four distinct accounts behind the saved responses, no secret or
+  invitation token in the host log, no Shiny output error and no horizontal
+  overflow at 390 and 1280 pixels in any session.
+
+Two defects found by this run were repaired with regression tests: round
+preparation used the study information read when the section was opened, and
+empty recipient and version lists rendered an output error.

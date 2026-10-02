@@ -148,7 +148,7 @@ command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, 
     qualitative_theme = "edit", qualitative_code = "edit", qualitative_item_source = "edit",
     qualitative_lineage = "manage", campaign_prepare = "coordinate",
     campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_account = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage", enroll_panel = "manage",
-    study_documentation = "manage", item_comparability = "manage"
+    study_documentation = "manage", item_comparability = "manage", staff_account = "manage"
   )
   # Export requests are admitted by the capability of their profile.
   capability <- if (startsWith(type, "request_export:")) export_capability(sub("^request_export:", "", type)) else capability[[type]]
@@ -208,18 +208,28 @@ create_study <- function(repo, actor, protocol, command_id) {
 #'   audit or contacts_export. The contact export is never implied by a role.
 #' @param enabled Grant if TRUE; revoke otherwise.
 #' @param command_id Idempotency key.
-#' @return Membership id.
+#' @param reason Optional rationale, recorded in the audit trail.
+#' @return Membership id. The last management right of a study cannot be
+#'   revoked: a study always keeps one person who can manage it.
 #' @export
-set_capability <- function(repo, actor, study_id, principal_id, capability, enabled, command_id) {
+set_capability <- function(repo, actor, study_id, principal_id, capability, enabled, command_id, reason = NULL) {
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
     valid_id(principal_id)
+    ensure(is.null(reason) || (scalar_text(reason) && nchar(reason, type = "bytes") <= 10000L), "capability.reason")
+    # Changes of rights within one study are decided one at a time.
+    one(query(repo, "SELECT id FROM research.studies WHERE id=$1 FOR NO KEY UPDATE", study_id))
+    authorize(repo, actor, study_id, "manage")
     ensure(length(capability) == 1L && capability %in% c("manage", "analyse", "export", "coordinate", "edit", "panel", "audit", "contacts_export") && is.logical(enabled) && length(enabled) == 1 && !is.na(enabled), "capability")
     command(repo, actor, study_id, "capability", command_id, list(principal_id, capability, enabled), function() {
+      if (capability == "manage" && !enabled) {
+        others <- query(repo, "SELECT count(*)::int AS n FROM identity.capabilities c JOIN identity.memberships m ON m.study_id=c.study_id AND m.id=c.membership_id JOIN identity.principals p ON p.id=m.principal_id WHERE c.study_id=$1 AND c.capability='manage' AND c.revoked_at IS NULL AND m.active AND p.active AND m.principal_id<>$2", study_id, principal_id)$n
+        ensure(others > 0L, "capability.last_manager", "DEL_CONFLICT")
+      }
       m <- query(repo, "INSERT INTO identity.memberships(id,study_id,principal_id) VALUES($1,$2,$3) ON CONFLICT(study_id,principal_id) DO UPDATE SET principal_id=EXCLUDED.principal_id RETURNING id", uid(), study_id, principal_id)$id
       execute(repo, "INSERT INTO identity.capabilities(study_id,membership_id,capability,revoked_at) VALUES($1,$2,$3,CASE WHEN $4 THEN NULL ELSE clock_timestamp() END) ON CONFLICT(study_id,membership_id,capability) DO UPDATE SET revoked_at=EXCLUDED.revoked_at", study_id, m, capability, enabled)
       list(id = m)
-    }, detail = paste(capability, if (enabled) "granted" else "revoked"))
+    }, reason = reason, detail = paste(capability, if (enabled) "granted" else "revoked"))
   })
 }
 #' List studies available to the current actor

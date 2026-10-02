@@ -2,7 +2,7 @@ operations_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::uiOutput(ns("body"))
 }
-operations_server <- function(id, study, round, lang, call, services, refresh, allowed) {
+operations_server <- function(id, study, round, lang, call, services, refresh, allowed, changed = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     field <- function(name, default = "") {
       value <- shiny::isolate(input[[name]])
@@ -16,6 +16,8 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
     preview <- shiny::reactiveVal(NULL)
     setup <- shiny::reactiveVal(NULL)
     items <- shiny::reactiveVal(NULL)
+    decisions <- shiny::reactiveVal(data.frame())
+    deciding <- all(c("record_item_decision", "list_item_decisions") %in% names(services))
     status <- shiny::reactiveVal("")
     needed <- c("freeze_round", "request_analysis", "get_operation", "get_analysis", "create_feedback", "get_feedback_candidate", "release_feedback", "assign_feedback", "request_export", "download_artifact", "get_study_setup", "prepare_round")
     ready <- all(needed %in% names(services))
@@ -28,8 +30,19 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
       preview(NULL)
       items(NULL)
       setup(NULL)
+      decisions(data.frame())
       if (ready && allowed()) attempt(function() setup(call("get_study_setup", study())))
+      if (ready && deciding && allowed()) attempt(function() decisions(call("list_item_decisions", study())))
     })
+    # Study information published or a protocol amended in another section.
+    if (!is.null(changed)) {
+      shiny::observeEvent(changed(),
+        {
+          if (ready && allowed()) attempt(function() setup(call("get_study_setup", study())))
+        },
+        ignoreInit = TRUE
+      )
+    }
     output$body <- shiny::renderUI({
       shiny::req(ready, allowed())
       ns <- session$ns
@@ -38,6 +51,18 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
         shiny::tags$p(tr(lang(), "Diese Aktionen beziehen sich auf die oben ausgew\u00e4hlte Runde. Analyse und Export werden im Hintergrund vorbereitet; mit Auftrag pr\u00fcfen sehen Sie den aktuellen Stand.", "These actions use the round selected above. Analysis and exports are prepared in the background; use Check operation to see their progress.")),
         shiny::tags$div(class = "del-actions", shiny::actionButton(ns("freeze"), tr(lang(), "Runde einfrieren", "Freeze round")), shiny::actionButton(ns("analyse"), tr(lang(), "Analyse beauftragen", "Request analysis")), shiny::actionButton(ns("poll"), tr(lang(), "Auftrag pr\u00fcfen", "Check operation")), shiny::actionButton(ns("read"), tr(lang(), "Analyse anzeigen", "View analysis"))),
         shiny::tableOutput(ns("analysis")),
+        if (deciding) {
+          shiny::tags$details(
+            shiny::tags$summary(tr(lang(), "Itementscheidungen", "Item decisions")),
+            shiny::tags$p(tr(lang(), "Das Regelergebnis der Analyse ist keine Entscheidung. Halten Sie f\u00fcr jedes Item die Entscheidung des Studienteams mit Begr\u00fcndung fest; fehlender Konsens ist ein zul\u00e4ssiges Ergebnis.", "The rule outcome of the analysis is not a decision. Record the study team\u2019s decision for each item with its rationale; no consensus is a legitimate result.")),
+            shiny::uiOutput(ns("decision_item")),
+            shiny::selectInput(ns("disposition"), tr(lang(), "Entscheidung des Studienteams", "Study team\u2019s decision"), stats::setNames(decision_dispositions(), disposition_label(decision_dispositions(), lang())), selected = field("disposition", "rerate")),
+            shiny::textAreaInput(ns("decision_reason"), tr(lang(), "Begr\u00fcndung der Itementscheidung", "Rationale for the item decision"), value = field("decision_reason"), width = "100%"),
+            shiny::checkboxInput(ns("decision_confirm"), tr(lang(), "Ich habe Item, Analyse und Entscheidung gepr\u00fcft.", "I reviewed the item, its analysis and the decision."), FALSE),
+            shiny::actionButton(ns("decide"), tr(lang(), "Itementscheidung speichern", "Save item decision")),
+            shiny::tableOutput(ns("decisions"))
+          )
+        },
         shiny::tags$details(
           shiny::tags$summary(tr(lang(), "Feedback pr\u00fcfen und freigeben", "Review and release feedback")),
           shiny::actionButton(ns("draft"), tr(lang(), "Feedback erstellen", "Create feedback")), shiny::verbatimTextOutput(ns("preview")),
@@ -110,6 +135,39 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
       },
       striped = TRUE
     )
+    output$decision_item <- shiny::renderUI({
+      a <- analysis()
+      codes <- if (is.null(a)) character() else unique(a$decisions$item_code)
+      shiny::selectInput(session$ns("decision_code"), tr(lang(), "Item der angezeigten Analyse", "Item of the displayed analysis"), codes, selected = shiny::isolate(input$decision_code))
+    })
+    output$decisions <- shiny::renderTable({
+      d <- decisions()
+      r <- round()
+      shiny::req(nrow(d) > 0, nrow(r) == 1)
+      d <- d[d$round_number == r$number, , drop = FALSE]
+      shiny::req(nrow(d) > 0)
+      out <- data.frame(d$item_code, disposition_label(d$disposition, lang()), d$reason, stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("Item", "Entscheidung", "Begr\u00fcndung"), c("Item", "Decision", "Reason"))
+      out
+    })
+    shiny::observeEvent(input$decide, attempt(function() {
+      r <- selected()
+      shiny::req(deciding, !is.na(r$analysis_id))
+      reason <- if (is.null(input$decision_reason)) "" else trimws(input$decision_reason)
+      if (is.null(analysis()) || is.null(input$decision_code) || !nzchar(input$decision_code)) {
+        status(tr(lang(), "Zuerst die Analyse der ausgew\u00e4hlten Runde anzeigen.", "View the analysis of the selected round first."))
+        return()
+      }
+      if (!isTRUE(input$decision_confirm) || !nzchar(reason)) {
+        status(tr(lang(), "Begr\u00fcndung und Best\u00e4tigung sind erforderlich.", "A reason and confirmation are required."))
+        return()
+      }
+      call("record_item_decision", r$analysis_id, input$decision_code, input$disposition, reason, command_id())
+      decisions(call("list_item_decisions", study()))
+      shiny::updateCheckboxInput(session, "decision_confirm", value = FALSE)
+      shiny::updateTextAreaInput(session, "decision_reason", value = "")
+      status(paste(tr(lang(), "Itementscheidung gespeichert:", "Item decision saved:"), input$decision_code))
+    }))
     shiny::observeEvent(input$draft, attempt(function() {
       r <- selected()
       shiny::req(!is.na(r$analysis_id))
@@ -139,7 +197,10 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
     }))
     shiny::observeEvent(input$csv, items(NULL))
     shiny::observeEvent(input$validate, attempt(function() {
-      shiny::req(input$csv, setup())
+      shiny::req(input$csv)
+      # The protocol and the published study information may have changed
+      # since this section was opened; validate against the current state.
+      setup(call("get_study_setup", study()))
       if (input$csv$size > 5e6) stop("file too large")
       x <- utils::read.csv(input$csv$datapath, stringsAsFactors = FALSE, fileEncoding = "UTF-8", check.names = FALSE)
       delphyr::validate_items(x, setup()$protocol)
@@ -156,6 +217,9 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
     output$consents <- shiny::renderUI({
       shiny::req(setup())
       x <- setup()$consent_versions
+      if (!nrow(x)) {
+        return(shiny::tags$p(class = "del-status del-status--attention", tr(lang(), "Zuerst unter Einrichtung eine Studieninformation ver\u00f6ffentlichen.", "Publish the study information under Setup first.")))
+      }
       shiny::selectInput(session$ns("consent"), tr(lang(), "Studieninformation", "Study information"), stats::setNames(x$id, paste(x$locale, x$content)))
     })
     shiny::observeEvent(input$prepare, attempt(function() {
@@ -171,4 +235,15 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
       zip::zipr(file, files, root = path)
     }, contentType = "application/zip")
   })
+}
+
+decision_dispositions <- function() c("retain", "revise", "remove", "split", "merge", "rerate", "finalize")
+
+disposition_label <- function(disposition, lang) {
+  labels <- tr(
+    lang,
+    c(retain = "Beibehalten", revise = "\u00dcberarbeiten", remove = "Entfernen", split = "Teilen", merge = "Zusammenf\u00fchren", rerate = "Erneut bewerten", finalize = "Abschlie\u00dfend aufnehmen"),
+    c(retain = "Retain", revise = "Revise", remove = "Remove", split = "Split", merge = "Merge", rerate = "Rate again", finalize = "Finalize")
+  )
+  unname(ifelse(disposition %in% names(labels), labels[disposition], disposition))
 }

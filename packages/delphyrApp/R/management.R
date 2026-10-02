@@ -2,7 +2,7 @@ management_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tags$section(class = "del-sheet del-management", shiny::uiOutput(ns("body")), status_ui(ns("status")), operations_ui(ns("operations")))
 }
-management_server <- function(id, study, lang, call, services) {
+management_server <- function(id, study, lang, call, services, changed = NULL, touch = function() NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     field <- function(name, default = "") {
       value <- shiny::isolate(input[[name]])
@@ -101,7 +101,10 @@ management_server <- function(id, study, lang, call, services) {
       r <- rounds()
       r[r$id == input$round, , drop = FALSE]
     })
-    operations_server("operations", study, selected, lang, call, services, refresh, allowed)
+    operations_server("operations", study, selected, lang, call, services, function() {
+      refresh()
+      touch()
+    }, allowed, changed = changed)
     shiny::observeEvent(input$transition, {
       shiny::req(allowed(), input$round, input$target)
       if (!isTRUE(input$confirm) || is.null(input$reason) || !nzchar(trimws(input$reason))) {
@@ -126,6 +129,7 @@ management_server <- function(id, study, lang, call, services) {
           call("transition_round", r$id, input$target, hash, input$reason, command_id())
           review(NULL)
           refresh()
+          touch()
           shiny::updateCheckboxInput(session, "confirm", value = FALSE)
           status(tr(lang(), "Status\u00e4nderung best\u00e4tigt.", "State change confirmed."))
         },
@@ -156,6 +160,7 @@ management_server <- function(id, study, lang, call, services) {
       tryCatch(
         {
           result <- call("enroll_panel", input$round, command_id())
+          touch()
           if (reviewable) load_review(input$round)
           status(paste(tr(lang(), "Aufgenommene Panelmitglieder:", "Panel members enrolled:"), result$added))
         },

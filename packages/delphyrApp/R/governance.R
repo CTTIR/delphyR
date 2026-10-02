@@ -231,7 +231,7 @@ export_profile_description <- function(profile, lang) {
 
 # Study-level exports. The offered profiles follow the actor's current rights;
 # the services check them again on request, on completion and on download.
-exports_server <- function(id, study, lang, call, services) {
+exports_server <- function(id, study, lang, call, services, changed = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     profiles <- shiny::reactiveVal(character())
     operation <- shiny::reactiveVal(NULL)
@@ -244,13 +244,23 @@ exports_server <- function(id, study, lang, call, services) {
       operation(NULL)
       artifact(NULL)
       if (ready) {
-        attempt(function() {
-          caps <- call("get_capabilities", study())
-          needed <- export_profile_capabilities()
-          profiles(names(needed)[vapply(needed, function(x) any(x %in% caps), logical(1))])
-        })
+        attempt(function() profiles(offered()))
       }
     })
+    offered <- function() {
+      caps <- call("get_capabilities", study())
+      needed <- export_profile_capabilities()
+      names(needed)[vapply(needed, function(x) any(x %in% caps), logical(1))]
+    }
+    # Rights granted or revoked in another section change the offered profiles.
+    if (!is.null(changed)) {
+      shiny::observeEvent(changed(),
+        {
+          if (ready) attempt(function() profiles(offered()))
+        },
+        ignoreInit = TRUE
+      )
+    }
     output$body <- shiny::renderUI({
       shiny::req(length(profiles()) > 0)
       ns <- session$ns

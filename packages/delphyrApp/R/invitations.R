@@ -1,6 +1,6 @@
 invitations_ui <- function(id) shiny::uiOutput(shiny::NS(id)("body"))
 
-invitations_server <- function(id, study, lang, call, services, default_issuer = "") {
+invitations_server <- function(id, study, lang, call, services, default_issuer = "", changed = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     field <- function(name, default = "") {
       value <- shiny::isolate(input[[name]])
@@ -25,6 +25,15 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
         })
       }
     })
+    # Contacts imported in another section create new drafts.
+    if (!is.null(changed)) {
+      shiny::observeEvent(changed(),
+        {
+          if (ready && allowed()) attempt(refresh)
+        },
+        ignoreInit = TRUE
+      )
+    }
     output$body <- shiny::renderUI({
       shiny::req(allowed())
       ns <- session$ns

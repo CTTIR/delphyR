@@ -9,7 +9,7 @@ Description: An English, French and German Shiny interface for synthetic Delphi
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: DBI, shiny, bslib, delphyr, jsonlite, uuid, zip
-Suggests: testthat (>= 3.0.0), knitr, rmarkdown
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown, withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 RoxygenNote: 8.0.0

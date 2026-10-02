@@ -1,6 +1,6 @@
 communications_ui <- function(id) shiny::uiOutput(shiny::NS(id)("body"))
 
-communications_server <- function(id, study, lang, call, services) {
+communications_server <- function(id, study, lang, call, services, changed = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     allowed <- shiny::reactiveVal(FALSE)
     rounds <- shiny::reactiveVal(data.frame())
@@ -25,6 +25,20 @@ communications_server <- function(id, study, lang, call, services) {
     field <- function(name, default = "") {
       x <- shiny::isolate(input[[name]])
       if (is.null(x)) default else x
+    }
+    # Rounds prepared or opened and members enrolled in another section.
+    if (!is.null(changed)) {
+      shiny::observeEvent(changed(),
+        {
+          if (ready && allowed()) {
+            attempt(function() {
+              rounds(call("list_campaign_rounds", study()))
+              if (length(input$round) == 1L && nzchar(input$round) && input$round %in% rounds()$id) recipients(call("list_campaign_enrollments", input$round))
+            })
+          }
+        },
+        ignoreInit = TRUE
+      )
     }
     output$body <- shiny::renderUI({
       shiny::req(allowed())
@@ -65,7 +79,7 @@ communications_server <- function(id, study, lang, call, services) {
     }))
     output$recipients <- shiny::renderUI({
       r <- recipients()
-      shiny::req(nrow(r))
+      shiny::req(nrow(r) > 0)
       shiny::selectizeInput(session$ns("enrollments"), tr(lang(), "Genaue Empf\u00e4ngerauswahl (Pseudonyme)", "Exact recipient selection (pseudonyms)"), choices = stats::setNames(r$enrollment_id, paste(r$pseudonym, state_label(r$state, lang()))), selected = field("enrollments", character()), multiple = TRUE)
     })
     draft <- function() list(round = input$round, enrollments = sort(input$enrollments), kind = input$kind, subject = input$subject, message = input$message, locale = input$locale, version = input$version)

@@ -46,7 +46,7 @@ validate_items <- function(items, protocol) {
 publish_consent <- function(repo, actor, study_id, text, locale, command_id) {
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
-    ensure(scalar_text(text) && scalar_text(locale) && locale %in% c("en", "fr", "de"), "consent")
+    ensure(scalar_text(text) && nchar(text, type = "bytes") <= 50000L && scalar_text(locale) && locale %in% c("en", "fr", "de"), "consent")
     command(repo, actor, study_id, "publish_consent", command_id, list(text, locale), function() {
       id <- uid()
       execute(repo, "INSERT INTO identity.consent_versions(id,study_id,locale,content,hash) VALUES($1,$2,$3,$4,$5)", id, study_id, locale, text, content_hash(list(text, locale)))

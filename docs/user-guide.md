@@ -66,6 +66,16 @@ The core withdrawal service stops future collection and message eligibility
 while retaining prior synthetic research data under its explicit test policy.
 This is not an institutional deletion policy.
 
+## Create and set up a study
+
+An account that the operator allowed to create studies sees **Create a new
+study**. Upload the complete protocol as JSON, read the summary and the full
+text, confirm, and the study is created with protocol version 1. In **Setup**,
+publish the study information that participants must consent to, manage the
+[rights of the study team](roles-and-rights.md) with a rationale for each
+change, and review the panel by pseudonym. A changed stakeholder group applies
+to rounds prepared afterwards.
+
 ## Manage rounds and protocols
 
 Select a round and use **Review instrument and readiness**. The review shows the
@@ -82,8 +92,12 @@ protocol amendment must be withdrawn and prepared again.
 
 Confirm every lifecycle change with a reason. Freeze a closed
 round before queuing analysis or export for the separate worker. Refresh the
-operation state to obtain completed results. Preview the exact feedback candidate
-before release, then assign released feedback to an unopened next round.
+operation state to obtain completed results. Under **Item decisions**, record
+the study team's decision for each item of the displayed analysis with its
+rationale; the rule outcome alone is never a decision, and no consensus is a
+legitimate result. Preview the exact feedback candidate before release, then
+assign released feedback to an unopened next round. A study is completed after
+its last round is finalized and every item of that round has a decision.
 
 Protocol amendments need a complete validated configuration, an exact comparison
 with the previous version, and explicit approval. They apply to future rounds;

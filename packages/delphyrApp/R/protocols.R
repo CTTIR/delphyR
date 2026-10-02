@@ -51,12 +51,12 @@ protocols_server <- function(id, study, lang, call, services) {
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     output$version_selector <- shiny::renderUI({
       v <- versions()
-      shiny::req(nrow(v))
+      shiny::req(nrow(v) > 0)
       shiny::selectInput(session$ns("version"), tr(lang(), "Gespeicherte Version", "Saved version"), stats::setNames(v$id, paste(tr(lang(), "Version", "Version"), v$version)), selected = utils::tail(v$id, 1))
     })
     output$history <- shiny::renderTable({
       v <- versions()
-      shiny::req(nrow(v))
+      shiny::req(nrow(v) > 0)
       out <- data.frame(version = v$version, reason = ifelse(is.na(v$reason), tr(lang(), "Erstfassung", "Initial version"), v$reason), stringsAsFactors = FALSE)
       names(out) <- c(tr(lang(), "Version", "Version"), tr(lang(), "Begr\u00fcndung", "Rationale"))
       out
@@ -79,7 +79,7 @@ protocols_server <- function(id, study, lang, call, services) {
       shiny::req(allowed(), input$file)
       p <- read_protocol_upload(input$file)
       v <- call("list_protocol_versions", study())
-      shiny::req(nrow(v))
+      shiny::req(nrow(v) > 0)
       latest <- v[which.max(v$version), , drop = FALSE]
       previous <- delphyr::new_protocol(jsonlite::fromJSON(latest$config, simplifyVector = FALSE))
       hash <- delphyr::content_hash(p)

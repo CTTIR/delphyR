@@ -125,3 +125,22 @@ test_that("an editor can start from empty provenance tables", {
     expect_false(grepl("Independent review", output$body$html, fixed = TRUE))
   })
 })
+
+test_that("a round without enrollments shows no recipient control and no output error", {
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = "coordinate",
+      list_campaign_rounds = data.frame(id = "round", number = 1L, state = "draft"),
+      list_campaign_enrollments = data.frame(enrollment_id = character(), pseudonym = character(), state = character()),
+      stop("Unexpected service")
+    )
+  }
+  names <- c("get_capabilities", "list_campaign_rounds", "list_campaign_enrollments", "prepare_campaign", "preview_campaign", "release_campaign", "cancel_campaign")
+  services <- stats::setNames(rep(list(function(...) NULL), length(names)), names)
+  shiny::testServer(delphyrApp:::communications_server, args = list(study = function() "study", lang = function() "en", call = call, services = services), {
+    session$flushReact()
+    session$setInputs(round = "round")
+    # An empty recipient list is a silent, empty output rather than an error.
+    expect_error(output$recipients, class = "shiny.silent.error")
+  })
+})
