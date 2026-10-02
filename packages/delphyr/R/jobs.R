@@ -1,10 +1,30 @@
+# Capability that admits each export profile. The contact export is a separate
+# right; the audit export is open to the audit role and to study management.
+export_capability <- function(profile) {
+  capabilities <- list(
+    research_round = "export", research_pseudonymized = "export", study_summary = c("analyse", "manage"),
+    audit_restricted = c("audit", "manage"), contacts_restricted = "contacts_export"
+  )
+  ensure(is.character(profile) && length(profile) == 1L && profile %in% names(capabilities), "export.profile")
+  capabilities[[profile]]
+}
+job_capability <- function(type, profile) if (identical(type, "analysis")) "analyse" else export_capability(profile)
+admit <- function(repo, actor, study_id, capability) {
+  if (length(capability) > 1L) authorize_any(repo, actor, study_id, capability) else authorize(repo, actor, study_id, capability)
+}
 request_job <- function(repo, actor, snapshot_id, type, key) {
   transaction(repo, function() {
     valid_id(snapshot_id)
     s <- one(query(repo, "SELECT study_id FROM research.snapshots WHERE id=$1", snapshot_id))
     authorize(repo, actor, s$study_id, if (type == "export") "export" else "analyse")
     command(repo, actor, s$study_id, paste0("request_", type), key, list(snapshot_id), function() {
-      job <- query(repo, "INSERT INTO ops.jobs(id,study_id,actor_id,type,input_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT(study_id,actor_id,type,input_id) DO UPDATE SET input_id=EXCLUDED.input_id RETURNING id,state", uid(), s$study_id, actor$principal_id, type, snapshot_id)
+      # One analysis per requester and snapshot; a finished export does not
+      # block a later request, while a duplicate pending request is merged.
+      job <- if (type == "analysis") {
+        query(repo, "INSERT INTO ops.jobs(id,study_id,actor_id,type,input_id,profile) VALUES($1,$2,$3,'analysis',$4,'analysis') ON CONFLICT(study_id,actor_id,input_id) WHERE type='analysis' AND state<>'dead_letter' DO UPDATE SET input_id=EXCLUDED.input_id RETURNING id,state", uid(), s$study_id, actor$principal_id, snapshot_id)
+      } else {
+        query(repo, "INSERT INTO ops.jobs(id,study_id,actor_id,type,input_id,profile) VALUES($1,$2,$3,'export',$4,'research_round') ON CONFLICT(study_id,actor_id,input_id,profile) WHERE type='export' AND state IN ('queued','running','retry_wait') DO UPDATE SET input_id=EXCLUDED.input_id RETURNING id,state", uid(), s$study_id, actor$principal_id, snapshot_id)
+      }
       list(id = job$id, state = job$state)
     })
   })
@@ -25,6 +45,35 @@ request_analysis <- function(repo, actor, snapshot_id, command_id) request_job(r
 #' @return Operation id. Free-text exports require a separate reviewed profile.
 #' @export
 request_export <- function(repo, actor, snapshot_id, command_id) request_job(repo, actor, snapshot_id, "export", command_id)
+#' Queue a private study-level export for one profile
+#'
+#' Profiles separate what leaves the system and who may request it:
+#' research_pseudonymized (export capability) holds every frozen round with
+#' pseudonyms, decisions, lineage and reviewed qualitative records;
+#' study_summary (analyse or manage) holds aggregates only;
+#' audit_restricted (audit or manage) holds events and approvals without
+#' response content; contacts_restricted (contacts_export) holds contact
+#' fields without pseudonyms. A public release is not produced by the software.
+#' @param repo Repository.
+#' @param actor Actor holding the capability of the requested profile.
+#' @param study_id Study UUID.
+#' @param profile research_pseudonymized, study_summary, audit_restricted or
+#'   contacts_restricted.
+#' @param command_id Idempotency key.
+#' @return Operation id and state.
+#' @export
+request_study_export <- function(repo, actor, study_id, profile, command_id) {
+  ensure(scalar_text(profile), "export.profile")
+  ensure(!identical(profile, "public_release"), "export.public_release_requires_separate_approval", "DEL_FORBIDDEN")
+  ensure(profile %in% c("research_pseudonymized", "study_summary", "audit_restricted", "contacts_restricted"), "export.profile")
+  transaction(repo, function() {
+    admit(repo, actor, study_id, export_capability(profile))
+    command(repo, actor, study_id, paste0("request_export:", profile), command_id, list(study_id, profile), function() {
+      job <- query(repo, "INSERT INTO ops.jobs(id,study_id,actor_id,type,input_id,profile) VALUES($1,$2,$3,'export',$2,$4) ON CONFLICT(study_id,actor_id,input_id,profile) WHERE type='export' AND state IN ('queued','running','retry_wait') DO UPDATE SET input_id=EXCLUDED.input_id RETURNING id,state", uid(), study_id, actor$principal_id, profile)
+      list(id = job$id, state = job$state)
+    }, detail = profile)
+  })
+}
 #' Retrieve an authorized operation state
 #' @param repo Repository.
 #' @param actor Requesting actor.
@@ -33,8 +82,8 @@ request_export <- function(repo, actor, snapshot_id, command_id) request_job(rep
 #' @export
 get_operation <- function(repo, actor, operation_id) {
   valid_id(operation_id)
-  x <- one(query(repo, "SELECT id,study_id,actor_id,type,state,result_ref,error_code FROM ops.jobs WHERE id=$1", operation_id))
-  authorize(repo, actor, x$study_id, if (x$type == "export") "export" else "analyse")
+  x <- one(query(repo, "SELECT id,study_id,actor_id,type,profile,state,result_ref,error_code FROM ops.jobs WHERE id=$1", operation_id))
+  admit(repo, actor, x$study_id, job_capability(x$type, x$profile))
   ensure(x$actor_id == actor$principal_id, "operation", "DEL_NOT_FOUND")
   x[, c("id", "state", "result_ref", "error_code"), drop = FALSE]
 }
@@ -119,16 +168,26 @@ write_export <- function(repo, actor, snapshot_id) {
   ensure(file.rename(staging, final), "artifact.rename", "DEL_STORAGE")
   list(id = key, study_id = x$study_id, checksum = hash)
 }
+# Checks every listed file of an export against its recorded SHA-256. On the
+# server the directory must hold exactly the listed files.
+verify_manifest <- function(path, exact = TRUE) {
+  ensure(scalar_text(path) && file.exists(file.path(path, "manifest.json")), "manifest.missing")
+  manifest <- from_json(paste(readLines(file.path(path, "manifest.json"), warn = FALSE), collapse = "\n"))
+  ensure(is.list(manifest$files) && length(manifest$files) > 0L, "manifest.files")
+  for (f in manifest$files) {
+    ensure(scalar_text(f$name) && identical(basename(f$name), f$name) && !f$name %in% c(".", ".."), "manifest.path")
+    ensure(file.exists(file.path(path, f$name)) && identical(digest::digest(file = file.path(path, f$name), algo = "sha256"), f$sha256), "manifest.checksum")
+  }
+  listed <- vapply(manifest$files, function(f) f$name, character(1))
+  if (exact) ensure(setequal(c(listed, "manifest.json"), list.files(path)), "manifest.unlisted_file")
+  manifest
+}
 #' Verify and reproduce a portable research export without a database
 #' @param path Export directory under the user's control.
 #' @return Recomputed delphyr_analysis after all listed checksums match.
 #' @export
 reproduce_export <- function(path) {
-  manifest <- from_json(paste(readLines(file.path(path, "manifest.json"), warn = FALSE), collapse = "\n"))
-  for (f in manifest$files) {
-    ensure(scalar_text(f$name) && identical(basename(f$name), f$name) && !f$name %in% c(".", ".."), "manifest.path")
-    ensure(identical(digest::digest(file = file.path(path, f$name), algo = "sha256"), f$sha256), "manifest.checksum")
-  }
+  manifest <- verify_manifest(path, exact = FALSE)
   s <- read_snapshot(paste(readLines(file.path(path, "snapshot.json"), warn = FALSE), collapse = "\n"))
   a <- analyse_round(s)
   ensure(identical(s$content_hash, manifest$snapshot_hash) && identical(a$provenance$result_hash, manifest$result_hash), "reproduction")
@@ -150,11 +209,17 @@ worker_step <- function(repo, study_id = NULL) {
   registered <- FALSE
   result <- tryCatch(
     {
-      if (j$type == "analysis") out <- run_analysis(repo, actor, j$input_id, paste0("job-", j$id)) else out <- write_export(repo, actor, j$input_id)
+      out <- if (j$type == "analysis") {
+        run_analysis(repo, actor, j$input_id, paste0("job-", j$id))
+      } else if (j$profile == "research_round") {
+        write_export(repo, actor, j$input_id)
+      } else {
+        write_study_export(repo, actor, j$input_id, j$profile)
+      }
       transaction(repo, function() {
         current <- one(query(repo, "SELECT id FROM ops.jobs WHERE id=$1 AND lease_token=$2 AND state='running' AND lease_until>clock_timestamp() FOR UPDATE", j$id, j$lease_token))
-        authorize(repo, actor, j$study_id, if (j$type == "export") "export" else "analyse")
-        if (j$type == "export") execute(repo, "INSERT INTO ops.artifacts VALUES($1,$2,$3,$4,$5,$6,clock_timestamp()+interval '1 day')", out$id, j$study_id, j$actor_id, j$input_id, out$id, out$checksum)
+        admit(repo, actor, j$study_id, job_capability(j$type, j$profile))
+        if (j$type == "export") execute(repo, "INSERT INTO ops.artifacts(id,study_id,actor_id,snapshot_id,storage_key,checksum,expires_at,profile) VALUES($1,$2,$3,$4::uuid,$5,$6,clock_timestamp()+interval '1 day',$7)", out$id, j$study_id, j$actor_id, if (j$profile == "research_round") j$input_id else NA_character_, out$id, out$checksum, j$profile)
         execute(repo, "UPDATE ops.jobs SET state='succeeded',result_ref=$3,lease_until=NULL WHERE id=$1 AND lease_token=$2", current$id, j$lease_token, out$id)
         list(id = j$id, state = "succeeded", result_ref = out$id)
       })
@@ -181,14 +246,16 @@ worker_step <- function(repo, study_id = NULL) {
 download_artifact <- function(repo, actor, artifact_id) {
   valid_id(artifact_id)
   x <- one(query(repo, "SELECT * FROM ops.artifacts WHERE id=$1 AND expires_at>clock_timestamp()", artifact_id))
-  authorize(repo, actor, x$study_id, "export")
+  admit(repo, actor, x$study_id, export_capability(x$profile))
   ensure(x$actor_id == actor$principal_id, "artifact", "DEL_NOT_FOUND")
   valid_id(x$storage_key)
   root <- normalizePath(repo$artifact_root, mustWork = TRUE)
   path <- normalizePath(file.path(root, x$storage_key), mustWork = TRUE)
   ensure(startsWith(path, paste0(root, .Platform$file.sep)), "artifact.path", "DEL_STORAGE")
   ensure(identical(digest::digest(file = file.path(path, "manifest.json"), algo = "sha256"), x$checksum), "artifact.checksum", "DEL_STORAGE")
-  reproduce_export(path)
-  audit(repo, actor, x$study_id, "artifact_download", artifact_id)
+  # Every delivered file is checked; research profiles are also recomputed.
+  verify_manifest(path)
+  if (x$profile == "research_round") reproduce_export(path) else if (x$profile == "research_pseudonymized") reproduce_study_export(path)
+  audit(repo, actor, x$study_id, "artifact_download", artifact_id, detail = x$profile)
   path
 }

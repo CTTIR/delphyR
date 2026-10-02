@@ -118,17 +118,34 @@ suppresses obsolete reminders, withdrawals, and cancelled campaigns.
 `sink_recorded` is not an external delivery confirmation; `delivery_unknown` is
 not automatically retried. See [communications](communications.md).
 
+## Document the study and decide comparability
+
+In **Documentation**, study management enters the team's own statements on
+authors, funding, conflicts of interest, approvals, interpretation, deviations
+and data availability. Each save is a new version with a rationale; empty
+topics appear in reports as not documented. In **Editorial review**, a revised
+item version is paired with its earlier version only after an explicit,
+reasoned comparability decision.
+
 ## Download and reproduce research exports
 
-The authorized requester can download a completed private export. Downloads
-recheck authority, expiry, and checksums. Numeric exports include frozen data,
-provenance, instrument texts, and a report; qualitative originals and account
-mappings are excluded. Pseudonyms remain potentially identifying. Revoking
-server access cannot recall an already downloaded copy.
+**Exports** offers the profiles your rights permit: pseudonymized research data
+of all frozen rounds, an aggregated study summary, the history and approvals,
+and, with its own separate right, the contact data. Confirm your entitlement,
+request the export, check the operation and download it. The authorized
+requester can download a completed private export for one day. Downloads
+recheck authority, expiry, and checksums. Qualitative originals, unreleased
+redactions and account mappings are excluded from every profile; a free-text
+answer appears only as its released redaction. Pseudonyms remain potentially
+identifying. Revoking server access cannot recall an already downloaded copy.
 
 ```sh
 Rscript reproduce.R /path/to/extracted-export
 ```
+
+**History** lists the recorded events of the study with their rationale for
+the audit role and study management ([audit trail](audit.md)). Panel members
+can download their own released feedback from the round view.
 
 The documented core package is needed to reproduce the analysis; Quarto is not.
 The manifest identifies the existing report's renderer. Read the

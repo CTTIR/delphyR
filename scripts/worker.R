@@ -1,5 +1,11 @@
 .libPaths(c(normalizePath(".R-library"), .libPaths()))
 pkgload::load_all("packages/delphyr", quiet = TRUE)
+# Exports record the software state they were built with, when it is known.
+if (!nzchar(Sys.getenv("DELPHYR_GIT_COMMIT"))) {
+  commit <- tryCatch(suppressWarnings(system2("git", c("rev-parse", "HEAD"), stdout = TRUE, stderr = FALSE)), error = function(e) character())
+  if (length(commit) == 1L && grepl("^[0-9a-f]{40}$", commit)) Sys.setenv(DELPHYR_GIT_COMMIT = commit)
+}
+if (!nzchar(Sys.getenv("DELPHYR_LOCKFILE_SHA256")) && file.exists("renv.lock")) Sys.setenv(DELPHYR_LOCKFILE_SHA256 = digest::digest(file = "renv.lock", algo = "sha256"))
 r <- delphyr::connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "delphyr_runtime", environment = "development", artifact_root = file.path(getwd(), ".artifacts"))
 repeat {
   result <- delphyr::worker_step(r)

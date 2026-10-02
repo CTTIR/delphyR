@@ -46,7 +46,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       "list_campaign_rounds", "list_campaign_enrollments", "prepare_campaign",
       "preview_campaign", "release_campaign", "cancel_campaign", "list_protocol_versions", "amend_protocol", "withdraw_participation", "preview_panel_import", "import_panel", "get_panel_import_receipt",
       "list_panel_invitations", "register_invited_account", "issue_panel_invitation", "revoke_panel_invitation",
-      "preview_panel_invitation", "accept_panel_invitation", "get_round_instrument", "get_round_readiness", "enroll_panel"
+      "preview_panel_invitation", "accept_panel_invitation", "get_round_instrument", "get_round_readiness", "enroll_panel",
+      "list_audit_events", "get_study_documentation", "record_study_documentation", "record_item_comparability", "get_item_comparability",
+      "request_study_export", "write_participant_feedback"
     )
     services <- stats::setNames(lapply(n, function(x) getExportedValue("delphyr", x)), n)
   }
@@ -83,7 +85,10 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         shiny::tags$div(id = "section-editorial", editorial_ui("editorial")),
         shiny::tags$div(id = "section-panel-import", panel_import_ui("panel_import")),
         shiny::tags$div(id = "section-invitations", invitations_ui("invitations")),
-        shiny::tags$div(id = "section-communications", communications_ui("communications"))
+        shiny::tags$div(id = "section-communications", communications_ui("communications")),
+        shiny::tags$div(id = "section-documentation", documentation_ui("documentation")),
+        shiny::tags$div(id = "section-exports", exports_ui("exports")),
+        shiny::tags$div(id = "section-audit", audit_ui("audit"))
       ),
       shiny::tags$footer(class = "del-note", "CTTIR \u00b7 delphyR \u00b7 0.0.1")
     )
@@ -159,12 +164,15 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         shiny::tags$ul(lapply(seq_len(nrow(links)), function(i) shiny::tags$li(shiny::tags$a(href = paste0("#", links$id[i]), links$label[i]))))
       )
     })
-    panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services), autosave_ms = autosave_ms)
+    panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services), autosave_ms = autosave_ms, feedback_download_available = "write_participant_feedback" %in% names(services))
     management_server("management", study, lang, call, services)
     editorial_server("editorial", study, lang, call, services)
     communications_server("communications", study, lang, call, services)
     protocols_server("protocols", study, lang, call, services)
     panel_import_server("panel_import", study, lang, call, services)
+    documentation_server("documentation", study, lang, call, services)
+    exports_server("exports", study, lang, call, services)
+    audit_server("audit", study, lang, call, services)
     verified <- is.character(session_actor$issuer) && length(session_actor$issuer) == 1L && grepl("^https?://", session_actor$issuer)
     invitations_server("invitations", study, lang, call, services, default_issuer = if (verified) session_actor$issuer else "")
     invitation_accept_server("invitation_accept", lang, call, services, verified, on_accepted = load_studies)

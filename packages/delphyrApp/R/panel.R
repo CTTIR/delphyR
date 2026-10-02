@@ -15,7 +15,7 @@ panel_ui <- function(id) {
     )
   )
 }
-panel_server <- function(id, study, lang, call, feedback_available = FALSE, capabilities_available = FALSE, withdrawal_available = FALSE, autosave_ms = 1500) {
+panel_server <- function(id, study, lang, call, feedback_available = FALSE, capabilities_available = FALSE, withdrawal_available = FALSE, autosave_ms = 1500, feedback_download_available = FALSE) {
   shiny::moduleServer(id, function(input, output, session) {
     visible <- shiny::reactiveVal(!capabilities_available)
     output$visible <- shiny::renderText(if (visible()) "yes" else "no")
@@ -116,6 +116,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
         shiny::actionButton(ns("consent"), tr(l, "Einwilligung speichern", "Save consent")),
         if (isTRUE(z$consent$accepted)) shiny::tags$p(tr(l, "Einwilligung liegt vor.", "Consent is recorded.")),
         if (nrow(z$receipt)) shiny::tags$p(paste(tr(l, "Abgabebeleg:", "Submission receipt:"), z$receipt$id, z$receipt$submitted_at)),
+        if (feedback_download_available && !is.null(z$feedback)) shiny::downloadButton(ns("feedback_download"), tr(l, "Mein Feedback herunterladen", "Download my feedback")),
         shiny::tags$p(class = "del-note", shiny::textOutput(ns("save_note"))),
         shiny::tags$p(class = "del-note", shiny::textOutput(ns("content_note"))),
         lapply(z$module_ids, function(x) rating_ui(ns(x))),
@@ -200,6 +201,20 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
         error = function(e) status(safe_error(e, lang()))
       )
     })
+    # The participant-feedback profile: the released aggregate and only this
+    # person's own previous answers, written to a private temporary directory.
+    output$feedback_download <- shiny::downloadHandler(
+      filename = function() "delphyr-feedback.zip",
+      content = function(file) {
+        z <- q()
+        shiny::req(feedback_download_available, z)
+        directory <- tempfile("delphyr-feedback-")
+        dir.create(directory, mode = "0700")
+        on.exit(unlink(directory, recursive = TRUE), add = TRUE)
+        call("write_participant_feedback", z$enrollment$id, directory)
+        zip::zipr(file, list.files(directory, full.names = TRUE), root = directory)
+      }, contentType = "application/zip"
+    )
     list(dirty = dirty, questionnaire = q, receipt = receipt)
   })
 }
@@ -262,7 +277,15 @@ rating_server <- function(id, q, item, lang, call, autosave_ms = 1500) {
       shiny::tagList(
         shiny::tags$p(tr(lang(), "Freigegebenes Feedback der Vorrunde:", "Released previous-round feedback:")),
         if (nrow(own)) shiny::tags$p(paste(tr(lang(), "Ihre vorherige Antwort:", "Your previous response:"), own$answer_status, own$value_integer, own$value_text)),
-        if (nrow(own) && any(own$item_version != item$item_version)) shiny::tags$p(tr(lang(), "Der Wortlaut wurde ge\u00e4ndert. Bewertungen sind nicht unmittelbar vergleichbar.", "The wording changed. Ratings are not directly comparable."))
+        if (nrow(own) && any(own$item_version != item$item_version)) {
+          decided <- f$comparability
+          comparable <- is.data.frame(decided) && nrow(decided) && any(decided$item_code == item$item_code & decided$dimension_code == item$dimension_code & decided$previous_version %in% own$item_version & decided$current_version == item$item_version & decided$comparable)
+          shiny::tags$p(if (isTRUE(comparable)) {
+            tr(lang(), "Der Wortlaut wurde \u00fcberarbeitet. Das Studienteam hat beide Fassungen als vergleichbar eingestuft.", "The wording was revised. The study team assessed both versions as comparable.")
+          } else {
+            tr(lang(), "Der Wortlaut wurde ge\u00e4ndert. Bewertungen sind nicht unmittelbar vergleichbar.", "The wording changed. Ratings are not directly comparable.")
+          })
+        }
       )
     })
     output$feedback <- shiny::renderTable(

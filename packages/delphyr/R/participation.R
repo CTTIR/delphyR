@@ -32,7 +32,7 @@ withdraw_participation <- function(repo, actor, study_id, retention_policy, comm
       id <- uid()
       execute(repo, "INSERT INTO research.participation_withdrawals(id,study_id,panelist_id,actor_id,retention_policy) VALUES($1,$2,$3,$4,$5)", id, study_id, panel, actor$principal_id, retention_policy)
       list(id = id, retention_policy = retention_policy)
-    })
+    }, detail = retention_policy)
   })
 }
 #' Change stakeholder group only for future round preparation
@@ -59,6 +59,6 @@ set_panel_group <- function(repo, actor, study_id, panelist_id, group_code, reas
       execute(repo, "UPDATE research.panelists SET group_code=$3 WHERE study_id=$1 AND id=$2", study_id, panelist_id, group_code)
       execute(repo, "INSERT INTO research.panel_group_events(id,study_id,panelist_id,actor_id,previous_group,group_code,reason) VALUES($1,$2,$3,$4,$5,$6,$7)", id, study_id, panelist_id, actor$principal_id, previous, group_code, reason)
       list(id = id, group_code = group_code)
-    })
+    }, reason = reason, detail = group_code)
   })
 }

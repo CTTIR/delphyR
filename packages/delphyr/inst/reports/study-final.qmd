@@ -1,0 +1,180 @@
+---
+title: "delphyR – synthetic study report"
+lang: en
+format:
+  html:
+    embed-resources: true
+    toc: true
+    number-sections: true
+    theme: cosmo
+    code-fold: false
+execute:
+  echo: false
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+# Only this packaged template is executable. All study content remains JSON data.
+x <- jsonlite::fromJSON("report-data.json", simplifyVector = TRUE)
+escape <- function(value) {
+  value <- as.character(value)
+  value[is.na(value)] <- "not available"
+  value <- gsub("&", "&amp;", value, fixed = TRUE)
+  value <- gsub("<", "&lt;", value, fixed = TRUE)
+  value <- gsub(">", "&gt;", value, fixed = TRUE)
+  value <- gsub('"', "&quot;", value, fixed = TRUE)
+  gsub("'", "&#39;", value, fixed = TRUE)
+}
+show_table <- function(table, empty = "No entries.") {
+  if (!is.data.frame(table) || !nrow(table)) {
+    cat("<p>", escape(empty), "</p>\n")
+    return(invisible(NULL))
+  }
+  cat('<div style="overflow-x:auto"><table><thead><tr>',
+      paste0("<th scope=\"col\">", escape(names(table)), "</th>", collapse = ""),
+      "</tr></thead><tbody>")
+  for (i in seq_len(nrow(table))) cat("<tr>", paste0("<td>", escape(unlist(table[i, ], use.names = FALSE)), "</td>", collapse = ""), "</tr>")
+  cat("</tbody></table></div>\n")
+}
+show_json <- function(value) cat("<pre>", escape(jsonlite::toJSON(value, auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null")), "</pre>\n")
+show_lines <- function(value) for (line in as.character(unlist(value))) cat("<p>", escape(line), "</p>\n")
+```
+
+# Purpose, design and data scope
+
+This report contains synthetic development data. It is not a public data
+release and not a scientific or institutional study approval. Example
+thresholds are not methodological recommendations. Agreement among panel
+members is not evidence of truth or effectiveness; dissent and insufficient
+data are legitimate results.
+
+```{r}
+#| results: asis
+show_json(x$metadata)
+```
+
+# Protocol, rules and amendments
+
+Valid numeric ratings form the denominator. Abstention and inability to judge
+are not zero ratings. Quartiles use type 7. Consensus classification, change
+between rounds and human item decisions are presented separately.
+
+```{r}
+#| results: asis
+show_json(x$protocol)
+show_table(x$protocol_versions)
+```
+
+# Recruitment and participation
+
+Counts refer to the time of export. "consent_recorded" counts members with a
+recorded consent to the study information of that round.
+
+```{r}
+#| results: asis
+show_table(x$recruitment)
+show_table(x$rounds)
+show_table(x$participation, "No round has enrolled panel members yet.")
+```
+
+# Instruments
+
+The texts and versions are those of each conducted round. They are not
+individual responses.
+
+```{r}
+#| results: asis
+show_table(x$instrument)
+```
+
+# Results by round
+
+```{r}
+#| results: asis
+show_table(x$results, "No round has been frozen and analysed yet.")
+show_table(x$denominators, "Denominators are not part of this profile or no round is frozen.")
+show_table(x$missingness, "Missingness is not part of this profile or no round is frozen.")
+show_table(x$distributions, "No distributions in this profile.")
+```
+
+# Change between rounds
+
+Paired statistics describe panel members with valid ratings in both rounds.
+Attrition is reported separately. A changed item version is compared only where
+the study team recorded an explicit comparability decision; otherwise it is
+shown as not comparable. Unchanged ratings can express stable dissent.
+
+```{r}
+#| results: asis
+show_table(x$comparisons, "Fewer than two frozen rounds; no comparison.")
+show_table(x$comparability, "No comparability decision recorded.")
+```
+
+# Feedback provided
+
+Each released feedback is an immutable artifact identified by its hash.
+
+```{r}
+#| results: asis
+show_table(x$feedback, "No feedback has been released.")
+```
+
+# Qualitative work, item decisions and lineage
+
+These records reflect the state at export time. Qualitative originals and
+account mappings are never part of a report.
+
+```{r}
+#| results: asis
+show_table(x$qualitative)
+show_table(x$decisions, "No item decision recorded.")
+show_table(x$lineage, "No item split or merge recorded.")
+```
+
+# Final items, persistent dissent and undecided items
+
+The classification is the rule outcome of the last frozen round. The
+disposition is the study team's own decision; "not documented" means that no
+decision was recorded for that round.
+
+```{r}
+#| results: asis
+show_table(x$final_items, "No frozen round.")
+```
+
+# Author-supplied documentation
+
+The software does not invent authorship, funding, conflicts of interest,
+approvals, interpretation or deviations. Statements below were entered by the
+study team; a recorded reference to an approval does not grant one. This table
+is not an ACCORD or CREDES certification.
+
+```{r}
+#| results: asis
+show_table(x$documentation)
+```
+
+# Data dictionary
+
+```{r}
+#| results: asis
+show_table(x$dictionary)
+```
+
+# Reproduction and limitations
+
+Scientific hashes link each snapshot, its rules and its analysis. The report
+timestamp changes on re-export; HTML bytes do not replace comparison of
+canonical analysis results.
+
+```{r}
+#| results: asis
+show_lines(x$limitations)
+show_json(x$provenance)
+cat("<p>Report data hash: <code>", escape(x$content_hash), "</code></p>")
+```
+
+Pseudonyms are not anonymous. Report release, methodological assessment and
+further disclosure remain human decisions.

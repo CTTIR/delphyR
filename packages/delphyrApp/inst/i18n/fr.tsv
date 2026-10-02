@@ -357,3 +357,109 @@ Fewer members are enrolled than the minimum valid n; results would be insufficie
 Eligible panel members are not yet enrolled in this round.	Des membres admissibles du panel ne sont pas encore inscrits à ce tour.
 No released feedback is assigned to this round.	Aucun retour publié n’est attribué à ce tour.
 This transition is not possible in the round’s current state, or the round has changed in the meantime.	Cette transition n’est pas possible dans l’état actuel du tour, ou le tour a été modifié entre-temps.
+Decide the comparability of two item versions	Décider de la comparabilité de deux versions d’un item
+A changed item version interrupts the paired comparison between rounds. Only an explicit, reasoned decision permits it. A later decision for the same pair of versions supersedes the earlier one; the history is kept.	Une version modifiée d’un item interrompt la comparaison appariée entre les tours. Seule une décision explicite et motivée l’autorise. Une décision ultérieure pour la même paire de versions remplace la précédente ; l’historique est conservé.
+Earlier item version	Version antérieure de l’item
+Later item version	Version ultérieure de l’item
+Decision	Décision
+Not comparable	Non comparable
+Comparable	Comparable
+Rationale for the comparability decision	Justification de la décision de comparabilité
+I reviewed both versions and confirm this decision.	J’ai examiné les deux versions et je confirme cette décision.
+Save comparability decision	Enregistrer la décision de comparabilité
+Earlier version	Version antérieure
+Later version	Version ultérieure
+Comparability decision saved.	Décision de comparabilité enregistrée.
+History	Historique
+Each event names its time, action, object and actor, and the rationale where the action required one. Actions of panel members carry no account reference. Response content and contacts do not appear here.	Chaque événement indique son heure, son action, son objet et son auteur, ainsi que la justification lorsque l’action en exigeait une. Les actions des membres du panel ne portent aucune référence de compte. Le contenu des réponses et les contacts n’apparaissent pas ici.
+Limit to actions (empty: all)	Limiter aux actions (vide : toutes)
+Maximum number of events (newest first)	Nombre maximal d’événements (les plus récents d’abord)
+Show history	Afficher l’historique
+events shown.	événements affichés.
+Panel member	Membre du panel
+Worker, approved by	Traitement automatique, approuvé par
+Staff account	Compte de l’équipe
+Action	Action
+By	Par
+Object	Objet
+Study created	Étude créée
+Protocol amended	Protocole modifié
+Study documentation recorded	Documentation de l’étude enregistrée
+Right granted or revoked	Droit accordé ou retiré
+Study information published	Information sur l’étude publiée
+Panel contacts imported	Contacts du panel importés
+Invited account registered	Compte invité enregistré
+Invitation issued	Invitation émise
+Invitation revoked	Invitation révoquée
+Invitation accepted	Invitation acceptée
+Panel member added	Membre du panel ajouté
+Stakeholder group changed	Groupe de parties prenantes modifié
+Panel members enrolled	Membres du panel inscrits
+Round prepared	Tour préparé
+Round state changed	État du tour modifié
+Consent decision recorded	Décision de consentement enregistrée
+Response saved	Réponse enregistrée
+Round submitted	Tour soumis
+Participation ended	Participation terminée
+Round frozen	Tour figé
+Analysis requested	Analyse demandée
+Analysis completed	Analyse terminée
+Feedback drafted	Retour rédigé
+Feedback assigned	Retour attribué
+Feedback displayed	Retour affiché
+Feedback downloaded	Retour téléchargé
+Item decision recorded	Décision sur l’item enregistrée
+Comparability decided	Comparabilité décidée
+Study completed	Étude terminée
+Original source preserved	Source originale conservée
+Editorial version created	Version éditoriale créée
+Editorial version released	Version éditoriale publiée
+Theme version defined	Version de thème définie
+Coding decision recorded	Décision de codage enregistrée
+Item linked to source	Item lié à une source
+Item split or merge recorded	Scission ou fusion d’items enregistrée
+Editorial records read	Données éditoriales consultées
+Editorial records exported	Données éditoriales exportées
+Campaign prepared	Campagne préparée
+Campaign approved	Campagne approuvée
+Campaign cancelled	Campagne annulée
+Local message receipt recorded	Reçu local de message enregistré
+Message suppressed	Message supprimé de l’envoi
+Export requested	Export demandé
+Export downloaded	Export téléchargé
+Authors and responsibilities	Auteurs et responsabilités
+Panel criteria and recruitment	Critères du panel et recrutement
+Funding	Financement
+Conflicts of interest	Conflits d’intérêts
+Institutional approval	Approbation institutionnelle
+Methodological interpretation	Interprétation méthodologique
+Protocol deviations	Écarts au protocole
+ACCORD/CREDES review	Examen ACCORD/CREDES
+Data and software availability	Disponibilité des données et des logiciels
+Study documentation for reports	Documentation de l’étude pour les rapports
+Reports never invent statements on authorship, funding, conflicts of interest, approvals, interpretation or deviations. Enter the study team’s own statements here. Empty topics appear in reports as not documented. Recording a reference to an approval does not grant one.	Les rapports n’inventent jamais de déclarations sur les auteurs, le financement, les conflits d’intérêts, les approbations, l’interprétation ou les écarts. Saisissez ici les déclarations de l’équipe de l’étude. Les sujets vides apparaissent dans les rapports comme non documentés. Enregistrer la référence d’une approbation ne vaut pas approbation.
+Current documentation version:	Version actuelle de la documentation :
+Rationale for this version	Justification de cette version
+I reviewed these statements. The new version replaces the previous one completely.	J’ai examiné ces déclarations. La nouvelle version remplace entièrement la précédente.
+Save new documentation version	Enregistrer la nouvelle version de la documentation
+At least one topic needs a statement.	Au moins un sujet doit contenir une déclaration.
+Documentation version saved:	Version de la documentation enregistrée :
+Pseudonymized research data	Données de recherche pseudonymisées
+Aggregated study summary	Synthèse agrégée de l’étude
+History and approvals	Historique et approbations
+Contact data	Données de contact
+Every frozen round with pseudonyms, decisions, lineage and reviewed editorial versions. Pseudonyms are not anonymous. Unredacted free text, contacts and account mappings are excluded.	Tous les tours figés avec pseudonymes, décisions, filiation et versions éditoriales examinées. Les pseudonymes ne sont pas anonymes. Les textes libres non révisés, les contacts et les correspondances de comptes sont exclus.
+Course, instruments and aggregated results without individual responses. Statistics below the protocol’s display minimum are suppressed.	Déroulement, instruments et résultats agrégés sans réponses individuelles. Les statistiques inférieures au minimum d’affichage du protocole sont supprimées.
+Events, approvals and rationales without response content, contacts or editorial originals.	Événements, approbations et justifications sans contenu de réponses, contacts ni originaux éditoriaux.
+Contact fields of imported panel contacts and their invitation state, without study pseudonyms.	Champs de contact des contacts du panel importés et état de leur invitation, sans pseudonymes d’étude.
+Study exports	Exports de l’étude
+Each profile contains only the data of its purpose. The export is prepared in the background and stored privately. A downloaded file is no longer covered by this application’s access control.	Chaque profil ne contient que les données correspondant à sa finalité. L’export est préparé en arrière-plan et conservé de manière privée. Un fichier téléchargé n’est plus couvert par le contrôle d’accès de cette application.
+Export profile	Profil d’export
+I am entitled to receive these data and will handle the file according to its purpose.	Je suis autorisé à recevoir ces données et je traiterai le fichier conformément à sa finalité.
+Explicitly confirm your entitlement first.	Confirmez d’abord explicitement votre autorisation.
+Download my feedback	Télécharger mon retour
+The wording was revised. The study team assessed both versions as comparable.	Le libellé a été révisé. L’équipe de l’étude a jugé les deux versions comparables.
+Documentation	Documentation
+Exports	Exports
+Review the recorded history of this study. Response content and contacts are not part of this view.	Examinez l’historique enregistré de cette étude. Le contenu des réponses et les contacts ne font pas partie de cette vue.
+Request the exports your role permits. Every retrieval is checked and recorded.	Demandez les exports que votre rôle autorise. Chaque récupération est vérifiée et enregistrée.

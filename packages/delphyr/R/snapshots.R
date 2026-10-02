@@ -151,7 +151,8 @@ assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
 #' @param repo Repository.
 #' @param actor Panel actor.
 #' @param enrollment_id Own target enrollment.
-#' @return Aggregate feedback and own prior response table, or NULL.
+#' @return Aggregate feedback, own prior response table and the effective
+#'   comparability decisions for revised items, or NULL.
 #' @export
 get_feedback <- function(repo, actor, enrollment_id) {
   transaction(repo, function() {
@@ -165,7 +166,11 @@ get_feedback <- function(repo, actor, enrollment_id) {
     own <- s$data[s$data$panelist_id == e$panelist_id, c("item_code", "item_version", "dimension_code", "answer_status", "value_integer", "value_text"), drop = FALSE]
     if (!isTRUE(s$protocol$feedback$own_previous_rating)) own <- own[FALSE, , drop = FALSE]
     audit(repo, actor, e$study_id, "feedback_displayed", f$id)
-    list(id = f$id, aggregate = jsonlite::fromJSON(f$content), own = own)
+    # Whether a revised item may be read against its earlier version is the
+    # study team's recorded decision, shown without its internal rationale.
+    decided <- comparability_history(repo, e$study_id)
+    decided <- decided[decided$effective, c("item_code", "dimension_code", "previous_version", "current_version", "comparable"), drop = FALSE]
+    list(id = f$id, aggregate = jsonlite::fromJSON(f$content), own = own, comparability = decided)
   })
 }
 #' List study round states and frozen result references
@@ -199,7 +204,7 @@ record_item_decision <- function(repo, actor, analysis_id, item_code, dispositio
       id <- uid()
       execute(repo, "INSERT INTO research.decisions VALUES($1,$2,$3,$4,$5,$6,$7)", id, x$study_id, analysis_id, item_code, disposition, reason, actor$principal_id)
       list(id = id)
-    })
+    }, reason = reason, detail = paste(item_code, disposition))
   })
 }
 #' Read authorized setup information for the round editor
@@ -245,6 +250,6 @@ complete_study <- function(repo, actor, study_id, reason, command_id) {
       ensure(nrow(unresolved) == 0, "completion.decisions")
       execute(repo, "UPDATE research.studies SET state='completed' WHERE id=$1", study_id)
       list(id = study_id, state = "completed")
-    })
+    }, reason = reason)
   })
 }

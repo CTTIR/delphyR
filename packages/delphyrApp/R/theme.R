@@ -108,9 +108,13 @@ connection_script <- function(banner_id, workspace_id) {
 }
 
 workspace_sections <- function(capabilities, lang) {
-  ids <- c("section-panel", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-invitations", "section-communications")
-  labels <- tr(lang, c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Einladungen", "Kommunikation"), c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Invitations", "Communications"))
-  show <- c("panel" %in% capabilities, "manage" %in% capabilities, "manage" %in% capabilities, any(c("edit", "manage") %in% capabilities), "coordinate" %in% capabilities, "coordinate" %in% capabilities, "coordinate" %in% capabilities)
+  has <- function(...) any(c(...) %in% capabilities)
+  ids <- c("section-panel", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-invitations", "section-communications", "section-documentation", "section-exports", "section-audit")
+  labels <- tr(
+    lang, c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Einladungen", "Kommunikation", "Dokumentation", "Exporte", "Verlauf"),
+    c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Invitations", "Communications", "Documentation", "Exports", "History")
+  )
+  show <- c(has("panel"), has("manage"), has("manage"), has("edit", "manage"), has("coordinate"), has("coordinate"), has("coordinate"), has("manage"), has("export", "analyse", "manage", "audit", "contacts_export"), has("audit", "manage"))
   data.frame(id = ids[show], label = labels[show], stringsAsFactors = FALSE)
 }
 
@@ -126,6 +130,12 @@ workspace_intro <- function(capabilities, lang) {
   }
   if ("panel" %in% capabilities) {
     return(tr(lang, "Speichern Sie jede Antwort und pr\u00fcfen Sie den best\u00e4tigten Stand vor Ihrer ausdr\u00fccklichen Abgabe.", "Save each response and review the confirmed answers before explicitly submitting your round."))
+  }
+  if ("audit" %in% capabilities) {
+    return(tr(lang, "Pr\u00fcfen Sie den aufgezeichneten Verlauf dieser Studie. Antwortinhalte und Kontakte geh\u00f6ren nicht zu dieser Ansicht.", "Review the recorded history of this study. Response content and contacts are not part of this view."))
+  }
+  if (any(c("analyse", "export", "contacts_export") %in% capabilities)) {
+    return(tr(lang, "Fordern Sie die Exporte an, die Ihre Rolle erlaubt. Jeder Abruf wird gepr\u00fcft und aufgezeichnet.", "Request the exports your role permits. Every retrieval is checked and recorded."))
   }
   tr(lang, "W\u00e4hlen Sie eine Studie, um Ihre verf\u00fcgbaren Arbeitsbereiche zu sehen.", "Choose a study to see your available work areas.")
 }

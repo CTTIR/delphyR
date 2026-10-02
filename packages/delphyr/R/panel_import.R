@@ -149,7 +149,7 @@ import_panel <- function(repo, actor, study_id, preview, expected_hash, reason, 
         invitations <- c(invitations, invitation)
       }
       list(id = receipt, file_hash = current$file_hash, preview_hash = current$hash, accepted_rows = nrow(current$rows), rejected_rows = 0L, invitation_ids = invitations)
-    })
+    }, reason = reason)
   })
 }
 #' Retrieve a minimal panel import receipt through current coordination rights

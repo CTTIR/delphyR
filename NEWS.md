@@ -16,6 +16,8 @@
 - Invitation issuance, account onboarding and confirmed acceptance in the interface, with a one-time hand-over code.
 - Automatic saving of settled responses with per-field commit confirmation, deliberate conflict resolution and retry-safe keys.
 - Round readiness findings that block approval or opening, exact instrument review, withdrawal of unopened round candidates and explicit enrollment of late panel members.
+- Audit trail with rationale and a History view; versioned author-supplied study documentation; explicit comparability decisions for revised items.
+- Study-level export profiles (research, summary, audit, contacts) with separate rights, a study report across rounds, offline reproduction and a participant feedback download.
 
 This is a development version using synthetic data, not acceptance of the complete P1 platform.
 

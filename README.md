@@ -111,13 +111,17 @@ inability to judge are reported separately. Quartiles use type 7; consensus rule
 use unrounded proportions. Changed item meanings require an explicit
 comparability decision.
 
-Private numeric exports contain the frozen snapshot, protocol, analysis,
-dictionary, instrument texts, missingness, structured item decisions, and lineage.
-They exclude qualitative originals, unreviewed editorial reasons, and account
-mappings. Pseudonyms are not anonymous identifiers.
+Private exports are separated by profile and right: pseudonymized research data
+of all frozen rounds, an aggregated summary with small-cell suppression, the
+audit trail, and contact data under its own right. Research exports contain the
+frozen snapshots, protocol versions, analyses, comparisons between rounds,
+decisions, lineage and reviewed qualitative records, and can be reproduced
+offline. They exclude qualitative originals, unreleased redactions and account
+mappings. Pseudonyms are not anonymous identifiers. No public release is produced.
 
-When Quarto is installed, the worker renders a fixed package template. Missing
-author information stays explicitly undocumented. An absent optional runtime
+When Quarto is installed, the worker renders a fixed package template. Author
+information comes from the versioned study documentation; a topic without an
+entry stays explicitly undocumented. An absent optional runtime
 selects a labelled basic HTML fallback; an actual render failure fails the job.
 The manifest records the renderer and checksums every delivered file.
 
@@ -128,8 +132,8 @@ The manifest records the renderer and checksums every delivered file.
 - [User guide](docs/user-guide.md), [operations](docs/operations.md), and [reporting](docs/reporting.md).
 - [Protocol amendments](docs/protocol-amendments.md), [panel import](docs/panel-import.md),
   [participation](docs/participation.md), and [synthetic communications](docs/communications.md).
-- [Authentication](docs/authentication.md), [invitations](docs/invitations.md), and
-  the [historical specification index](docs/spec/README.md).
+- [Authentication](docs/authentication.md), [invitations](docs/invitations.md),
+  [audit trail](docs/audit.md), and the [historical specification index](docs/spec/README.md).
 
 Some detailed implementation documents and the historical specification remain
 in German. Current code and verified status take precedence over historical

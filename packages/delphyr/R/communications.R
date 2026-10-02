@@ -30,7 +30,7 @@ prepare_campaign <- function(repo, actor, round_id, enrollment_ids, kind, subjec
       execute(repo, "INSERT INTO ops.campaigns(id,study_id,round_id,kind,locale,template_version,subject,body,hash,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", id, r$study_id, round_id, kind, locale, template_version, subject, body, h, actor$principal_id)
       for (e in recipients) execute(repo, "INSERT INTO ops.campaign_recipients VALUES($1,$2,$3,$4)", r$study_id, round_id, id, e)
       list(id = id, hash = h, n_recipients = length(recipients))
-    })
+    }, detail = kind)
   })
 }
 campaign_get <- function(repo, actor, id, lock = FALSE) {
@@ -83,7 +83,7 @@ release_campaign <- function(repo, actor, campaign_id, expected_hash, reason, co
         execute(repo, "INSERT INTO ops.message_delivery(message_id) VALUES($1)", id)
       }
       list(id = c$id, n_recipients = length(recipients))
-    })
+    }, reason = reason)
   })
 }
 #' Cancel remaining synthetic campaign delivery
@@ -101,7 +101,7 @@ cancel_campaign <- function(repo, actor, campaign_id, reason, command_id) {
     command(repo, actor, c$study_id, "campaign_cancel", command_id, list(campaign_id, reason), function() {
       execute(repo, "INSERT INTO ops.campaign_cancellations(id,study_id,campaign_id,reason,cancelled_by) VALUES($1,$2,$3,$4,$5)", uid(), c$study_id, c$id, reason, actor$principal_id)
       list(id = c$id)
-    })
+    }, reason = reason)
   })
 }
 claim_campaign_message <- function(repo, study_id = NULL, lease_seconds = 30L) {

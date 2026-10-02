@@ -14,7 +14,7 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | ITM-01 | in_progress | Partial functionality; complete P1 gate remains open. |
 | ITM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | ITM-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
-| ITM-04 | in_progress | Partial functionality; complete P1 gate remains open. |
+| ITM-04 | implemented_tested | Split/merge lineage and explicit, superseding comparability decisions; both exported and used for comparisons between rounds (ADR-021). |
 | RND-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | RND-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | RND-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
@@ -34,12 +34,12 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | QUA-02 | in_progress | Multiple links tested; complete exploratory UI path remains open. |
 | COM-01 | in_progress | Exact approval/outbox tested in local sink; provider/contact integration remains open. |
 | COM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
-| EXP-01 | in_progress | Numeric P0 profile excludes contacts; further profiles/free text remain open. |
-| EXP-02 | in_progress | Quarto, instrument/denominator/missingness tables and manifest tested; author information explicitly missing. |
+| EXP-01 | implemented_tested | Research, summary, audit and contact profiles with separate rights; canary tests for originals, contacts and account references; released redactions only. Public release is refused by design. |
+| EXP-02 | implemented_tested | Study report across rounds with versions, hashes, limitations and versioned author-supplied documentation; offline reproduction of analyses and comparisons. Institutional content of the documentation remains the study team's. |
 | SEC-01 | in_progress | Direct Shiny gateway passed twelve real checks; stock OSS drops headers and remains unqualified. |
 | SEC-02 | in_progress | Minimal errors/audit data; complete canary matrix remains open. |
 | SEC-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
-| AUD-01 | in_progress | Partial functionality; complete P1 gate remains open. |
+| AUD-01 | implemented_tested | Actor, time, object, action, detail and rationale for every command; History view and audit export; panel account references withheld ([audit](audit.md)). |
 | OPS-01 | in_progress | Database and selected study artifact restore with offline reproduction passed; production recovery remains open. |
 | OPS-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | UX-01 | in_progress | 390px without overflow and selected keyboard/submission path passed; complete tab/assistive-technology matrix remains open. |

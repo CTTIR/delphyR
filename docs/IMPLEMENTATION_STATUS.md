@@ -115,6 +115,15 @@ Measured on 2026-10-02 against the current sources; each entry names its evidenc
   withdrawal of unopened candidates, explicit enrollment of late members.
   Migration 013, `test-round-lifecycle.R` and `browser-management-postgres.R`.
 
+- **Audit, documentation, comparability and export profiles**
+  ([ADR-021](adr/021-export-profiles-and-study-documentation.md), [audit](audit.md),
+  [reporting](reporting.md)): rationale in every audit event and a History view;
+  versioned author-supplied documentation; explicit comparability decisions;
+  research, summary, audit and contact profiles with separate rights; a study
+  report across rounds; offline reproduction; participant feedback download.
+  Migration 014, `test-audit-documentation.R`, `test-study-export.R` and
+  `browser-governance-postgres.R`.
+
 Hosted CI failed for commit `5bf26c7` at the package check (non-ASCII source
 characters in `R/invitations.R`); the following commit repaired it and both
 packages carry a source-level ASCII test.

@@ -38,6 +38,14 @@ transaction <- function(repo, code) {
     del_abort("DEL_STORAGE", "transaction")
   })
 }
+# A read-only view of one database state for assembling an export from many
+# statements.
+consistent_read <- function(repo, code) {
+  transaction(repo, function() {
+    DBI::dbExecute(repo$con, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
+    code()
+  })
+}
 #' Apply checksummed forward migrations
 #' @param repo Repository connected as migration owner.
 #' @param path Directory of SQL migrations, normally installed package resources.
@@ -106,8 +114,24 @@ authorize <- function(repo, actor, study_id, capability = NULL) {
   }
   m$id
 }
-audit <- function(repo, actor, study, action, object) execute(repo, "INSERT INTO ops.audit(id,study_id,actor_id,action,object_ref) VALUES($1,$2,$3,$4,$5)", uid(), study, actor$principal_id, action, as.character(object))
-command <- function(repo, actor, study, type, key, payload, fun) {
+# An audit event names actor, time, object and action, plus the recorded
+# rationale and a short non-sensitive detail such as a target state. Tokens,
+# contacts and response content never belong here.
+# Admission for services open to more than one staff role.
+authorize_any <- function(repo, actor, study_id, capabilities) {
+  identity_check(repo, actor)
+  valid_id(study_id)
+  m <- query(repo, "SELECT id FROM identity.memberships WHERE study_id=$1 AND principal_id=$2 AND active", study_id, actor$principal_id)
+  ensure(nrow(m) == 1, "study", "DEL_NOT_FOUND")
+  c <- query(repo, "SELECT capability FROM identity.capabilities WHERE study_id=$1 AND membership_id=$2 AND revoked_at IS NULL", study_id, m$id)
+  ensure(any(capabilities %in% c$capability), "capability", "DEL_FORBIDDEN")
+  m$id
+}
+audit <- function(repo, actor, study, action, object, reason = NULL, detail = NULL) {
+  text <- function(x) if (is.null(x) || !length(x) || is.na(x[[1]])) NA_character_ else as.character(x[[1]])
+  execute(repo, "INSERT INTO ops.audit(id,study_id,actor_id,action,object_ref,reason,detail) VALUES($1,$2,$3,$4,$5,$6,$7)", uid(), study, actor$principal_id, action, as.character(object), text(reason), text(detail))
+}
+command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, detail = NULL) {
   ensure(scalar_text(key) && nchar(key) <= 200, "command_id")
   # Serialize retries of one command without blocking independent participants.
   lock <- paste(study, actor$principal_id, type, key, sep = ":")
@@ -123,9 +147,12 @@ command <- function(repo, actor, study, type, key, payload, fun) {
     qualitative_source = "edit", qualitative_edit = "edit", qualitative_release = "manage",
     qualitative_theme = "edit", qualitative_code = "edit", qualitative_item_source = "edit",
     qualitative_lineage = "manage", campaign_prepare = "coordinate",
-    campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_account = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage", enroll_panel = "manage"
-  )[[type]]
-  authorize(repo, actor, study, capability)
+    campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_account = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage", enroll_panel = "manage",
+    study_documentation = "manage", item_comparability = "manage"
+  )
+  # Export requests are admitted by the capability of their profile.
+  capability <- if (startsWith(type, "request_export:")) export_capability(sub("^request_export:", "", type)) else capability[[type]]
+  if (length(capability) > 1L) authorize_any(repo, actor, study, capability) else authorize(repo, actor, study, capability)
   h <- content_hash(payload)
   old <- query(repo, "SELECT payload_hash,outcome::text FROM ops.commands WHERE study_id=$1 AND actor_id=$2 AND command_type=$3 AND command_key=$4", study, actor$principal_id, type, key)
   if (nrow(old)) {
@@ -133,8 +160,11 @@ command <- function(repo, actor, study, type, key, payload, fun) {
     return(jsonlite::fromJSON(old$outcome, simplifyVector = TRUE))
   }
   result <- fun()
-  execute(repo, "INSERT INTO ops.commands VALUES($1,$2,$3,$4,$5,$6::jsonb)", study, actor$principal_id, type, key, h, json(result))
-  audit(repo, actor, study, type, if (!is.null(result$id)) result$id else study)
+  stored <- query(repo, "INSERT INTO ops.commands VALUES($1,$2,$3,$4,$5,$6::jsonb) RETURNING outcome::text", study, actor$principal_id, type, key, h, json(result))
+  # A retry returns the stored receipt; the first reply uses the same field order.
+  fields <- names(jsonlite::fromJSON(stored$outcome, simplifyVector = FALSE))
+  if (!is.null(names(result)) && setequal(fields, names(result))) result <- result[fields]
+  audit(repo, actor, study, type, if (!is.null(result$id)) result$id else study, reason, detail)
   result
 }
 #' Create an isolated synthetic study and its first immutable protocol
@@ -174,7 +204,8 @@ create_study <- function(repo, actor, protocol, command_id) {
 #' @param actor Study manager.
 #' @param study_id Study UUID.
 #' @param principal_id Principal UUID.
-#' @param capability One of manage, analyse, export, coordinate, edit, panel, audit.
+#' @param capability One of manage, analyse, export, coordinate, edit, panel,
+#'   audit or contacts_export. The contact export is never implied by a role.
 #' @param enabled Grant if TRUE; revoke otherwise.
 #' @param command_id Idempotency key.
 #' @return Membership id.
@@ -183,12 +214,12 @@ set_capability <- function(repo, actor, study_id, principal_id, capability, enab
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
     valid_id(principal_id)
-    ensure(capability %in% c("manage", "analyse", "export", "coordinate", "edit", "panel", "audit") && is.logical(enabled) && length(enabled) == 1 && !is.na(enabled), "capability")
+    ensure(length(capability) == 1L && capability %in% c("manage", "analyse", "export", "coordinate", "edit", "panel", "audit", "contacts_export") && is.logical(enabled) && length(enabled) == 1 && !is.na(enabled), "capability")
     command(repo, actor, study_id, "capability", command_id, list(principal_id, capability, enabled), function() {
       m <- query(repo, "INSERT INTO identity.memberships(id,study_id,principal_id) VALUES($1,$2,$3) ON CONFLICT(study_id,principal_id) DO UPDATE SET principal_id=EXCLUDED.principal_id RETURNING id", uid(), study_id, principal_id)$id
       execute(repo, "INSERT INTO identity.capabilities(study_id,membership_id,capability,revoked_at) VALUES($1,$2,$3,CASE WHEN $4 THEN NULL ELSE clock_timestamp() END) ON CONFLICT(study_id,membership_id,capability) DO UPDATE SET revoked_at=EXCLUDED.revoked_at", study_id, m, capability, enabled)
       list(id = m)
-    })
+    }, detail = paste(capability, if (enabled) "granted" else "revoked"))
   })
 }
 #' List studies available to the current actor

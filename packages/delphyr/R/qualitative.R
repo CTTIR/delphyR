@@ -60,7 +60,7 @@ redact_qualitative_source <- function(repo, actor, study_id, source_id, text, re
       h <- content_hash(payload)
       execute(repo, "INSERT INTO research.qualitative_edits(id,study_id,source_id,kind,redacted_text,reason,edited_by,hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", id, study_id, source_id, kind, text, reason, actor$principal_id, h)
       list(id = id, hash = h)
-    })
+    }, reason = reason, detail = kind)
   })
 }
 #' Release an exact qualitative version after independent review
@@ -84,7 +84,7 @@ release_qualitative_edit <- function(repo, actor, study_id, edit_id, expected_ha
       id <- uid()
       execute(repo, "INSERT INTO research.qualitative_releases(id,study_id,edit_id,reviewer_id,reason,content_hash) VALUES($1,$2,$3,$4,$5,$6)", id, study_id, edit_id, actor$principal_id, reason, expected_hash)
       list(id = id, hash = expected_hash)
-    })
+    }, reason = reason)
   })
 }
 #' Define an immutable version of a qualitative theme
@@ -108,7 +108,7 @@ create_qualitative_theme <- function(repo, actor, study_id, code, version, label
       id <- uid()
       execute(repo, "INSERT INTO research.qualitative_themes(id,study_id,code,version,label,definition,created_by) VALUES($1,$2,$3,$4,$5,$6,$7)", id, study_id, code, version, label, definition, actor$principal_id)
       list(id = id)
-    })
+    }, detail = paste0(code, " v", version))
   })
 }
 #' Append a reasoned theme coding decision
@@ -133,7 +133,7 @@ code_qualitative_source <- function(repo, actor, study_id, source_id, theme_id, 
       id <- uid()
       execute(repo, "INSERT INTO research.qualitative_codings(id,study_id,source_id,theme_id,decision,reason,coder_id) VALUES($1,$2,$3,$4,$5,$6,$7)", id, study_id, source_id, theme_id, decision, reason, actor$principal_id)
       list(id = id)
-    })
+    }, reason = reason, detail = decision)
   })
 }
 qualitative_item <- function(repo, study, code, version) {
@@ -162,7 +162,7 @@ link_item_source <- function(repo, actor, study_id, item_code, item_version, sou
       id <- uid()
       execute(repo, "INSERT INTO research.qualitative_item_sources(id,study_id,item_id,source_id,reason,actor_id) VALUES($1,$2,$3,$4,$5,$6)", id, study_id, item, source_id, reason, actor$principal_id)
       list(id = id)
-    })
+    }, reason = reason, detail = paste0(item_code, " v", item_version))
   })
 }
 #' Record a complete item split or merge without deleting its parents
@@ -203,7 +203,7 @@ record_item_lineage <- function(repo, actor, study_id, parents, children, relati
       execute(repo, "INSERT INTO research.item_lineage_events(id,study_id,relation,parent_count,child_count,reason,actor_id,hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", id, study_id, relation, length(from), length(to), reason, actor$principal_id, h)
       for (a in from) for (b in to) execute(repo, "INSERT INTO research.item_lineage_edges VALUES($1,$2,$3,$4)", study_id, id, a, b)
       list(id = id, hash = h)
-    })
+    }, reason = reason, detail = relation)
   })
 }
 #' Read restricted qualitative provenance or reviewed export tables

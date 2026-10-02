@@ -181,8 +181,13 @@ management_server <- function(id, study, lang, call, services) {
         shiny::tableOutput(ns("review_items")),
         shiny::tags$h4(tr(l, "Aufgenommene Panelmitglieder", "Enrolled panel members")),
         shiny::tableOutput(ns("review_enrollments")),
-        shiny::tags$h4(tr(l, "Bereitschaftspr\u00fcfung", "Readiness review")),
-        if (nrow(findings)) shiny::tableOutput(ns("review_readiness")) else shiny::tags$p(tr(l, "Keine Befunde.", "No findings.")),
+        # Readiness concerns a round that has not been opened yet.
+        if (i$round$state %in% c("draft", "review", "approved")) {
+          shiny::tagList(
+            shiny::tags$h4(tr(l, "Bereitschaftspr\u00fcfung", "Readiness review")),
+            if (nrow(findings)) shiny::tableOutput(ns("review_readiness")) else shiny::tags$p(tr(l, "Keine Befunde.", "No findings."))
+          )
+        },
         shiny::tags$details(
           shiny::tags$summary(tr(l, "Freigabeverlauf und technische Angaben", "Approval history and technical details")),
           shiny::tableOutput(ns("review_events")),

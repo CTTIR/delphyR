@@ -23,7 +23,8 @@ set_capability(
 
 \item{principal_id}{Principal UUID.}
 
-\item{capability}{One of manage, analyse, export, coordinate, edit, panel, audit.}
+\item{capability}{One of manage, analyse, export, coordinate, edit, panel,
+audit or contacts_export. The contact export is never implied by a role.}
 
 \item{enabled}{Grant if TRUE; revoke otherwise.}
 

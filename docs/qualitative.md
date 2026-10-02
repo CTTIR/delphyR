@@ -46,8 +46,13 @@ already occur in an imported instrument or an earlier lineage event. Children
 must have new semantic codes. The service serializes lineage decisions within a
 study and rejects identity reuse and cycles. The database enforces same-study
 references, immutable events and edges, and the declared complete edge counts at
-transaction commit. Historical parents remain intact. Item revision with an
-explicit comparability decision is not implemented by this split/merge API.
+transaction commit. Historical parents remain intact.
+
+A revised item keeps its code and receives a new version. Whether ratings of
+the two versions may be paired is a separate explicit decision:
+`record_item_comparability()` stores it with a rationale, the latest decision
+per version pair is effective, and the history is exported. Without a decision
+a changed version is not comparable.
 
 ## Access and export boundaries
 

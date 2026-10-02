@@ -343,3 +343,32 @@ DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-management-post
 
 This script covers the round lifecycle controls. Analysis, feedback, export and
 study completion in the browser are recorded separately.
+
+## Documentation, comparability, export profiles, history and participant download
+
+`browser-governance-postgres.R` builds a two-round synthetic study through the
+services, starts a manager, an audit-only and a panel host, steps the export
+worker under the restricted runtime role and passed on 2 October 2026:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-governance-postgres.R
+```
+
+- The manager saved documentation version 1 only with a rationale and
+  confirmation, and recorded a "not comparable" decision for the revised item.
+- The manager was offered the research, summary and audit profiles, not the
+  contact profile. The downloaded summary contained no response file and no
+  pseudonym; the downloaded research export was reproduced offline, with the
+  revised item shown as not comparable for the recorded reason and three paired
+  members for the unchanged item.
+- The History section listed the documentation, the comparability decision and
+  the downloads with their rationale and without any panel account reference.
+- The audit-only account saw only Exports and History, was offered only the
+  audit profile, and its download contained events without panel account
+  references.
+- The panel member saw the changed-wording notice and downloaded a file holding
+  only that person's own previous answers. All downloads were recorded as audit
+  events. No Shiny output error and no horizontal overflow at 390 and 1280 pixels.
+
+Downloads are fetched inside the page from the Shiny download link and unpacked
+for inspection; this checks the delivered bytes, not a browser's save dialog.

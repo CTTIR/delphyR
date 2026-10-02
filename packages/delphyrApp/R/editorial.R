@@ -7,6 +7,8 @@ editorial_server <- function(id, study, lang, call, services) {
     reviews <- shiny::reactiveVal(data.frame())
     reviewed <- shiny::reactiveVal(NULL)
     lineage <- shiny::reactiveVal(NULL)
+    comparability <- shiny::reactiveVal(data.frame())
+    comparable_ready <- all(c("record_item_comparability", "get_item_comparability") %in% names(services))
     status <- shiny::reactiveVal("")
     needed <- c("get_capabilities", "get_qualitative_provenance", "list_qualitative_reviews", "record_qualitative_source", "redact_qualitative_source", "release_qualitative_edit", "create_qualitative_theme", "code_qualitative_source", "link_item_source", "record_item_lineage")
     ready <- all(needed %in% names(services))
@@ -15,12 +17,14 @@ editorial_server <- function(id, study, lang, call, services) {
       caps(call("get_capabilities", study()))
       records(if ("edit" %in% caps()) call("get_qualitative_provenance", study()) else NULL)
       reviews(if ("manage" %in% caps()) call("list_qualitative_reviews", study()) else data.frame())
+      comparability(if (comparable_ready && "manage" %in% caps()) call("get_item_comparability", study()) else data.frame())
     }
     shiny::observeEvent(study(), {
       reviewed(NULL)
       lineage(NULL)
       records(NULL)
       reviews(data.frame())
+      comparability(data.frame())
       caps(character())
       if (ready) attempt(refresh)
     })
@@ -99,7 +103,22 @@ editorial_server <- function(id, study, lang, call, services) {
               shiny::tableOutput(ns("lineage")),
               shiny::checkboxInput(ns("lineage_confirm"), tr(l, "Ich best\u00e4tige die angezeigte Beziehung.", "I confirm the displayed relationship."), FALSE),
               shiny::actionButton(ns("lineage_save"), tr(l, "Beziehung speichern", "Save relationship"))
-            )
+            ),
+            if (comparable_ready) {
+              shiny::tags$details(
+                shiny::tags$summary(tr(l, "Vergleichbarkeit zweier Itemfassungen entscheiden", "Decide the comparability of two item versions")),
+                shiny::tags$p(tr(l, "Eine ge\u00e4nderte Itemfassung unterbricht den gepaarten Vergleich zwischen Runden. Nur eine ausdr\u00fcckliche, begr\u00fcndete Entscheidung l\u00e4sst ihn zu. Eine sp\u00e4tere Entscheidung f\u00fcr dasselbe Fassungspaar ersetzt die fr\u00fchere; der Verlauf bleibt erhalten.", "A changed item version interrupts the paired comparison between rounds. Only an explicit, reasoned decision permits it. A later decision for the same pair of versions supersedes the earlier one; the history is kept.")),
+                shiny::textInput(ns("comparable_item"), tr(l, "Itemcode", "Item code"), value = field("comparable_item")),
+                shiny::textInput(ns("comparable_dimension"), tr(l, "Dimension", "Dimension"), value = field("comparable_dimension")),
+                shiny::numericInput(ns("comparable_previous"), tr(l, "Fr\u00fchere Itemversion", "Earlier item version"), value = field("comparable_previous", 1), min = 1, step = 1),
+                shiny::numericInput(ns("comparable_current"), tr(l, "Sp\u00e4tere Itemversion", "Later item version"), value = field("comparable_current", 2), min = 1, step = 1),
+                shiny::selectInput(ns("comparable_decision"), tr(l, "Entscheidung", "Decision"), stats::setNames(c("no", "yes"), c(tr(l, "Nicht vergleichbar", "Not comparable"), tr(l, "Vergleichbar", "Comparable"))), selected = field("comparable_decision", "no")),
+                shiny::textAreaInput(ns("comparable_reason"), tr(l, "Begr\u00fcndung der Vergleichbarkeitsentscheidung", "Rationale for the comparability decision"), value = field("comparable_reason"), width = "100%"),
+                shiny::checkboxInput(ns("comparable_confirm"), tr(l, "Ich habe beide Fassungen gepr\u00fcft und best\u00e4tige diese Entscheidung.", "I reviewed both versions and confirm this decision."), FALSE),
+                shiny::actionButton(ns("comparable_save"), tr(l, "Vergleichbarkeitsentscheidung speichern", "Save comparability decision")),
+                shiny::tableOutput(ns("comparability"))
+              )
+            }
           )
         },
         shiny::actionButton(ns("refresh"), tr(l, "Redaktionsstand aktualisieren", "Refresh editorial records")),
@@ -179,6 +198,26 @@ editorial_server <- function(id, study, lang, call, services) {
       shiny::req(x)
       rbind(data.frame(role = tr(lang(), "Ausgang", "Parent"), x$parents), data.frame(role = tr(lang(), "Neu", "New"), x$children))
     })
+    output$comparability <- shiny::renderTable({
+      x <- comparability()
+      shiny::req(nrow(x) > 0)
+      x <- x[x$effective, , drop = FALSE]
+      out <- data.frame(x$item_code, x$dimension_code, x$previous_version, x$current_version, ifelse(x$comparable, tr(lang(), "Vergleichbar", "Comparable"), tr(lang(), "Nicht vergleichbar", "Not comparable")), x$reason, stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("Item", "Dimension", "Fr\u00fchere Version", "Sp\u00e4tere Version", "Entscheidung", "Begr\u00fcndung"), c("Item", "Dimension", "Earlier version", "Later version", "Decision", "Reason"))
+      out
+    })
+    shiny::observeEvent(input$comparable_save, attempt(function() {
+      shiny::req(comparable_ready, "manage" %in% caps())
+      reason <- if (is.null(input$comparable_reason)) "" else trimws(input$comparable_reason)
+      if (!isTRUE(input$comparable_confirm) || !nzchar(reason)) {
+        status(tr(lang(), "Begr\u00fcndung und Best\u00e4tigung sind erforderlich.", "A reason and confirmation are required."))
+        return()
+      }
+      call("record_item_comparability", study(), trimws(input$comparable_item), trimws(input$comparable_dimension), input$comparable_previous, input$comparable_current, identical(input$comparable_decision, "yes"), reason, command_id())
+      shiny::updateCheckboxInput(session, "comparable_confirm", value = FALSE)
+      comparability(call("get_item_comparability", study()))
+      status(tr(lang(), "Vergleichbarkeitsentscheidung gespeichert.", "Comparability decision saved."))
+    }))
     shiny::observeEvent(input$lineage_save, attempt(function() {
       x <- lineage()
       shiny::req(x, isTRUE(input$lineage_confirm))

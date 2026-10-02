@@ -38,10 +38,12 @@ contrasts group rules, reports missingness, checks comparability, and prepares
 suppressed feedback. A feedback draft still needs a reviewed release before
 participant use.
 
-`reproduce_export(path)` verifies a previously obtained private export and
-recomputes its analysis without the application or Quarto. Numeric exports do
-not include qualitative originals or account mappings; they are not automatically
-suitable for public release.
+`reproduce_export(path)` verifies a previously obtained private round export
+and recomputes its analysis without the application or Quarto;
+`reproduce_study_export(path)` does the same for every round of a study-level
+research export and for the comparisons between rounds. Exports do not include
+qualitative originals or account mappings; they are not automatically suitable
+for public release.
 
 ## Study services
 

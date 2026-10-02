@@ -52,6 +52,6 @@ amend_protocol <- function(repo, actor, study_id, protocol, expected_hash, reaso
       execute(repo, "INSERT INTO research.protocol_versions VALUES($1,$2,$3,$4::jsonb,$5)", id, study_id, version, json(protocol), hash)
       execute(repo, "INSERT INTO research.protocol_amendments(id,study_id,previous_protocol_id,protocol_id,actor_id,reason) VALUES($1,$2,$3,$4,$5,$6)", uid(), study_id, old$id, id, actor$principal_id, reason)
       list(id = id, version = version, hash = hash)
-    })
+    }, reason = reason)
   })
 }

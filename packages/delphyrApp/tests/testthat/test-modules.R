@@ -502,3 +502,16 @@ test_that("a blocked opening shows the readiness findings instead of a success",
   expect_identical(readiness_label(c("deadline_passed", "unknown_code"), "de"), c("Die Frist ist abgelaufen.", "unknown_code"))
   expect_identical(round_state_label(c("open", "cancelled"), "en"), c("Open", "Withdrawn (never opened)"))
 })
+
+test_that("the readiness review is shown only before a round is opened", {
+  state <- new.env()
+  state$calls <- list()
+  state$round_state <- "open"
+  state$blocked <- TRUE
+  shiny::testServer(delphyrApp:::management_server, args = list(study = function() "study", lang = function() "en", call = management_review_call(state), services = management_review_services()), {
+    session$flushReact()
+    session$setInputs(round = "round", review = 1)
+    expect_match(output$review_panel$html, "Instrument of round 1", fixed = TRUE)
+    expect_false(grepl("Readiness review", output$review_panel$html, fixed = TRUE))
+  })
+})

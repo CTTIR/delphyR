@@ -53,7 +53,7 @@ issue_panel_invitation <- function(repo, actor, study_id, draft_id, principal_id
       id <- uid()
       x <- query(repo, "INSERT INTO identity.panel_invitations(id,study_id,draft_id,expected_principal_id,expected_issuer,expected_subject,token_hash,expires_at,actor_id,reason) VALUES($1,$2,$3,$4,$5,$6,$7,clock_timestamp()+$8*interval '1 second',$9,$10) RETURNING expires_at::text", id, study_id, draft_id, principal_id, p$issuer, p$subject, h, ttl_seconds, actor$principal_id, reason)
       list(id = id, expires_at = x$expires_at)
-    })
+    }, reason = reason)
   })
 }
 #' Revoke an unconsumed synthetic invitation
@@ -73,7 +73,7 @@ revoke_panel_invitation <- function(repo, actor, study_id, invitation_id, reason
       ensure(!nrow(query(repo, "SELECT invitation_id FROM identity.panel_invitation_acceptances WHERE invitation_id=$1", invitation_id)), "invitation.accepted", "DEL_CONFLICT")
       execute(repo, "INSERT INTO identity.panel_invitation_revocations(invitation_id,study_id,actor_id,reason) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING", invitation_id, study_id, actor$principal_id, reason)
       list(id = invitation_id)
-    })
+    }, reason = reason)
   })
 }
 #' Accept an invitation after verified login and an explicit confirmed action
@@ -160,7 +160,7 @@ register_invited_account <- function(repo, actor, study_id, issuer, subject, rea
       p <- query(repo, "INSERT INTO identity.principals(id,issuer,subject) VALUES($1,$2,$3) ON CONFLICT(issuer,subject) DO UPDATE SET subject=EXCLUDED.subject RETURNING id,active", uid(), issuer, subject)
       ensure(isTRUE(p$active), "invitation.account_disabled", "DEL_FORBIDDEN")
       list(id = p$id)
-    })
+    }, reason = reason)
   })
 }
 #' List imported invitation drafts and their current invitation state

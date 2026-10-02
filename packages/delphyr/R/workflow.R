@@ -51,7 +51,7 @@ publish_consent <- function(repo, actor, study_id, text, locale, command_id) {
       id <- uid()
       execute(repo, "INSERT INTO identity.consent_versions(id,study_id,locale,content,hash) VALUES($1,$2,$3,$4,$5)", id, study_id, locale, text, content_hash(list(text, locale)))
       list(id = id)
-    })
+    }, detail = locale)
   })
 }
 #' Record an explicit consent decision
@@ -73,7 +73,7 @@ record_consent <- function(repo, actor, study_id, consent_version_id, decision, 
       id <- uid()
       execute(repo, "INSERT INTO identity.consents(id,study_id,membership_id,consent_version_id,decision) VALUES($1,$2,$3,$4,$5)", id, study_id, m, consent_version_id, decision)
       list(id = id)
-    })
+    }, detail = if (decision) "accepted" else "declined")
   })
 }
 #' Register a synthetic panel member
@@ -99,7 +99,7 @@ add_panelist <- function(repo, actor, study_id, principal_id, group_code, comman
       execute(repo, "INSERT INTO identity.panelist_links VALUES($1,$2,$3)", study_id, m, id)
       execute(repo, "INSERT INTO identity.capabilities(study_id,membership_id,capability) VALUES($1,$2,'panel') ON CONFLICT DO NOTHING", study_id, m)
       list(id = id)
-    })
+    }, detail = group_code)
   })
 }
 # Active panel members who may take part in the given round number under the
@@ -212,7 +212,7 @@ transition_round <- function(repo, actor, round_id, target, expected_hash, reaso
       execute(repo, "INSERT INTO research.round_events(id,study_id,round_id,target_state,content_hash,actor_id,reason) VALUES($1,$2,$3,$4,$5,$6,$7)", uid(), r$study_id, r$id, target, expected_hash, actor$principal_id, reason)
       if (target == "open") execute(repo, "UPDATE research.studies SET state='active' WHERE id=$1 AND state='draft'", r$study_id)
       list(id = round_id, state = target)
-    })
+    }, reason = reason, detail = target)
   })
 }
 enrollment_get <- function(repo, actor, id, locking = TRUE) {
@@ -369,7 +369,7 @@ round_readiness <- function(repo, r) {
     if (length(missing)) add("error", "translation_missing", path, paste(missing, collapse = ","))
   }
   if (!isTRUE(one(query(repo, "SELECT deadline>clock_timestamp() AS ok FROM research.rounds WHERE id=$1", r$id))$ok)) add("error", "deadline_passed", "round.deadline")
-  enrolled <- query(repo, "SELECT e.panelist_id,e.group_code FROM research.enrollments e JOIN research.panelists p ON p.study_id=e.study_id AND p.id=e.panelist_id JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN identity.memberships m ON m.study_id=l.study_id AND m.id=l.membership_id JOIN identity.principals a ON a.id=m.principal_id JOIN identity.capabilities c ON c.study_id=m.study_id AND c.membership_id=m.id AND c.capability='panel' AND c.revoked_at IS NULL WHERE e.study_id=$1 AND e.round_id=$2 AND e.state IN ('eligible','in_progress') AND p.active AND m.active AND a.active", r$study_id, r$id)
+  enrolled <- query(repo, "SELECT e.panelist_id,e.group_code FROM research.enrollments e JOIN research.panelists p ON p.study_id=e.study_id AND p.id=e.panelist_id JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN identity.memberships m ON m.study_id=l.study_id AND m.id=l.membership_id JOIN identity.principals a ON a.id=m.principal_id JOIN identity.capabilities c ON c.study_id=m.study_id AND c.membership_id=m.id AND c.capability='panel' AND c.revoked_at IS NULL WHERE e.study_id=$1 AND e.round_id=$2 AND e.state<>'withdrawn' AND p.active AND m.active AND a.active", r$study_id, r$id)
   if (!nrow(enrolled)) add("error", "no_enrollments", "round.enrollments")
   rule <- protocol$analysis$consensus
   if (nrow(enrolled)) {
