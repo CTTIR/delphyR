@@ -26,6 +26,7 @@ Change state
 Check invitation
 Check operation
 Choose a rating
+Choose a rating or select another response type.
 Choose a study to see your available work areas.
 Closed
 Coding decision
@@ -67,6 +68,7 @@ Eligible
 Email already exists
 Email case variants require explicit review
 End participation
+Enter text or select another response type.
 Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.
 Exact recipient selection (pseudonyms)
 exactly selected recipients
@@ -135,6 +137,7 @@ Language
 Language is not supported by this study
 Link an item to its source
 Load round
+Load the saved response and discard my entry
 Local receipt recorded
 Local test receipts only. This application sends no email. Recipients are represented only by study pseudonyms.
 Manage the protocol, rounds and independent reviews. Choose a study section to prepare the next step.
@@ -216,6 +219,7 @@ required
 response fields confirmed saved.
 Response text
 Response type
+Responses are saved automatically shortly after each change. Only the confirmation shown beside a field establishes a save.
 Restricted contact preview
 Review and release feedback
 Review rationale including dissent
@@ -238,13 +242,14 @@ Save coding decision
 Save consent
 Save each response and review the confirmed answers before explicitly submitting your round.
 Save each response field explicitly. Saving is not automatic.
+Save now
 Save relationship
-Save response
 Save source linkage
 Save theme version
 Save version
 Save your changes first. The current round stays open.
 Saved response
+Saved response loaded.
 Saved version
 Saved:
 Saved. Original history is preserved.

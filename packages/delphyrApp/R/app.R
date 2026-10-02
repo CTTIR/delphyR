@@ -1,9 +1,10 @@
 #' Build a synthetic study application with a trusted server identity
 #'
 #' The hosting application must resolve the actor on the server. Never derive
-#' the actor from an input, URL parameter or a browser-supplied role. This P0
-#' interface uses explicit saves; autosave, production authentication, mail,
-#' and deployment qualification are outside this interface's acceptance scope.
+#' the actor from an input, URL parameter or a browser-supplied role. Responses
+#' are saved automatically after a short pause; only a committed revision is
+#' shown as saved. Production authentication, external mail and deployment
+#' qualification are outside this interface's acceptance scope.
 #'
 #' @param repo A connected delphyr repository; lifetime is managed by the caller.
 #' @param actor Trusted actor supplied by server-side session setup.
@@ -14,6 +15,8 @@
 #' @param language Initial interface language: en (default), fr or de.
 #' @param services Named list of service functions, each accepting repo and actor
 #'   as their first two arguments. NULL uses exported delphyr services.
+#' @param autosave_ms Pause in milliseconds after which a settled, complete
+#'   response is saved automatically. 0 leaves only the explicit save button.
 #' @return A shiny.appobj, runnable with shiny::runApp().
 #' @export
 #' @examples
@@ -22,8 +25,9 @@
 #'   shiny::runApp(run_app(repo, actor))
 #' }
 run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), services = NULL,
-                    actor_factory = NULL, repo_factory = NULL) {
+                    actor_factory = NULL, repo_factory = NULL, autosave_ms = 1500) {
   language <- match.arg(language)
+  if (!is.numeric(autosave_ms) || length(autosave_ms) != 1L || is.na(autosave_ms) || autosave_ms < 0 || autosave_ms > 60000) stop("Invalid autosave delay.", call. = FALSE)
   if (is.null(actor_factory)) {
     if (is.null(actor) || !is.list(actor)) stop("A trusted server actor is required.", call. = FALSE)
   } else if (!is.function(actor_factory) || !is.null(actor)) {
@@ -155,7 +159,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         shiny::tags$ul(lapply(seq_len(nrow(links)), function(i) shiny::tags$li(shiny::tags$a(href = paste0("#", links$id[i]), links$label[i]))))
       )
     })
-    panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services))
+    panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services), autosave_ms = autosave_ms)
     management_server("management", study, lang, call, services)
     editorial_server("editorial", study, lang, call, services)
     communications_server("communications", study, lang, call, services)

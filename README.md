@@ -76,8 +76,8 @@ Rscript scripts/start-demo.R 1 3850
 
 Open <http://127.0.0.1:3849> for the manager and
 <http://127.0.0.1:3850> for the first panel account. Review and open the prepared
-round as manager. The panel account records consent, saves each response, and
-explicitly submits. Close and freeze the round before requesting analysis.
+round as manager. The panel account records consent, rates each item (responses
+are saved automatically and confirmed per field), and explicitly submits. Close and freeze the round before requesting analysis.
 The separate worker processes analysis, exports, and approved local message receipts.
 
 Each demo instance uses one fixed server identity. Session-specific repository
@@ -88,8 +88,8 @@ identity-header path and production deployment remain unqualified.
 
 ## Study workflows
 
-- **Panel:** no preselected rating, explicit saves, revision conflict checks,
-  deliberate submission, and a durable receipt. Released feedback includes only
+- **Panel:** no preselected rating, automatic saving with per-field commit
+  confirmation, revision conflict checks, deliberate submission, and a durable receipt. Released feedback includes only
   the participant's own previous responses alongside approved aggregates.
 - **Management:** exact instrument review, round transitions, future-round
   protocol amendments, queued analysis and exports, and reviewed feedback releases.
@@ -99,10 +99,10 @@ identity-header path and production deployment remain unqualified.
   unbound invitation drafts; exact campaign previews with local database sink
   receipts. No external email is sent.
 
-Invitation acceptance is a separate service contract using an explicitly
-approved, already provisioned issuer/subject identity. Importing an address does
-not create an account or grant study access. The full invitation browser journey
-remains a separate integration gate.
+Invitations bind one explicitly approved issuer/subject account. Coordinators
+register that account, issue a single-use invitation and pass on a one-time
+hand-over code; the invited person confirms acceptance after verified sign-in.
+Importing an address does not create an account or grant study access.
 
 ## Data and reproducibility
 

@@ -102,3 +102,10 @@ test_that("analysis and feedback retain scientific hashes across JSON persistenc
   expect_true(validate_feedback(restored_feedback))
   expect_identical(prepare_feedback(a)$hash, f$hash)
 })
+
+test_that("package code is ASCII with escaped text", {
+  paths <- list.files(testthat::test_path("..", "..", "R"), pattern = "[.]R$", full.names = TRUE)
+  skip_if(!length(paths), "Source files are not available in an installed package")
+  offending <- paths[vapply(paths, function(path) any(grepl("[^\\x01-\\x7F]", readLines(path, warn = FALSE), perl = TRUE)), logical(1))]
+  expect_identical(basename(offending), character())
+})

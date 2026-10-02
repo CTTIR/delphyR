@@ -2,13 +2,9 @@
 # Run from the repository root; starts and stops its own two application hosts.
 # The invitee identity uses the gateway adapter with a synthetic trusted request:
 # this qualifies the screens and services, not an OIDC gateway deployment.
-if (!identical(Sys.getenv("DELPHYR_TEST_DB"), "true")) stop("Set DELPHYR_TEST_DB=true to opt in.")
-if (dir.exists(".R-library")) .libPaths(c(normalizePath(".R-library"), .libPaths()))
-Sys.setenv(CHROMOTE_CHROME = Sys.getenv("CHROMOTE_CHROME", "/usr/bin/chromium"))
-pkgload::load_all("packages/delphyr", quiet = TRUE)
-root <- normalizePath(".")
+source("packages/delphyrApp/inst/qa/browser-helpers.R")
 ports <- c(coordinator = 3876L, invitee = 3877L)
-admin <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "development")
+admin <- qa_admin()
 f <- demo_study(admin, n = 2L, item_count = 1L)
 csv <- paste("external_ref,email,display_name,locale,stakeholder_group", "QA-INV-1,invitee@example.invalid,Synthetic Invitee,en,public_contributors", sep = "\n")
 preview <- preview_panel_import(admin, f$manager, f$study_id, csv)
@@ -16,52 +12,18 @@ invisible(import_panel(admin, f$manager, f$study_id, preview, preview$hash, "Syn
 issuer <- "https://synthetic-idp.example.invalid/realms/qa"
 subject <- paste0("qa-", uuid::UUIDgenerate())
 secret <- paste(format(openssl::rand_bytes(32L)), collapse = "")
-host <- function(root, libs, role, port, principal, issuer, subject, secret) {
-  .libPaths(libs)
-  pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
-  pkgload::load_all(file.path(root, "packages/delphyrApp"), quiet = TRUE)
-  repo <- delphyr::connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "delphyr_runtime", environment = "development")
-  app <- if (role == "coordinator") {
-    delphyrApp::run_app(repo, delphyr::demo_actor(repo, principal))
-  } else {
-    config <- delphyr::new_authentication_config(issuer, secret, "127.0.0.1")
-    request <- list(REMOTE_ADDR = "127.0.0.1", HTTP_X_DELPHYR_GATEWAY = secret, HTTP_X_FORWARDED_USER = subject)
+hosts <- list(
+  qa_host("invitation-coordinator", ports[["coordinator"]], function(repo, data) delphyrApp::run_app(repo, delphyr::demo_actor(repo, data$principal)), list(principal = f$manager$principal_id)),
+  qa_host("invitation-invitee", ports[["invitee"]], function(repo, data) {
+    config <- delphyr::new_authentication_config(data$issuer, data$secret, "127.0.0.1")
+    request <- list(REMOTE_ADDR = "127.0.0.1", HTTP_X_DELPHYR_GATEWAY = data$secret, HTTP_X_FORWARDED_USER = data$subject)
     delphyrApp::run_app(repo, actor_factory = function(session, repo) delphyr::authenticated_actor(repo, request, config))
-  }
-  shiny::runApp(app, host = "127.0.0.1", port = port, launch.browser = FALSE)
-}
-hosts <- lapply(names(ports), function(role) callr::r_bg(host, list(root, .libPaths(), role, ports[[role]], f$manager$principal_id, issuer, subject, secret), stderr = file.path(root, ".checks", paste0("invitation-", role, ".log")), stdout = "|"))
+  }, list(issuer = issuer, subject = subject, secret = secret))
+)
 on.exit(for (h in hosts) if (h$is_alive()) h$kill(), add = TRUE)
-session <- function() {
-  b <- chromote::ChromoteSession$new()
-  js <- function(code) {
-    result <- b$Runtime$evaluate(code, awaitPromise = TRUE)
-    if (!is.null(result$exceptionDetails)) stop(result$exceptionDetails$text)
-    result$result$value
-  }
-  wait_for <- function(code, tries = 150L) {
-    for (attempt in seq_len(tries)) {
-      if (isTRUE(tryCatch(js(code), error = function(e) FALSE))) return(invisible(TRUE))
-      Sys.sleep(.1)
-    }
-    stop("Browser condition was not met: ", code)
-  }
-  type <- function(id, value) js(sprintf("(function(){var x=document.getElementById(%s);x.value=%s;x.dispatchEvent(new Event('input',{bubbles:true}));x.dispatchEvent(new Event('change',{bubbles:true}));return true;})()", jsonlite::toJSON(id, auto_unbox = TRUE), jsonlite::toJSON(value, auto_unbox = TRUE)))
-  list(b = b, js = js, wait_for = wait_for, type = type)
-}
-open_page <- function(s, url) {
-  for (attempt in seq_len(100)) {
-    ok <- tryCatch({
-      s$b$Page$navigate(url)
-      Sys.sleep(.3)
-      isTRUE(s$js("typeof Shiny !== 'undefined'"))
-    }, error = function(e) FALSE)
-    if (ok) return(invisible(TRUE))
-    Sys.sleep(.3)
-  }
-  stop("Application did not start: ", url)
-}
-count <- function(sql, ...) DBI::dbGetQuery(admin$con, sql, params = list(...))$n
+session <- qa_session
+open_page <- qa_open
+count <- function(sql, ...) qa_count(admin, sql, ...)
 
 # 1. An unregistered identity is told so and receives no session.
 invitee <- session()
@@ -93,7 +55,7 @@ coordinator$wait_for("document.getElementById('invitations-code') === null")
 stopifnot(!grepl(as.character(parsed$token), coordinator$js("document.documentElement.outerHTML"), fixed = TRUE))
 
 # 3. The invitee signs in again; the code arrives in the URL fragment only.
-invitee$b$close()
+invitee$close()
 invitee <- session()
 open_page(invitee, sprintf("http://127.0.0.1:%d/#invitation=%s", ports[["invitee"]], code))
 invitee$wait_for("document.getElementById('invitation_accept-code') !== null && document.getElementById('invitation_accept-code').value.length > 0")
@@ -124,9 +86,9 @@ stopifnot(identical(invitee$js("document.getElementById('invitation_accept-code'
 for (s in list(invitee, coordinator)) {
   stopifnot(identical(s$js("document.querySelectorAll('.shiny-output-error').length"), 0L))
   for (mobile in c(TRUE, FALSE)) {
-    s$b$Emulation$setDeviceMetricsOverride(width = if (mobile) 390 else 1280, height = if (mobile) 844 else 900, deviceScaleFactor = 1, mobile = mobile)
+    s$viewport(mobile)
     Sys.sleep(.3)
-    stopifnot(isTRUE(s$js("document.documentElement.scrollWidth <= innerWidth")))
+    stopifnot(s$no_overflow())
   }
 }
 
@@ -151,7 +113,7 @@ stopifnot(
 )
 logs <- unlist(lapply(file.path(".checks", paste0("invitation-", names(ports), ".log")), readLines, warn = FALSE))
 stopifnot(!any(grepl(as.character(parsed$token), logs, fixed = TRUE)), !any(grepl(secret, logs, fixed = TRUE)))
-for (s in list(invitee, coordinator, replay)) s$b$close()
+for (s in list(invitee, coordinator, replay)) s$close()
 DBI::dbDisconnect(admin$con)
 print(list(
   unregistered_notice = TRUE, issued_through_ui = TRUE, fragment_prefill_cleared = TRUE, changed_code_refused = TRUE,

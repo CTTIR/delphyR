@@ -3,8 +3,9 @@
 **A focused workspace for synthetic Delphi studies.**
 
 `delphyrApp` brings panel responses, round management, editorial review, and
-coordination into the CTTIR suite. Participants explicitly save their own
-responses and receive a durable submission receipt. Managers review instruments,
+coordination into the CTTIR suite. Participants' responses are saved shortly
+after each change, shown as saved only once committed, and submitted deliberately
+for a durable receipt. Managers review instruments,
 advance rounds, prepare feedback, and request private research exports.
 
 The interface offers **English, German, and French**, with English as the default.
@@ -49,11 +50,16 @@ mail transport is enabled.
 
 1. Choose a study and load an assigned round.
 2. Read the stored study information and explicitly record consent.
-3. Select a response or allowed special category; save each field explicitly.
+3. Select a response or allowed special category. A settled, complete entry is
+   saved automatically after a short pause; **Save now** saves it at once.
 4. Review the confirmed field count and submit deliberately.
 
-A failed save keeps the typed value and does not advance its confirmed revision.
-Submission is blocked while fields have pending changes. Services independently
+A field reads *Unsaved change* until its own commit returns. A failed save keeps
+the typed value and does not advance its confirmed revision. A revision conflict
+from another tab stops automatic saving for that field; the stored response is
+loaded only on request. Submission first saves complete pending entries and is
+blocked while any field remains unconfirmed. `run_app(autosave_ms = 0)` offers
+explicit saving only. Services independently
 check consent, ownership, rights, deadline, required fields, and revision sets.
 Submitted responses cannot be edited. Ratings have no default midpoint and the
 panel does not see live current-round results.

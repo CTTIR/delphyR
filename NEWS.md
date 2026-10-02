@@ -14,6 +14,7 @@
 - Permission-filtered navigation and tested connection-loss/recovery indicators.
 - English package guides and executable offline analysis vignette; authored study content retains its language.
 - Invitation issuance, account onboarding and confirmed acceptance in the interface, with a one-time hand-over code.
+- Automatic saving of settled responses with per-field commit confirmation, deliberate conflict resolution and retry-safe keys.
 
 This is a development version using synthetic data, not acceptance of the complete P1 platform.
 

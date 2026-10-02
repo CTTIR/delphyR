@@ -157,9 +157,7 @@ Save all changes and confirm submission first.	Enregistrez toutes les modificati
 Save coding decision	Enregistrer la décision de codage
 Save consent	Enregistrer le consentement
 Save each response and review the confirmed answers before explicitly submitting your round.	Enregistrez chaque réponse et vérifiez les réponses confirmées avant de soumettre explicitement votre tour.
-Save each response field explicitly. Saving is not automatic.	Enregistrez explicitement chaque champ de réponse. L’enregistrement n’est pas automatique.
 Save relationship	Enregistrer la relation
-Save response	Enregistrer la réponse
 Save source linkage	Enregistrer le lien à la source
 Save theme version	Enregistrer la version du thème
 Save version	Enregistrer la version
@@ -312,3 +310,10 @@ Accept invitation	Accepter l’invitation
 Explicitly confirm acceptance first.	Confirmez d’abord explicitement l’acceptation.
 You joined the panel. Select the study to continue.	Vous avez rejoint le panel. Sélectionnez l’étude pour continuer.
 Invitations	Invitations
+Responses are saved automatically shortly after each change. Only the confirmation shown beside a field establishes a save.	Les réponses sont enregistrées automatiquement peu après chaque modification. Seule la confirmation affichée à côté d’un champ atteste l’enregistrement.
+Save now	Enregistrer maintenant
+Choose a rating or select another response type.	Choisissez une évaluation ou sélectionnez un autre type de réponse.
+Load the saved response and discard my entry	Charger la réponse enregistrée et abandonner ma saisie
+Saved response loaded.	Réponse enregistrée chargée.
+Save each response field explicitly. Saving is not automatic.	Enregistrez explicitement chaque champ de réponse. L’enregistrement n’est pas automatique.
+Enter text or select another response type.	Saisissez un texte ou sélectionnez un autre type de réponse.

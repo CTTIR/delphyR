@@ -65,13 +65,15 @@ stored study information. Record consent explicitly. Ratings have no
 preselected midpoint. A field can instead use a special response category
 permitted by its scale.
 
-Save each response explicitly. **Saved** appears only after a committed revision
-and server timestamp return. A failed save preserves the pending form value.
-For a revision conflict, reload and review the authoritative server state;
+A settled, complete response is saved automatically after a short pause;
+**Save now** saves it at once. **Saved** appears only after a committed revision
+and server timestamp return; until then the field reads *Unsaved change*. A
+failed save preserves the pending form value. A revision conflict stops automatic
+saving for that field: load the stored response deliberately and review it;
 automatic overwriting is not offered.
 
-The progress count means confirmed response fields. Save pending changes before
-confirming final submission. The service checks consent, ownership, rights,
+The progress count means confirmed response fields. Final submission first saves
+complete pending entries and is refused while any field remains unconfirmed. The service checks consent, ownership, rights,
 deadline, required fields, and the exact revision set again. A successful
 submission returns a durable receipt and ends editing for that round.
 

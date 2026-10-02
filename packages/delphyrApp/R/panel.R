@@ -15,7 +15,7 @@ panel_ui <- function(id) {
     )
   )
 }
-panel_server <- function(id, study, lang, call, feedback_available = FALSE, capabilities_available = FALSE, withdrawal_available = FALSE) {
+panel_server <- function(id, study, lang, call, feedback_available = FALSE, capabilities_available = FALSE, withdrawal_available = FALSE, autosave_ms = 1500) {
   shiny::moduleServer(id, function(input, output, session) {
     visible <- shiny::reactiveVal(!capabilities_available)
     output$visible <- shiny::renderText(if (visible()) "yes" else "no")
@@ -76,6 +76,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
     dirty <- shiny::reactive(any(vapply(editors(), function(x) isTRUE(x$dirty()), logical(1))))
     shiny::observeEvent(input$load, {
       shiny::req(input$enrollment)
+      for (x in editors()) if (shiny::isolate(x$dirty()) && is.function(x$save_now)) x$save_now()
       if (dirty()) {
         status(tr(lang(), "Bitte \u00c4nderungen zuerst speichern. Die ge\u00f6ffnete Runde bleibt erhalten.", "Save your changes first. The current round stays open."))
         return()
@@ -90,7 +91,7 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
           for (i in seq_len(nrow(z$items))) {
             mid <- paste0("item_", generation, "_", i)
             ids[i] <- mid
-            mods[[i]] <- rating_server(mid, z, z$items[i, , drop = FALSE], lang, call)
+            mods[[i]] <- rating_server(mid, z, z$items[i, , drop = FALSE], lang, call, autosave_ms = autosave_ms)
           }
           z$module_ids <- ids
           editors(mods)
@@ -130,7 +131,12 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
     })
     output$content_note <- shiny::renderText(tr(lang(), "Studientexte, Skalenanker und Einwilligung bleiben in ihrer genehmigten Sprache.", "Study text, scale anchors and consent remain in their approved language."))
     output$information_label <- shiny::renderText(tr(lang(), "Studieninformation", "Study information"))
-    output$save_note <- shiny::renderText(tr(lang(), "Jedes Bewertungsfeld einzeln speichern. Keine automatische Speicherung.", "Save each response field explicitly. Saving is not automatic."))
+    automatic <- is.numeric(autosave_ms) && length(autosave_ms) == 1L && autosave_ms > 0
+    output$save_note <- shiny::renderText(if (automatic) {
+      tr(lang(), "Antworten werden kurz nach jeder \u00c4nderung automatisch gespeichert. Nur die Best\u00e4tigung neben einem Feld belegt die Speicherung.", "Responses are saved automatically shortly after each change. Only the confirmation shown beside a field establishes a save.")
+    } else {
+      tr(lang(), "Jedes Bewertungsfeld einzeln speichern. Keine automatische Speicherung.", "Save each response field explicitly. Saving is not automatic.")
+    })
     output$deadline <- shiny::renderText({
       shiny::req(q())
       zone <- q()$protocol$study$timezone
@@ -175,11 +181,13 @@ panel_server <- function(id, study, lang, call, feedback_available = FALSE, capa
     shiny::observeEvent(input$submit, {
       z <- q()
       shiny::req(z)
+      a <- editors()
+      # Pending complete answers are saved first; submission never outruns a save.
+      for (x in a) if (shiny::isolate(x$dirty()) && is.function(x$save_now)) x$save_now()
       if (dirty() || !isTRUE(input$confirm)) {
         status(tr(lang(), "Zuerst alle \u00c4nderungen speichern und die Abgabe best\u00e4tigen.", "Save all changes and confirm submission first."))
         return()
       }
-      a <- editors()
       revs <- vapply(a, function(x) as.integer(x$revision()), integer(1))
       names(revs) <- z$items$id
       revs <- revs[revs > 0]
@@ -199,24 +207,38 @@ rating_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tags$section(
     class = "del-item", shiny::uiOutput(ns("title")), shiny::uiOutput(ns("prior")), shiny::tableOutput(ns("feedback")), shiny::uiOutput(ns("form")),
-    shiny::actionButton(ns("save"), "Save response", class = "btn-primary"), shiny::uiOutput(ns("save_status"))
+    shiny::actionButton(ns("save"), "Save now", class = "btn-primary"), shiny::uiOutput(ns("save_status")), shiny::uiOutput(ns("conflict"))
   )
 }
-rating_server <- function(id, q, item, lang, call) {
+rating_server <- function(id, q, item, lang, call, autosave_ms = 1500) {
   shiny::moduleServer(id, function(input, output, session) {
     scale <- q$protocol$instrument$scales[[item$scale_code]]
-    old <- q$responses[q$responses$round_item_id == item$id, , drop = FALSE]
-    revision <- shiny::reactiveVal(if (nrow(old)) old$revision[1] else 0L)
-    old_status <- if (nrow(old)) old$status[1] else "not_answered"
-    old_value <- if (nrow(old) && old_status == "answered") {
-      if (scale$type == "free_text") old$value_text[1] else as.character(old$value_int[1])
-    } else {
-      ""
+    stored <- function(responses) {
+      old <- responses[responses$round_item_id == item$id, , drop = FALSE]
+      status <- if (nrow(old)) old$status[1] else "not_answered"
+      value <- if (nrow(old) && status == "answered") {
+        if (scale$type == "free_text") old$value_text[1] else as.character(old$value_int[1])
+      } else {
+        ""
+      }
+      list(revision = if (nrow(old)) old$revision[1] else 0L, status = status, value = value)
     }
+    initial <- stored(q$responses)
+    old_status <- initial$status
+    old_value <- initial$value
+    revision <- shiny::reactiveVal(initial$revision)
     baseline <- shiny::reactiveVal(list(status = old_status, value = old_value))
     message <- shiny::reactiveVal("")
     save_failed <- shiny::reactiveVal(FALSE)
+    # A conflict or closed round stops automatic attempts until the person acts.
+    conflict <- shiny::reactiveVal(FALSE)
+    closed <- shiny::reactiveVal(FALSE)
     answered <- shiny::reactiveVal(old_status != "not_answered")
+    locked <- isTRUE(q$enrollment$state %in% c("submitted", "withdrawn"))
+    last_attempt <- NULL
+    # After deliberately loading the saved response, nothing is saved
+    # automatically until the form shows that loaded state.
+    awaiting_loaded <- FALSE
     output$title <- shiny::renderUI({
       texts <- jsonlite::fromJSON(item$texts)
       text <- texts[[lang()]]
@@ -252,17 +274,18 @@ rating_server <- function(id, q, item, lang, call) {
       },
       striped = TRUE
     )
+    rating_choices <- function(l) c(stats::setNames("", tr(l, "Bitte w\u00e4hlen", "Choose a rating")), stats::setNames(as.character(unlist(scale$values)), as.character(unlist(scale$values))))
     output$form <- shiny::renderUI({
       ns <- session$ns
       l <- shiny::isolate(lang())
       opts <- response_choices(scale, l)
 
       shiny::tags$fieldset(
-        disabled = if (isTRUE(q$enrollment$state %in% c("submitted", "withdrawn"))) "disabled" else NULL, shiny::selectInput(ns("kind"), tr(l, "Antworttyp", "Response type"), opts, selected = old_status),
+        disabled = if (locked) "disabled" else NULL, shiny::selectInput(ns("kind"), tr(l, "Antworttyp", "Response type"), opts, selected = old_status),
         if (scale$type == "free_text") {
           shiny::textAreaInput(ns("value"), tr(l, "Antworttext", "Response text"), value = old_value, width = "100%")
         } else {
-          shiny::selectInput(ns("value"), tr(l, "Bewertung", "Rating"), c(stats::setNames("", tr(l, "Bitte w\u00e4hlen", "Choose a rating")), stats::setNames(as.character(unlist(scale$values)), as.character(unlist(scale$values)))), selected = old_value)
+          shiny::selectInput(ns("value"), tr(l, "Bewertung", "Rating"), rating_choices(l), selected = old_value)
         },
         if (!is.null(scale$anchors)) shiny::tags$p(class = "del-note", paste(names(scale$anchors), unlist(scale$anchors), sep = ": ", collapse = "; "))
       )
@@ -272,41 +295,130 @@ rating_server <- function(id, q, item, lang, call) {
       if (scale$type == "free_text") {
         shiny::updateTextAreaInput(session, "value", label = tr(lang(), "Antworttext", "Response text"))
       } else {
-        shiny::updateSelectInput(session, "value", label = tr(lang(), "Bewertung", "Rating"), choices = c(stats::setNames("", tr(lang(), "Bitte w\u00e4hlen", "Choose a rating")), stats::setNames(as.character(unlist(scale$values)), as.character(unlist(scale$values)))), selected = if (is.null(input$value)) old_value else input$value)
+        shiny::updateSelectInput(session, "value", label = tr(lang(), "Bewertung", "Rating"), choices = rating_choices(lang()), selected = if (is.null(input$value)) old_value else input$value)
       }
-      shiny::updateActionButton(session, "save", label = tr(lang(), "Antwort speichern", "Save response"))
+      shiny::updateActionButton(session, "save", label = tr(lang(), "Jetzt speichern", "Save now"))
+    })
+    # Entering a value means answering; choosing a special response clears it.
+    # The pair shown on screen is therefore always the pair that is stored.
+    shiny::observeEvent(input$value, {
+      if (nzchar(input$value) && !is.null(input$kind) && input$kind != "answered") shiny::updateSelectInput(session, "kind", selected = "answered")
+    })
+    shiny::observeEvent(input$kind, {
+      if (input$kind != "answered" && !is.null(input$value) && nzchar(input$value)) {
+        if (scale$type == "free_text") shiny::updateTextAreaInput(session, "value", value = "") else shiny::updateSelectInput(session, "value", selected = "")
+      }
     })
     current <- shiny::reactive({
-      list(status = if (is.null(input$kind)) old_status else input$kind, value = if (is.null(input$value)) old_value else input$value)
+      status <- if (is.null(input$kind)) old_status else input$kind
+      value <- if (is.null(input$value)) old_value else input$value
+      # A value shown beside a special response is never part of the answer.
+      list(status = status, value = if (identical(status, "answered")) value else "")
     })
     dirty <- shiny::reactive(!identical(current(), baseline()))
+    complete <- shiny::reactive(current()$status != "answered" || nzchar(trimws(current()$value)))
     output$save_status <- shiny::renderUI({
-      tone <- if (dirty() || save_failed()) "attention" else if (revision() > 0) "saved" else "neutral"
-      shiny::tags$div(class = paste("del-status", paste0("del-status--", tone)),
-        role = "status", `aria-live` = "polite", shiny::textOutput(session$ns("status")))
+      tone <- if (dirty() || save_failed() || conflict()) "attention" else if (revision() > 0) "saved" else "neutral"
+      shiny::tags$div(
+        class = paste("del-status", paste0("del-status--", tone)),
+        role = "status", `aria-live` = "polite", shiny::textOutput(session$ns("status"))
+      )
     })
-    output$status <- shiny::renderText(if (dirty()) paste(tr(lang(), "Ungespeicherte \u00c4nderung.", "Unsaved change."), if (save_failed()) localize_status(message(), lang()) else "") else if (nzchar(message())) localize_status(message(), lang()) else if (revision() > 0) tr(lang(), "Gespeicherter Stand", "Saved response") else tr(lang(), "Noch nicht gespeichert", "Not yet saved"))
+    output$status <- shiny::renderText({
+      if (conflict()) {
+        return(localize_status(message(), lang()))
+      }
+      if (dirty()) {
+        return(paste(
+          tr(lang(), "Ungespeicherte \u00c4nderung.", "Unsaved change."),
+          if (save_failed()) {
+            localize_status(message(), lang())
+          } else if (!complete()) {
+            if (scale$type == "free_text") tr(lang(), "Bitte Text eingeben oder einen anderen Antworttyp angeben.", "Enter text or select another response type.") else tr(lang(), "Bitte eine Bewertung w\u00e4hlen oder einen anderen Antworttyp angeben.", "Choose a rating or select another response type.")
+          } else {
+            ""
+          }
+        ))
+      }
+      if (nzchar(message())) localize_status(message(), lang()) else if (revision() > 0) tr(lang(), "Gespeicherter Stand", "Saved response") else tr(lang(), "Noch nicht gespeichert", "Not yet saved")
+    })
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
-    shiny::observeEvent(input$save, {
-      a <- current()
+    save_now <- function() {
+      a <- shiny::isolate(current())
+      if (locked || !shiny::isolate(dirty())) {
+        return(!shiny::isolate(dirty()))
+      }
+      if (!shiny::isolate(complete())) {
+        return(FALSE)
+      }
       value <- if (a$status != "answered") NULL else if (scale$type == "free_text") a$value else suppressWarnings(as.numeric(a$value))
+      expected <- shiny::isolate(revision())
+      # An identical retry reuses its key, so a save whose reply was lost
+      # returns the original receipt instead of a false conflict.
+      attempt <- list(payload = a, revision = expected)
+      key <- if (!is.null(last_attempt) && identical(last_attempt$attempt, attempt)) last_attempt$key else command_id()
+      last_attempt <<- list(attempt = attempt, key = key)
       message(tr(lang(), "Wird gespeichert \u2026", "Saving \u2026"))
       tryCatch(
         {
-          r <- call("save_response", q$enrollment$id, item$id, list(value = value, status = a$status), revision(), command_id())
+          r <- call("save_response", q$enrollment$id, item$id, list(value = value, status = a$status), expected, key)
           save_failed(FALSE)
+          conflict(FALSE)
           revision(r$revision)
           baseline(a)
           answered(a$status != "not_answered")
           message(paste(tr(lang(), "Gespeichert:", "Saved:"), r$saved_at))
+          TRUE
         },
         error = function(e) {
           save_failed(TRUE)
+          if (inherits(e, "DEL_CONFLICT")) conflict(TRUE)
+          if (inherits(e, "DEL_ROUND_CLOSED")) closed(TRUE)
           message(safe_error(e, lang()))
+          FALSE
         }
       )
+    }
+    shiny::observeEvent(input$save, {
+      if (shiny::isolate(dirty()) && !shiny::isolate(complete())) {
+        return()
+      }
+      save_now()
     })
-    list(dirty = dirty, revision = revision, answered = answered)
+    if (is.numeric(autosave_ms) && length(autosave_ms) == 1L && autosave_ms > 0 && !locked) {
+      settled <- shiny::debounce(current, autosave_ms)
+      shiny::observeEvent(current(), {
+        if (awaiting_loaded && !dirty()) awaiting_loaded <<- FALSE
+      })
+      shiny::observeEvent(settled(), {
+        # Save only the settled state the person still sees, never a stale one.
+        if (!awaiting_loaded && identical(settled(), shiny::isolate(current())) && !shiny::isolate(conflict()) && !shiny::isolate(closed())) save_now()
+      }, ignoreInit = TRUE)
+    }
+    output$conflict <- shiny::renderUI({
+      shiny::req(conflict())
+      shiny::actionButton(session$ns("reload"), tr(lang(), "Gespeicherten Stand laden und meine Eingabe verwerfen", "Load the saved response and discard my entry"), class = "btn-outline-danger")
+    })
+    shiny::observeEvent(input$reload, {
+      shiny::req(conflict())
+      tryCatch(
+        {
+          fresh <- stored(call("get_questionnaire", q$enrollment$id)$responses)
+          revision(fresh$revision)
+          baseline(list(status = fresh$status, value = fresh$value))
+          awaiting_loaded <<- !identical(shiny::isolate(current()), list(status = fresh$status, value = fresh$value))
+          answered(fresh$status != "not_answered")
+          shiny::updateSelectInput(session, "kind", selected = fresh$status)
+          if (scale$type == "free_text") shiny::updateTextAreaInput(session, "value", value = fresh$value) else shiny::updateSelectInput(session, "value", selected = fresh$value)
+          last_attempt <<- NULL
+          save_failed(FALSE)
+          conflict(FALSE)
+          message(tr(lang(), "Gespeicherter Stand geladen.", "Saved response loaded."))
+        },
+        error = function(e) message(safe_error(e, lang()))
+      )
+    })
+    list(dirty = dirty, revision = revision, answered = answered, save_now = save_now, conflict = conflict)
   })
 }
 response_choices <- function(scale, lang) {

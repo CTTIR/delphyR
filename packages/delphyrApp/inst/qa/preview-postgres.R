@@ -39,9 +39,12 @@ runtime <- do.call(delphyr::connect_repository, c(connection, list(
   user = Sys.getenv("DELPHYR_DB_RUNTIME", "delphyr_runtime")
 )))
 actor <- delphyr::demo_actor(runtime, fixture$panel[[1]]$principal_id)
+# The scripted checks that use this host verify pending and explicitly saved
+# states, so automatic saving is off unless a delay is requested.
+autosave <- as.numeric(Sys.getenv("DELPHYR_QA_AUTOSAVE_MS", "0"))
 tryCatch(
   shiny::runApp(
-    delphyrApp::run_app(runtime, actor, language = "en"),
+    delphyrApp::run_app(runtime, actor, language = "en", autosave_ms = autosave),
     host = "127.0.0.1", port = 3868L, launch.browser = FALSE
   ),
   finally = DBI::dbDisconnect(runtime$con)

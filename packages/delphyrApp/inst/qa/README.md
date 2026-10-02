@@ -289,3 +289,34 @@ resulting study access, both viewport widths, and independent database reads.
 The invitee identity comes from the gateway adapter with a synthetic trusted
 request; this is not an OIDC gateway qualification. Host logs are written to
 ignored `.checks/invitation-*.log` and are scanned for the token and secret.
+
+## Automatic saving, two tabs and connection loss
+
+`browser-autosave-postgres.R` starts its own panel host with the default
+automatic saving and passed on 2 October 2026 in Chromium against PostgreSQL
+with the restricted runtime role:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-autosave-postgres.R
+```
+
+- A rating chosen without touching the response type became an answer and was
+  committed as revision 1 without any button; the status read *Unsaved change*
+  until the commit, then *Saved* with the server time.
+- A changed rating stayed unsaved until its own commit (revision 2). A special
+  response cleared the rating shown beside it and was stored without a value.
+- A second tab of the same person committed a newer revision. The first tab's
+  stale entry produced a conflict, created no revision, and stopped further
+  automatic attempts. Only the explicit *Load the saved response* action replaced
+  the entry, and no revision was created by it.
+- After an entry made while Chromium went offline and the WebSocket closed, the
+  alert stated that changes are not being saved, the field confirmation was
+  hidden, the database was unchanged, and a reload showed the committed value.
+- Submitting immediately after a new entry saved it first (revision 4) and the
+  submission referenced exactly that revision. Audit save events equalled the
+  committed revisions.
+
+`preview-postgres.R` and `preview.R` run with explicit saving
+(`autosave_ms = 0`) because the earlier scripts check pending and explicitly
+saved states; set `DELPHYR_QA_AUTOSAVE_MS` to change that host. This remains a
+narrow tested scenario on one browser, not an offline editor.

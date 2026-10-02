@@ -35,21 +35,21 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
       shiny::tags$section(
         class = "del-sheet",
         shiny::tags$h2(tr(l, "Einladungen und Kontobindung", "Invitations and account binding")),
-        shiny::tags$p(class = "del-banner", tr(l, "Jede Einladung ist an genau ein verifiziertes Konto gebunden (Aussteller und Subject des Identitätsanbieters). Eine E-Mail-Adresse wählt kein Konto aus. Es wird keine E-Mail versendet.", "Each invitation is bound to exactly one verified account (identity-provider issuer and subject). An email address never selects an account. No email is sent.")),
+        shiny::tags$p(class = "del-banner", tr(l, "Jede Einladung ist an genau ein verifiziertes Konto gebunden (Aussteller und Subject des Identit\u00e4tsanbieters). Eine E-Mail-Adresse w\u00e4hlt kein Konto aus. Es wird keine E-Mail versendet.", "Each invitation is bound to exactly one verified account (identity-provider issuer and subject). An email address never selects an account. No email is sent.")),
         shiny::tableOutput(ns("drafts")),
-        shiny::selectInput(ns("draft"), tr(l, "Einladungsentwurf", "Invitation draft"), if (nrow(open)) stats::setNames(open$draft_id, paste(open$external_ref, "·", open$display_name)) else character(), selected = field("draft", NULL)),
-        shiny::textInput(ns("issuer"), tr(l, "Aussteller (Issuer-URL des Identitätsanbieters)", "Issuer (identity-provider issuer URL)"), value = field("issuer", default_issuer), width = "100%"),
+        shiny::selectInput(ns("draft"), tr(l, "Einladungsentwurf", "Invitation draft"), if (nrow(open)) stats::setNames(open$draft_id, paste(open$external_ref, "\u00b7", open$display_name)) else character(), selected = field("draft", NULL)),
+        shiny::textInput(ns("issuer"), tr(l, "Aussteller (Issuer-URL des Identit\u00e4tsanbieters)", "Issuer (identity-provider issuer URL)"), value = field("issuer", default_issuer), width = "100%"),
         shiny::textInput(ns("subject"), tr(l, "Stabiles Subject des eingeladenen Kontos", "Stable subject of the invited account"), value = field("subject"), width = "100%"),
-        shiny::numericInput(ns("ttl"), tr(l, "Gültigkeit in Minuten (1 bis 1440)", "Validity in minutes (1 to 1440)"), value = field("ttl", 15), min = 1, max = 1440, step = 1),
-        shiny::textAreaInput(ns("reason"), tr(l, "Begründung der Kontobindung", "Account-binding rationale"), value = field("reason"), width = "100%"),
-        shiny::checkboxInput(ns("confirm"), tr(l, "Ich habe geprüft, dass dieses stabile Konto zur eingeladenen Person gehört.", "I verified that this stable account belongs to the invited person."), FALSE),
+        shiny::numericInput(ns("ttl"), tr(l, "G\u00fcltigkeit in Minuten (1 bis 1440)", "Validity in minutes (1 to 1440)"), value = field("ttl", 15), min = 1, max = 1440, step = 1),
+        shiny::textAreaInput(ns("reason"), tr(l, "Begr\u00fcndung der Kontobindung", "Account-binding rationale"), value = field("reason"), width = "100%"),
+        shiny::checkboxInput(ns("confirm"), tr(l, "Ich habe gepr\u00fcft, dass dieses stabile Konto zur eingeladenen Person geh\u00f6rt.", "I verified that this stable account belongs to the invited person."), FALSE),
         shiny::actionButton(ns("issue"), tr(l, "Konto registrieren und Einladung ausstellen", "Register account and issue invitation"), class = "btn-primary"),
         shiny::uiOutput(ns("issued")),
         shiny::tags$details(
           shiny::tags$summary(tr(l, "Ausstehende Einladung widerrufen", "Revoke an outstanding invitation")),
-          shiny::selectInput(ns("outstanding"), tr(l, "Ausstehende Einladung", "Outstanding invitation"), if (nrow(pending)) stats::setNames(pending$invitation_id, paste(pending$external_ref, "·", pending$display_name)) else character(), selected = field("outstanding", NULL)),
-          shiny::textAreaInput(ns("revoke_reason"), tr(l, "Widerrufsbegründung", "Revocation rationale"), value = field("revoke_reason"), width = "100%"),
-          shiny::checkboxInput(ns("revoke_confirm"), tr(l, "Ich möchte diese Einladung widerrufen.", "I want to revoke this invitation."), FALSE),
+          shiny::selectInput(ns("outstanding"), tr(l, "Ausstehende Einladung", "Outstanding invitation"), if (nrow(pending)) stats::setNames(pending$invitation_id, paste(pending$external_ref, "\u00b7", pending$display_name)) else character(), selected = field("outstanding", NULL)),
+          shiny::textAreaInput(ns("revoke_reason"), tr(l, "Widerrufsbegr\u00fcndung", "Revocation rationale"), value = field("revoke_reason"), width = "100%"),
+          shiny::checkboxInput(ns("revoke_confirm"), tr(l, "Ich m\u00f6chte diese Einladung widerrufen.", "I want to revoke this invitation."), FALSE),
           shiny::actionButton(ns("revoke"), tr(l, "Einladung widerrufen", "Revoke invitation"), class = "btn-outline-danger")
         ),
         shiny::actionButton(ns("refresh"), tr(l, "Einladungsstand aktualisieren", "Refresh invitation states")),
@@ -66,7 +66,7 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
           return(NULL)
         }
         x <- data.frame(d$external_ref, d$display_name, d$stakeholder_group, invitation_state_label(d$state, lang()), ifelse(is.na(d$expires_at) | d$state != "outstanding", "", d$expires_at), stringsAsFactors = FALSE)
-        names(x) <- tr(lang(), c("Quellenreferenz", "Anzeigename", "Interessengruppe", "Einladungsstatus", "Gültig bis (UTC)"), c("Source reference", "Display name", "Stakeholder group", "Invitation state", "Valid until (UTC)"))
+        names(x) <- tr(lang(), c("Quellenreferenz", "Anzeigename", "Interessengruppe", "Einladungsstatus", "G\u00fcltig bis (UTC)"), c("Source reference", "Display name", "Stakeholder group", "Invitation state", "Valid until (UTC)"))
         x
       },
       striped = TRUE
@@ -77,7 +77,7 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
       reason <- if (is.null(input$reason)) "" else trimws(input$reason)
       ttl <- suppressWarnings(as.numeric(input$ttl))
       if (!isTRUE(input$confirm) || !nzchar(reason)) {
-        status(tr(lang(), "Begründung und Bestätigung sind erforderlich.", "A reason and confirmation are required."))
+        status(tr(lang(), "Begr\u00fcndung und Best\u00e4tigung sind erforderlich.", "A reason and confirmation are required."))
         return()
       }
       if (length(ttl) != 1L || is.na(ttl) || ttl != floor(ttl) || ttl < 1 || ttl > 1440) stop("Invalid validity")
@@ -90,17 +90,17 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
       shiny::updateCheckboxInput(session, "confirm", value = FALSE)
       shiny::updateTextInput(session, "subject", value = "")
       refresh()
-      status(tr(lang(), "Einladung ausgestellt. Der Übergabecode wird nur jetzt angezeigt.", "Invitation issued. The hand-over code is shown only now."))
+      status(tr(lang(), "Einladung ausgestellt. Der \u00dcbergabecode wird nur jetzt angezeigt.", "Invitation issued. The hand-over code is shown only now."))
     }))
     output$issued <- shiny::renderUI({
       x <- issued()
       shiny::req(x)
       shiny::tags$div(
         class = "del-handover",
-        shiny::tags$h3(tr(lang(), "Übergabecode", "Hand-over code")),
-        shiny::tags$p(tr(lang(), "Geben Sie diesen Code über einen genehmigten privaten Kanal weiter. Er wird nicht gespeichert und kann nicht erneut angezeigt werden.", "Pass this code on through an approved private channel. It is not stored and cannot be displayed again.")),
-        shiny::tags$textarea(id = session$ns("code"), class = "form-control del-code", readonly = "readonly", rows = 3, `aria-label` = tr(lang(), "Übergabecode", "Hand-over code"), x$code),
-        shiny::tags$p(paste(tr(lang(), "Gültig bis (UTC):", "Valid until (UTC):"), x$expires_at)),
+        shiny::tags$h3(tr(lang(), "\u00dcbergabecode", "Hand-over code")),
+        shiny::tags$p(tr(lang(), "Geben Sie diesen Code \u00fcber einen genehmigten privaten Kanal weiter. Er wird nicht gespeichert und kann nicht erneut angezeigt werden.", "Pass this code on through an approved private channel. It is not stored and cannot be displayed again.")),
+        shiny::tags$textarea(id = session$ns("code"), class = "form-control del-code", readonly = "readonly", rows = 3, `aria-label` = tr(lang(), "\u00dcbergabecode", "Hand-over code"), x$code),
+        shiny::tags$p(paste(tr(lang(), "G\u00fcltig bis (UTC):", "Valid until (UTC):"), x$expires_at)),
         shiny::actionButton(session$ns("hide"), tr(lang(), "Code ausblenden", "Hide code"))
       )
     })
@@ -109,7 +109,7 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
       shiny::req(allowed(), input$outstanding)
       reason <- if (is.null(input$revoke_reason)) "" else trimws(input$revoke_reason)
       if (!isTRUE(input$revoke_confirm) || !nzchar(reason)) {
-        status(tr(lang(), "Begründung und Bestätigung sind erforderlich.", "A reason and confirmation are required."))
+        status(tr(lang(), "Begr\u00fcndung und Best\u00e4tigung sind erforderlich.", "A reason and confirmation are required."))
         return()
       }
       call("revoke_panel_invitation", study(), input$outstanding, reason, command_id())
@@ -143,7 +143,7 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
     previewed <- shiny::reactiveVal(NULL)
     receipt <- shiny::reactiveVal(NULL)
     status <- shiny::reactiveVal("")
-    unavailable <- function() status(tr(lang(), "Diese Einladung ist für Ihr Konto nicht verfügbar. Sie kann abgelaufen, widerrufen, bereits verwendet oder für ein anderes Konto ausgestellt sein. Wenden Sie sich an die Studienleitung.", "This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team."))
+    unavailable <- function() status(tr(lang(), "Diese Einladung ist f\u00fcr Ihr Konto nicht verf\u00fcgbar. Sie kann abgelaufen, widerrufen, bereits verwendet oder f\u00fcr ein anderes Konto ausgestellt sein. Wenden Sie sich an die Studienleitung.", "This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team."))
     output$body <- shiny::renderUI({
       shiny::req(ready)
       ns <- session$ns
@@ -151,9 +151,9 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
       shiny::tags$section(
         class = "del-sheet",
         shiny::tags$h2(tr(l, "Einladung annehmen", "Accept an invitation")),
-        shiny::tags$p(tr(l, "Geben Sie den Übergabecode ein, den Sie von der Studienkoordination erhalten haben. Die Prüfung ändert nichts. Erst Ihre ausdrückliche Bestätigung nimmt Sie in das Panel auf; Einwilligung und Antworten bleiben eigene Schritte.", "Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.")),
-        shiny::passwordInput(ns("code"), tr(l, "Übergabecode", "Hand-over code"), value = shiny::isolate(if (is.null(input$code)) "" else input$code), width = "100%"),
-        shiny::actionButton(ns("check"), tr(l, "Einladung prüfen", "Check invitation")),
+        shiny::tags$p(tr(l, "Geben Sie den \u00dcbergabecode ein, den Sie von der Studienkoordination erhalten haben. Die Pr\u00fcfung \u00e4ndert nichts. Erst Ihre ausdr\u00fcckliche Best\u00e4tigung nimmt Sie in das Panel auf; Einwilligung und Antworten bleiben eigene Schritte.", "Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.")),
+        shiny::passwordInput(ns("code"), tr(l, "\u00dcbergabecode", "Hand-over code"), value = shiny::isolate(if (is.null(input$code)) "" else input$code), width = "100%"),
+        shiny::actionButton(ns("check"), tr(l, "Einladung pr\u00fcfen", "Check invitation")),
         shiny::uiOutput(ns("preview")),
         status_ui(ns("status"))
       )
@@ -188,7 +188,7 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
           p <- call("preview_panel_invitation", x$study_id, x$invitation_id, x$token)
           # One idempotency key per previewed invitation makes a lost reply retryable.
           previewed(list(code = x, preview = p, key = command_id()))
-          status(tr(lang(), "Einladung geprüft. Noch keine Teilnahme angelegt.", "Invitation checked. No participation has been created yet."))
+          status(tr(lang(), "Einladung gepr\u00fcft. Noch keine Teilnahme angelegt.", "Invitation checked. No participation has been created yet."))
         },
         error = function(e) unavailable()
       )
@@ -203,8 +203,8 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
       ns <- session$ns
       shiny::tagList(
         shiny::tags$h3(x$preview$study_title),
-        shiny::tags$p(paste(tr(lang(), "Gültig bis (UTC):", "Valid until (UTC):"), x$preview$expires_at)),
-        shiny::checkboxInput(ns("confirm"), tr(lang(), "Ich möchte mit meinem angemeldeten Konto dem Panel dieser Studie beitreten.", "I want to join this study's panel with my signed-in account."), FALSE),
+        shiny::tags$p(paste(tr(lang(), "G\u00fcltig bis (UTC):", "Valid until (UTC):"), x$preview$expires_at)),
+        shiny::checkboxInput(ns("confirm"), tr(lang(), "Ich m\u00f6chte mit meinem angemeldeten Konto dem Panel dieser Studie beitreten.", "I want to join this study's panel with my signed-in account."), FALSE),
         shiny::actionButton(ns("accept"), tr(lang(), "Einladung verbindlich annehmen", "Accept invitation"), class = "btn-primary")
       )
     })
@@ -212,7 +212,7 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
       x <- previewed()
       shiny::req(ready, x)
       if (!isTRUE(input$confirm)) {
-        status(tr(lang(), "Bitte die Annahme ausdrücklich bestätigen.", "Explicitly confirm acceptance first."))
+        status(tr(lang(), "Bitte die Annahme ausdr\u00fccklich best\u00e4tigen.", "Explicitly confirm acceptance first."))
         return()
       }
       tryCatch(
@@ -221,7 +221,7 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
           receipt(result)
           previewed(NULL)
           shiny::updateTextInput(session, "code", value = "")
-          status(tr(lang(), "Sie sind dem Panel beigetreten. Wählen Sie die Studie aus, um fortzufahren.", "You joined the panel. Select the study to continue."))
+          status(tr(lang(), "Sie sind dem Panel beigetreten. W\u00e4hlen Sie die Studie aus, um fortzufahren.", "You joined the panel. Select the study to continue."))
           on_accepted(x$code$study_id)
         },
         error = function(e) unavailable()

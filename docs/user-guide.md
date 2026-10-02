@@ -47,11 +47,18 @@ and panel sessions. In the panel view, choose a study and assigned round, read
 the stored information, and record consent explicitly. Ratings start without
 a preselected value. Choose allowed special responses separately.
 
-Save each field explicitly. Only a returned revision and server timestamp
-establish a confirmed save. Errors retain the pending value; a revision conflict
-requires reloading and reviewing the server state. Save pending changes before
-final submission. Successful submission returns a durable receipt and ends
-editing for that round.
+A settled, complete entry is saved automatically about 1.5 seconds after the
+last change; **Save now** saves it immediately. Choosing a rating selects the
+response type *Give a response*; choosing a special response clears the rating.
+An answer without a rating or text is incomplete and is not saved. Only a
+returned revision and server timestamp establish a confirmed save; until then
+the field reads *Unsaved change*. Errors retain the pending value and are not
+retried in the background. A revision conflict, for example from a second tab,
+stops automatic saving for that field. *Load the saved response and discard my
+entry* replaces the entry with the stored response; nothing is overwritten
+automatically. Final submission first saves complete pending entries and is
+refused while any field is unconfirmed. Successful submission returns a durable
+receipt and ends editing for that round.
 
 A disconnected browser must not imply successful saving. The tested reload
 path restores the last committed value; unsaved text is not an offline backup.

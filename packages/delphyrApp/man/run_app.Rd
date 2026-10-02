@@ -10,7 +10,8 @@ run_app(
   language = c("en", "fr", "de"),
   services = NULL,
   actor_factory = NULL,
-  repo_factory = NULL
+  repo_factory = NULL,
+  autosave_ms = 1500
 )
 }
 \arguments{
@@ -28,15 +29,19 @@ session identity independently. Mutually exclusive with actor.}
 
 \item{repo_factory}{Optional function creating a repository for each session;
 its DBI connection is closed when the session ends.}
+
+\item{autosave_ms}{Pause in milliseconds after which a settled, complete
+response is saved automatically. 0 leaves only the explicit save button.}
 }
 \value{
 A shiny.appobj, runnable with shiny::runApp().
 }
 \description{
 The hosting application must resolve the actor on the server. Never derive
-the actor from an input, URL parameter or a browser-supplied role. This P0
-interface uses explicit saves; autosave, production authentication, mail,
-and deployment qualification are outside this interface's acceptance scope.
+the actor from an input, URL parameter or a browser-supplied role. Responses
+are saved automatically after a short pause; only a committed revision is
+shown as saved. Production authentication, external mail and deployment
+qualification are outside this interface's acceptance scope.
 }
 \examples{
 if (interactive() && FALSE) {
