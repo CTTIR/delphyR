@@ -1,6 +1,6 @@
 # Requirements matrix
 
-As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical component, not institutional study approval. Historical browser language evidence is DE/EN; the en/fr/de expansion requires its own current-source checks.
+As of 2026-10-02. `implemented_tested` denotes the evidenced synthetic technical component, not institutional study approval. Historical browser language evidence is DE/EN; the en/fr/de expansion requires its own current-source checks.
 
 | ID | Status | Evidence / boundary |
 |---|---|---|
@@ -21,7 +21,7 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | RSP-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | RSP-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | RSP-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
-| RSP-04 | in_progress | Actual browser: network-loss save remains unconfirmed; reload restores last revision. Autosave remains open. |
+| RSP-04 | implemented_tested | Settled entries are saved automatically and marked saved only after the commit; an entry made offline stays visibly unconfirmed and uncommitted, is saved after reconnection, and reload restores the last committed revision (ADR-019, Chromium against PostgreSQL). |
 | ANA-01 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | ANA-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | ANA-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
@@ -32,7 +32,7 @@ As of 2026-09-25. `implemented_tested` denotes the evidenced synthetic technical
 | FDB-03 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | QUA-01 | implemented_tested | Original, redaction, summary and release are separate and immutable; only independently released versions reach feedback and exports; released feedback is corrected by a new version. |
 | QUA-02 | implemented_tested | Several sources per item and several items per source; the exploratory path from free-text round to rating round runs through the interface. |
-| COM-01 | in_progress | Exact approval/outbox tested in local sink; provider/contact integration remains open. |
+| COM-01 | implemented_tested | Exact preview and approval, send time, quiet hours, reminder limits, delivery states and human resolution of uncertain delivery, in the local sink and through the adapter contract with test doubles. No production provider adapter is shipped or approved. |
 | COM-02 | implemented_tested | Actual service/database or independent method tests; see validation report. |
 | EXP-01 | implemented_tested | Research, summary, audit and contact profiles with separate rights; canary tests for originals, contacts and account references; released redactions only. Public release is refused by design. |
 | EXP-02 | implemented_tested | Study report across rounds with versions, hashes, limitations and versioned author-supplied documentation; offline reproduction of analyses and comparisons. Institutional content of the documentation remains the study team's. |

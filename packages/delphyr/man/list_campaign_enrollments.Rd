@@ -14,7 +14,8 @@ list_campaign_enrollments(repo, actor, round_id)
 \item{round_id}{Round UUID.}
 }
 \value{
-Enrollment UUID, study pseudonym and participation state.
+Enrollment UUID, study pseudonym, participation state and the
+  number of approved reminders that count against the protocol's limit.
 }
 \description{
 Preview eligible campaign selection fields without contacts or answers

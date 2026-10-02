@@ -50,7 +50,8 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       "list_audit_events", "get_study_documentation", "record_study_documentation", "record_item_comparability", "get_item_comparability",
       "request_study_export", "write_participant_feedback", "get_account_rights", "create_study", "publish_consent", "list_study_staff",
       "register_staff_account", "set_capability", "list_panel", "set_panel_group", "record_item_decision", "list_item_decisions",
-      "list_contribution_rounds", "import_round_contributions", "list_released_edits", "list_released_feedback", "release_feedback_correction"
+      "list_contribution_rounds", "import_round_contributions", "list_released_edits", "list_released_feedback", "release_feedback_correction",
+      "list_uncertain_deliveries", "resolve_delivery", "get_operations_status"
     )
     services <- stats::setNames(lapply(n, function(x) getExportedValue("delphyr", x)), n)
   }

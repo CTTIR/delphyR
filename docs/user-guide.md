@@ -140,11 +140,17 @@ sign-in, the invited person checks the code, confirms explicitly and joins the
 panel; consent and responses remain separate steps. See [invitations](invitations.md).
 
 Campaigns select a round, purpose, exact study pseudonyms, and final text. Approval
-requires review of that frozen preview and a reason. Changed text or recipients
-need a new preview. The worker writes only local database sink receipts and
-suppresses obsolete reminders, withdrawals, and cancelled campaigns.
-`sink_recorded` is not an external delivery confirmation; `delivery_unknown` is
-not automatically retried. See [communications](communications.md).
+requires review of that frozen preview and a reason, and may state the earliest
+send time with its timezone. The preview shows the protocol's quiet hours and
+reminder limits and each person's reminder count; a reminder that would exceed
+a limit for anyone is refused, and you select the recipients again. Changed text
+or recipients need a new preview. The worker writes only local database sink
+receipts and suppresses obsolete reminders, withdrawals, and cancelled campaigns.
+`sink_recorded` is not an external delivery confirmation. A `delivery_unknown`
+message is never repeated automatically: under *Resolve uncertain deliveries*
+you record, with a rationale, that delivery was confirmed, that it is queued
+again with a possible duplicate, or that it is abandoned. See
+[communications](communications.md).
 
 ## Document the study and decide comparability
 

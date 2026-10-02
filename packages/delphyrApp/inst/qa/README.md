@@ -448,3 +448,25 @@ The free-text round itself is conducted through the services. In the browser:
   unchanged, the first display event referred to the earlier version and the
   last to the correction, and all three releases were made by a different
   account than the edits.
+
+## Campaign rules, send time and uncertain delivery
+
+`browser-communications-postgres.R` passed on 2 October 2026 in Chromium against
+PostgreSQL; the worker was stepped under the restricted runtime role:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-communications-postgres.R
+```
+
+- The preview showed the protocol's quiet hours and the limit of one reminder;
+  the recipient list showed each person's reminder count. An approved reminder
+  to two people was recorded in the local sink.
+- A second reminder to the same people was refused with the limit named and
+  created no approval and no message.
+- A send time without a timezone was refused. With a time one hour ahead the
+  campaign was approved and its message stayed queued when the worker ran.
+- A claim was let expire as after a worker crash: the delivery became
+  uncertain and was not repeated. Resolution without a rationale was refused;
+  with rationale and confirmation it was abandoned and recorded.
+- The status of background work listed message states without contacts or
+  account references. No external message was sent at any point.

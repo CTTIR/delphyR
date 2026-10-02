@@ -1,12 +1,16 @@
 A changed item version interrupts the paired comparison between rounds. Only an explicit, reasoned decision permits it. A later decision for the same pair of versions supersedes the earlier one; the history is kept.
 A reason and confirmation are required.
 A required group has fewer enrolled members than the minimum valid n; its results would be insufficient data.
+A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.
 A text and confirmation are required.
 A valid synthetic .invalid email is required
+Abandon, do not send
+Abandoned
 Abstain
 Accept an invitation
 Accept invitation
 Accepted
+Accepted by the provider
 ACCORD/CREDES review
 Account
 Account-binding rationale
@@ -18,6 +22,7 @@ agreement
 Amendments apply only to future rounds. Existing rounds and frozen data retain their original protocol. This technical approval does not replace institutional or ethics approval.
 An item lacks an approved language version.
 An item uses a dimension or scale that the protocol does not define.
+An uncertain delivery is never repeated automatically, because the message may already have arrived. Check with the provider whether it was accepted. Queuing it again can lead to a duplicate message.
 Analysed
 Analysis
 Analysis and subsequent round
@@ -31,6 +36,7 @@ Approve local test receipts
 Approve new protocol version
 Approved
 Approved for local test receipts
+Approved from (UTC):
 Approved. No email will be sent.
 Assess evidence together
 Assign to selected subsequent round
@@ -112,6 +118,9 @@ Decision
 Decision rationale
 Definition and coding rule
 Delimiter
+Delivery confirmed
+Delivery confirmed, do not send again
+Delivery decision saved.
 Derivation rationale
 Design
 Detail
@@ -135,6 +144,7 @@ Each published version is immutable. A round refers to exactly one version; chan
 Each submitted free-text answer is preserved as an immutable original source, without a pseudonym. Answers already taken over are skipped. Participants see only versions that another person has released.
 Earlier item version
 Earlier version
+Earliest time with timezone (empty: now)
 Edited text
 Editorial records exported
 Editorial records read
@@ -152,6 +162,7 @@ Enroll eligible panel members
 Enrolled panel members
 Enter text or select another response type.
 Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.
+Error code
 events shown.
 Events, approvals and rationales without response content, contacts or editorial originals.
 Every frozen round with pseudonyms, decisions, lineage and reviewed editorial versions. Pseudonyms are not anonymous. Unredacted free text, contacts and account mappings are excluded.
@@ -164,14 +175,17 @@ Explicitly confirm acceptance first.
 Explicitly confirm the protocol first.
 Explicitly confirm withdrawal first.
 Explicitly confirm your entitlement first.
+Export
 Export downloaded
 Export profile
 Export queued. Check the operation.
 Export requested
 Exports
 Failed
+Failed, not sent
 Feedback assigned
 Feedback assigned.
+Feedback corrected
 Feedback created for review.
 Feedback displayed
 Feedback downloaded
@@ -187,6 +201,7 @@ Finalize
 Finalized
 Finding
 Free-text answers
+Free-text contributions taken over
 Freeze round
 Frozen
 Frozen round
@@ -201,6 +216,7 @@ Hide code
 History
 History and approvals
 I am entitled to receive these data and will handle the file according to its purpose.
+I checked this delivery and understand the consequence of my decision.
 I confirm the displayed relationship.
 I consent to the displayed study information.
 I independently reviewed this exact version.
@@ -285,11 +301,18 @@ Local test receipts only. This application sends no email. Recipients are repres
 Manage the protocol, rounds and independent reviews. Choose a study section to prepare the next step.
 Maximum number of events (newest first)
 Maximum number of rounds
+Maximum reminders per person and round:
 Merge
+Message accepted by the provider
+Message failed
 Message language
+Message outcome unknown
+Message retry scheduled
 Message suppressed
 Message type
+Messages
 Methodological interpretation
+Minimum hours between reminders:
 Minimum valid n
 Moderated summary (not a quotation):
 My participation
@@ -310,13 +333,18 @@ No partial import: the entire file remains blocked.
 No released feedback is assigned to this round.
 Normalized email
 Not applicable
+Not approved: at least one person has reached the maximum number of reminders for this round. Select the recipients again.
+Not approved: the minimum interval since the previous reminder has not passed for at least one person. Choose a later time or other recipients.
+Not approved: the time needs a timezone, must not be in the past and at most 90 days ahead.
 Not comparable
 Not yet issued
 Not yet saved
 Note
 Note for participants
 Object
+Oldest waiting (s)
 Open
+Operation
 Operation:
 optional
 Original source preserved
@@ -341,6 +369,7 @@ Participation ended. Saved data are retained. Receipt:
 Pass this code on through an approved private channel. It is not stored and cannot be displayed again.
 Pending
 Pending receipts cancelled. Existing receipts are preserved.
+Permanently failed
 Prepare a new round
 Prepare round
 Preserve original
@@ -362,6 +391,7 @@ Protocol is valid. No study has been created yet.
 Protocol validated. No new version has been saved.
 Protocol version
 Protocol versions
+Provider
 Pseudonym
 Pseudonymized research data
 Publish a new version
@@ -369,10 +399,13 @@ Publish study information
 Publish the study information under Setup first.
 Qualitative content enters feedback only as a version that another person has released. Summaries are labelled as such, never as quotations.
 Qualitative editorial work
+Queue again, a duplicate is possible
 Queued
+Quiet hours:
 Rate again
 Rating
 Rationale
+Rationale and how it was checked
 Rationale for the change of rights
 Rationale for the comparability decision
 Rationale for the correction (internal)
@@ -409,6 +442,7 @@ Released previous-round feedback:
 Released versions for this feedback
 Released versions of the corrected version
 Reminder
+reminders:
 Remove
 replaced
 Reports never invent statements on authorship, funding, conflicts of interest, approvals, interpretation or deviations. Enter the study team’s own statements here. Empty topics appear in reports as not documented. Recording a reference to an approval does not grant one.
@@ -418,6 +452,7 @@ Request the exports your role permits. Every retrieval is checked and recorded.
 required
 Requirement
 Research data export
+Resolve uncertain deliveries
 response fields confirmed saved.
 Response saved
 Response text
@@ -459,6 +494,7 @@ Save all changes and confirm submission first.
 Save coding decision
 Save comparability decision
 Save consent
+Save decision
 Save each response and review the confirmed answers before explicitly submitting your round.
 Save each response field explicitly. Saving is not automatic.
 Save item decision
@@ -480,6 +516,7 @@ Semicolon
 Setup
 Severity
 Show history
+Show status
 Snapshot confirmed.
 Source for redaction, coding and item linkage
 Source reference
@@ -488,6 +525,7 @@ Specify another account
 Split
 Stable subject of the invited account
 Staff account
+Staff account registered
 Stakeholder group
 Stakeholder group changed
 Stakeholder group changed. Earlier rounds are unchanged.
@@ -496,6 +534,7 @@ Stakeholder groups
 State
 State change confirmed.
 Status
+Status of background work
 Study
 Study code
 Study completed
@@ -569,6 +608,8 @@ Transition
 Unable to judge
 Unanswered
 unbound invitation drafts.
+Uncertain delivery
+Uncertain delivery resolved
 Unsaved change.
 Upload a complete study protocol as JSON. It is validated and displayed; only your confirmation creates the study with protocol version 1. Thresholds are methodological decisions of the study team. Only synthetic studies are permitted in this development environment.
 Valid until (UTC)
@@ -585,6 +626,7 @@ Version type
 View analysis
 View restricted original text
 View the analysis of the selected round first.
+Waiting to retry
 Withdrawn (never opened)
 Wording
 Worker, approved by

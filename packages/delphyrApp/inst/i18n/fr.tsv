@@ -591,3 +591,45 @@ This feedback was corrected.	Ce retour a été corrigé.
 Released contributions of the previous round	Contributions publiées du tour précédent
 Moderated summary (not a quotation):	Synthèse modérée (pas une citation) :
 Redacted contribution:	Contribution révisée :
+Earliest time with timezone (empty: now)	Heure la plus proche avec fuseau horaire (vide : maintenant)
+Resolve uncertain deliveries	Régler les remises incertaines
+An uncertain delivery is never repeated automatically, because the message may already have arrived. Check with the provider whether it was accepted. Queuing it again can lead to a duplicate message.	Une remise incertaine n’est jamais répétée automatiquement, car le message a peut-être déjà été reçu. Vérifiez auprès du prestataire s’il a été accepté. Le remettre en file d’attente peut entraîner un message en double.
+Uncertain delivery	Remise incertaine
+Delivery confirmed, do not send again	Remise confirmée, ne pas renvoyer
+Queue again, a duplicate is possible	Remettre en file d’attente, un doublon est possible
+Abandon, do not send	Abandonner, ne pas envoyer
+Rationale and how it was checked	Justification et mode de vérification
+I checked this delivery and understand the consequence of my decision.	J’ai vérifié cette remise et je comprends la conséquence de ma décision.
+Save decision	Enregistrer la décision
+Provider	Prestataire
+Delivery decision saved.	Décision de remise enregistrée.
+reminders:	rappels :
+Quiet hours:	Heures de silence :
+Maximum reminders per person and round:	Nombre maximal de rappels par personne et par tour :
+Minimum hours between reminders:	Nombre minimal d’heures entre les rappels :
+Approved from (UTC):	Approuvé à partir de (UTC) :
+Not approved: at least one person has reached the maximum number of reminders for this round. Select the recipients again.	Non approuvé : au moins une personne a atteint le nombre maximal de rappels pour ce tour. Sélectionnez de nouveau les destinataires.
+Not approved: the minimum interval since the previous reminder has not passed for at least one person. Choose a later time or other recipients.	Non approuvé : l’intervalle minimal depuis le rappel précédent n’est pas écoulé pour au moins une personne. Choisissez une heure ultérieure ou d’autres destinataires.
+Not approved: the time needs a timezone, must not be in the past and at most 90 days ahead.	Non approuvé : l’heure doit comporter un fuseau horaire, ne doit pas être passée et ne doit pas dépasser 90 jours.
+Accepted by the provider	Accepté par le prestataire
+Failed, not sent	Échec, non envoyé
+Delivery confirmed	Remise confirmée
+Abandoned	Abandonné
+Message accepted by the provider	Message accepté par le prestataire
+Message failed	Échec du message
+Message retry scheduled	Nouvelle tentative du message planifiée
+Message outcome unknown	Résultat du message inconnu
+Uncertain delivery resolved	Remise incertaine réglée
+Staff account registered	Compte de l’équipe enregistré
+Free-text contributions taken over	Contributions en texte libre reprises
+Feedback corrected	Retour corrigé
+Status of background work	État des traitements en arrière-plan
+A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.	Un processus distinct traite les analyses, les exports et les messages approuvés. Signalez à l’exploitant les longues attentes ou les opérations définitivement échouées.
+Show status	Afficher l’état
+Export	Export
+Operation	Opération
+Oldest waiting (s)	Attente la plus longue (s)
+Error code	Code d’erreur
+Messages	Messages
+Waiting to retry	En attente d’une nouvelle tentative
+Permanently failed	Échec définitif

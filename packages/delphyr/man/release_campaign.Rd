@@ -4,7 +4,15 @@
 \alias{release_campaign}
 \title{Release an exact synthetic campaign and atomically create its outbox}
 \usage{
-release_campaign(repo, actor, campaign_id, expected_hash, reason, command_id)
+release_campaign(
+  repo,
+  actor,
+  campaign_id,
+  expected_hash,
+  reason,
+  command_id,
+  not_before = NULL
+)
 }
 \arguments{
 \item{repo}{Repository.}
@@ -18,10 +26,18 @@ release_campaign(repo, actor, campaign_id, expected_hash, reason, command_id)
 \item{reason}{Human approval rationale.}
 
 \item{command_id}{Idempotency key.}
+
+\item{not_before}{Earliest send time with an explicit offset, for example
+"2026-10-05T09:00:00+02:00"; NULL means now. At most 90 days ahead.}
 }
 \value{
-Campaign id and approved recipient count. No message is sent.
+Campaign id, approved recipient count and the approved earliest
+  send time. No message is sent.
 }
 \description{
-Release an exact synthetic campaign and atomically create its outbox
+The approval covers the exact text, the exact recipients and the earliest
+send time. Quiet hours of the protocol are fixed with the approval. A
+reminder is refused when any recipient would exceed the protocol's maximum
+number of reminders or receive it sooner than the minimum interval after
+the previous one; the limits never shrink an approved audience silently.
 }

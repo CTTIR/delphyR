@@ -139,6 +139,13 @@ Measured on 2026-10-02 against the current sources; each entry names its evidenc
   released feedback is corrected by a new version. Migration 015,
   `test-exploratory.R` and `browser-exploratory-postgres.R`.
 
+- **Communications** ([ADR-024](adr/024-communication-schedule-and-delivery.md),
+  [communications](communications.md)): approved send time, quiet hours,
+  reminder limits, a provider adapter contract tested with doubles, human
+  resolution of uncertain deliveries and a status view of background work.
+  Migration 016, `test-delivery.R` and `browser-communications-postgres.R`.
+  No production provider adapter is shipped or approved.
+
 Hosted CI failed for commit `5bf26c7` at the package check (non-ASCII source
 characters in `R/invitations.R`); the following commit repaired it and both
 packages carry a source-level ASCII test.
@@ -148,16 +155,16 @@ packages carry a source-level ASCII test.
 - Institutional governance, consent/retention/deletion policies, operator
   responsibility and approved research-data handling.
 - Stock-OSS hosting decision or separate direct-backend production qualification
-  with TLS, secret management and separated operational roles.
-- Browser invitation issuance/acceptance and full account onboarding; tested
-  services require existing provisioned accounts.
-- Full qualitative provenance in participant feedback, approved free-text/audit/
-  publication profiles and scientific author information.
-- Production provider adapter, reminder schedules, quiet hours and controlled
-  resolution of uncertain delivery. No external dispatch is approved.
-- Autosave, complete management browser workflow, systematic tab-order/assistive-
-  technology/cross-browser acceptance and end-to-end load tests.
-- Approved retention/cleanup, full production recovery, pilot and release acceptance.
+  with TLS, secret management and separated operational roles. The local gateway
+  qualification predates the changes listed above and has to be repeated.
+- A production provider adapter with an approved sender and contact policy. No
+  external dispatch is approved.
+- The complete log canary matrix and correlation IDs in user-visible errors.
+- Systematic tab-order/assistive-technology/cross-browser acceptance, current
+  en/fr/de evidence for every screen and end-to-end load tests at specification
+  scale.
+- Approved retention/cleanup, full production recovery, runbooks, pilot and
+  release acceptance.
 
 Synthetic examples and green local tests do not close these gates. `admin/`, data,
 backups and local libraries remain ignored. Entry points: [README](../README.md),

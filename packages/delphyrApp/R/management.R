@@ -15,6 +15,7 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
     # The instrument and readiness findings last shown for one exact round.
     review <- shiny::reactiveVal(NULL)
     reviewable <- all(c("get_round_instrument", "get_round_readiness") %in% names(services))
+    background <- shiny::reactiveVal(NULL)
     load_review <- function(id) review(list(id = id, instrument = call("get_round_instrument", id), readiness = call("get_round_readiness", id)))
     refresh <- function() {
       allowed(FALSE)
@@ -67,7 +68,16 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
         shiny::textAreaInput(ns("reason"), tr(lang(), "Begr\u00fcndung", "Reason"), value = field("reason"), width = "100%"),
         shiny::checkboxInput(ns("confirm"), tr(lang(), "Ich habe die ausgew\u00e4hlte Runde und den Zielstatus gepr\u00fcft", "I reviewed the round and target state"), FALSE),
         shiny::actionButton(ns("transition"), tr(lang(), "Status \u00e4ndern", "Change state"), class = "btn-primary"),
-        if ("complete_study" %in% names(services)) shiny::actionButton(ns("complete"), tr(lang(), "Studie abschlie\u00dfen", "Complete study"))
+        if ("complete_study" %in% names(services)) shiny::actionButton(ns("complete"), tr(lang(), "Studie abschlie\u00dfen", "Complete study")),
+        if ("get_operations_status" %in% names(services)) {
+          shiny::tags$details(
+            shiny::tags$summary(tr(lang(), "Stand der Hintergrundarbeit", "Status of background work")),
+            shiny::tags$p(tr(lang(), "Analysen, Exporte und freigegebene Mitteilungen verarbeitet ein getrennter Worker. Lange Wartezeiten oder endg\u00fcltig fehlgeschlagene Auftr\u00e4ge sind dem Betrieb zu melden.", "A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.")),
+            shiny::actionButton(ns("background_load"), tr(lang(), "Stand anzeigen", "Show status")),
+            shiny::tableOutput(ns("background_jobs")),
+            shiny::tableOutput(ns("background_messages"))
+          )
+        }
       )
     })
     shiny::outputOptions(output, "body", suspendWhenHidden = FALSE)
@@ -144,6 +154,27 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
           }
         }
       )
+    })
+    shiny::observeEvent(input$background_load, {
+      shiny::req(allowed())
+      tryCatch(background(call("get_operations_status", study())), error = function(e) status(safe_error(e, lang())))
+    })
+    output$background_jobs <- shiny::renderTable({
+      x <- background()
+      shiny::req(x, nrow(x$jobs) > 0)
+      j <- x$jobs
+      kind <- ifelse(j$type == "analysis", tr(lang(), "Analyse", "Analysis"), paste(tr(lang(), "Export", "Export"), j$profile))
+      out <- data.frame(kind, operation_state_label(j$state, lang()), j$n, j$oldest_waiting_seconds, ifelse(is.na(j$error_codes), "", j$error_codes), stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("Auftrag", "Status", "Anzahl", "\u00c4lteste Wartezeit (s)", "Fehlercode"), c("Operation", "State", "Count", "Oldest waiting (s)", "Error code"))
+      out
+    })
+    output$background_messages <- shiny::renderTable({
+      x <- background()
+      shiny::req(x, nrow(x$messages) > 0)
+      m <- x$messages
+      out <- data.frame(delivery_label(m$state, lang()), m$n, m$oldest_waiting_seconds, stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("Mitteilungen", "Anzahl", "\u00c4lteste Wartezeit (s)"), c("Messages", "Count", "Oldest waiting (s)"))
+      out
     })
     shiny::observeEvent(input$review, {
       shiny::req(allowed(), reviewable, input$round)
@@ -287,4 +318,9 @@ readiness_label <- function(code, lang) {
   )
   labels <- tr(lang, de, en)
   unname(ifelse(code %in% names(labels), labels[code], code))
+}
+
+operation_state_label <- function(state, lang) {
+  labels <- tr(lang, c(queued = "Eingereiht", running = "In Bearbeitung", succeeded = "Erfolgreich", retry_wait = "Wartet auf Wiederholung", dead_letter = "Endg\u00fcltig fehlgeschlagen"), c(queued = "Queued", running = "Processing", succeeded = "Succeeded", retry_wait = "Waiting to retry", dead_letter = "Permanently failed"))
+  unname(ifelse(state %in% names(labels), labels[state], state))
 }

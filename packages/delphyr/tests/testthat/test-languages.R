@@ -15,14 +15,14 @@ test_that("French approved content persists through consent, instrument, import 
   p<-demo_protocol();p$study$code<-paste0("FR-",uid());p$study$languages<-c("en","fr","de");p$study$default_language<-"fr"
   s<-create_study(r,manager,p,"create")$id
   add_panelist(r,manager,s,panel$principal_id,"professionals","panel")
-  consent<-publish_consent(r,manager,s,"Information synthétique. Aucune donnée réelle.","fr","consent")$id
-  items<-data.frame(item_code="I001",item_version=1L,locale=c("en","fr","de"),text=c("Synthetic item","Question synthétique","Synthetisches Item"),dimension_code="relevance",scale_code="relevance_9",source_ref="synthetic",required=TRUE,display_order=1L)
+  consent<-publish_consent(r,manager,s,"Information synth\u00e9tique. Aucune donn\u00e9e r\u00e9elle.","fr","consent")$id
+  items<-data.frame(item_code="I001",item_version=1L,locale=c("en","fr","de"),text=c("Synthetic item","Question synth\u00e9tique","Synthetisches Item"),dimension_code="relevance",scale_code="relevance_9",source_ref="synthetic",required=TRUE,display_order=1L)
   round<-prepare_round(r,manager,s,items,consent,format(Sys.time()+3600,"%Y-%m-%dT%H:%M:%SZ",tz="UTC"),"round")$id
   stored<-query(r,"SELECT texts::text FROM research.round_items WHERE round_id=$1",round)$texts
-  expect_identical(jsonlite::fromJSON(stored)$fr,"Question synthétique")
+  expect_identical(jsonlite::fromJSON(stored)$fr,"Question synth\u00e9tique")
   expect_identical(query(r,"SELECT locale FROM identity.consent_versions WHERE id=$1",consent)$locale,"fr")
   e<-query(r,"SELECT id FROM research.enrollments WHERE round_id=$1",round)$id
-  campaign<-prepare_campaign(r,manager,round,e,"invitation","Invitation synthétique","Étude synthétique uniquement.",locale="fr",command_id="campaign")
+  campaign<-prepare_campaign(r,manager,round,e,"invitation","Invitation synth\u00e9tique","\u00c9tude synth\u00e9tique uniquement.",locale="fr",command_id="campaign")
   expect_identical(query(r,"SELECT locale FROM ops.campaigns WHERE id=$1",campaign$id)$locale,"fr")
   preview<-preview_panel_import(r,manager,s,"external_ref,email,display_name,locale,stakeholder_group\nfrench,french@example.invalid,Synthetic French,fr,professionals")
   expect_true(preview$valid)

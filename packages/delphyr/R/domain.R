@@ -171,7 +171,10 @@ check_protocol <- function(p) {
   template <- demo_protocol()
   known_keys(p, names(template), "protocol")
   ensure(identical(p$schema_version, "1.0"), "schema_version")
-  for (k in setdiff(names(template), "schema_version")) known_keys(p[[k]], names(template[[k]]), k)
+  # Reminder limits and quiet hours are optional; when present they bind
+  # every approved campaign of the study.
+  optional <- list(communications = c("quiet_hours", "max_reminders", "min_reminder_interval_hours"))
+  for (k in setdiff(names(template), "schema_version")) known_keys(p[[k]], c(names(template[[k]]), optional[[k]]), k, required = names(template[[k]]))
   for (k in c("code", "title", "rationale")) ensure(scalar_text(p$study[[k]]), paste0("study.", k))
   ensure(p$study$environment %in% c("demo", "production"), "study.environment")
   # Production approval deliberately requires a separately implemented governance contract.
@@ -228,6 +231,17 @@ check_protocol <- function(p) {
   ensure(whole(p$feedback$minimum_display_cell_n) && length(p$feedback$minimum_display_cell_n) == 1 && p$feedback$minimum_display_cell_n > 0, "feedback.minimum_display_cell_n")
   ensure(p$feedback$comments == "moderated_summary", "feedback.comments")
   ensure(p$communications$mode == "sink" && isTRUE(p$communications$campaign_approval_required) && identical(p$communications$automated_reminders_enabled, FALSE), "communications")
+  if (!is.null(p$communications$quiet_hours)) {
+    quiet <- p$communications$quiet_hours
+    known_keys(quiet, c("start", "end"), "communications.quiet_hours")
+    clock <- "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    ensure(scalar_text(quiet$start) && scalar_text(quiet$end) && grepl(clock, quiet$start) && grepl(clock, quiet$end) && !identical(quiet$start, quiet$end), "communications.quiet_hours")
+  }
+  if (!is.null(p$communications$max_reminders)) ensure(whole(p$communications$max_reminders) && length(p$communications$max_reminders) == 1L && p$communications$max_reminders >= 0 && p$communications$max_reminders <= 100, "communications.max_reminders")
+  if (!is.null(p$communications$min_reminder_interval_hours)) {
+    hours <- p$communications$min_reminder_interval_hours
+    ensure(is.numeric(hours) && length(hours) == 1L && is.finite(hours) && hours > 0 && hours <= 8760, "communications.min_reminder_interval_hours")
+  }
   ensure(whole(p$stopping$max_rounds) && length(p$stopping$max_rounds) == 1 && p$stopping$max_rounds > 0, "stopping.max_rounds")
   ensure(isTRUE(p$stopping$allow_persistent_dissensus) && identical(p$stopping$automatic_study_completion, FALSE), "stopping")
   invisible(TRUE)

@@ -144,3 +144,117 @@ test_that("a round without enrollments shows no recipient control and no output 
     expect_error(output$recipients, class = "shiny.silent.error")
   })
 })
+
+delivery_module_services <- function() {
+  names <- c("get_capabilities", "list_campaign_rounds", "list_campaign_enrollments", "prepare_campaign", "preview_campaign", "release_campaign", "cancel_campaign", "list_uncertain_deliveries", "resolve_delivery")
+  stats::setNames(rep(list(function(...) NULL), length(names)), names)
+}
+
+test_that("approval passes the send time and explains refused reminder limits", {
+  released <- list()
+  refusal <- "campaign.reminder_limit"
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = "coordinate",
+      list_campaign_rounds = data.frame(id = "round", number = 1L, state = "open"),
+      list_campaign_enrollments = data.frame(enrollment_id = c("e1", "e2"), pseudonym = c("p1", "p2"), state = "eligible", reminders = c(0L, 2L)),
+      list_uncertain_deliveries = data.frame(),
+      prepare_campaign = list(id = "campaign", hash = "hash", n_recipients = 1L),
+      preview_campaign = list(
+        id = "campaign", kind = "reminder", subject = "Synthetic subject", body = "Synthetic body", locale = "en", hash = "hash",
+        rules = list(timezone = "Europe/Berlin", quiet_start = "20:00", quiet_end = "08:00", max_reminders = 2, min_reminder_interval_hours = 48),
+        schedule = if (length(released)) list(not_before = "2026-12-01T08:00:00Z") else NULL, released = length(released) > 0, cancelled = FALSE,
+        recipients = data.frame(enrollment_id = "e1", pseudonym = "p1", delivery_state = if (length(released)) "queued" else "draft", reason = NA)
+      ),
+      release_campaign = {
+        if (!is.null(refusal)) stop(structure(list(message = "conflict", call = NULL, code = "DEL_CONFLICT", path = refusal), class = c("DEL_CONFLICT", "delphyr_error", "error", "condition")))
+        released[[length(released) + 1L]] <<- list(...)
+        list(id = "campaign", n_recipients = 1L, not_before = "2026-12-01T08:00:00Z")
+      },
+      stop("Unexpected service")
+    )
+  }
+  shiny::testServer(delphyrApp:::communications_server, args = list(study = function() "study", lang = function() "en", call = call, services = delivery_module_services()), {
+    session$flushReact()
+    session$setInputs(round = "round")
+    expect_match(output$recipients$html, "reminders: 2", fixed = TRUE)
+    session$setInputs(enrollments = "e1", kind = "reminder", subject = "Synthetic subject", message = "Synthetic body", locale = "en", version = 1, prepare = 1)
+    expect_match(output$preview$html, "Quiet hours: 20:00", fixed = TRUE)
+    expect_match(output$preview$html, "Maximum reminders per person and round: 2", fixed = TRUE)
+    session$setInputs(reason = "Reviewed", confirm = TRUE, not_before = "2026-12-01T09:00:00+01:00", release = 1)
+    expect_match(output$status, "maximum number of reminders", fixed = TRUE)
+    expect_length(released, 0L)
+    refusal <<- "campaign.reminder_interval"
+    session$setInputs(release = 2)
+    expect_match(output$status, "minimum interval", fixed = TRUE)
+    refusal <<- "campaign.not_before"
+    session$setInputs(release = 3)
+    expect_match(output$status, "needs a timezone", fixed = TRUE)
+    refusal <<- NULL
+    session$setInputs(release = 4)
+    expect_identical(released[[1]]$not_before, "2026-12-01T09:00:00+01:00")
+    expect_match(output$status, "No email will be sent", fixed = TRUE)
+    expect_match(output$preview$html, "Approved from (UTC): 2026-12-01T08:00:00Z", fixed = TRUE)
+  })
+})
+
+test_that("an uncertain delivery is resolved only with rationale and confirmation", {
+  pending <- TRUE
+  resolved <- list()
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = "coordinate",
+      list_campaign_rounds = data.frame(id = "round", number = 1L, state = "open"),
+      list_campaign_enrollments = data.frame(enrollment_id = "e1", pseudonym = "p1", state = "eligible", reminders = 0L),
+      list_uncertain_deliveries = if (pending) data.frame(message_id = "message", kind = "reminder", round_number = 1L, pseudonym = "p1", reason = "adapter_outcome_unknown", adapter = "test_provider", attempts = 1L, updated_at = "2026-10-02 10:00:00+00") else data.frame(),
+      resolve_delivery = {
+        resolved[[length(resolved) + 1L]] <<- list(...)
+        pending <<- FALSE
+        list(id = "message", state = "abandoned")
+      },
+      stop("Unexpected service")
+    )
+  }
+  shiny::testServer(delphyrApp:::communications_server, args = list(study = function() "study", lang = function() "en", call = call, services = delivery_module_services()), {
+    session$flushReact()
+    expect_match(output$body$html, "Resolve uncertain deliveries (1)", fixed = TRUE)
+    expect_match(output$uncertain, "test_provider", fixed = TRUE)
+    expect_match(output$uncertain, "Reminder", fixed = TRUE)
+    session$setInputs(uncertain_message = "message", resolution = "abandon", resolution_reason = "", resolution_confirm = TRUE, resolve = 1)
+    expect_length(resolved, 0L)
+    session$setInputs(resolution_reason = "Provider confirms no acceptance", resolution_confirm = FALSE, resolve = 2)
+    expect_length(resolved, 0L)
+    session$setInputs(resolution_confirm = TRUE, resolve = 3)
+    expect_identical(resolved[[1]], list("study", "message", "abandon", "Provider confirms no acceptance", resolved[[1]][[5]]))
+    expect_match(output$status, "Delivery decision saved", fixed = TRUE)
+    expect_match(output$body$html, "Resolve uncertain deliveries (0)", fixed = TRUE)
+  })
+  expect_identical(delivery_label(c("accepted", "abandoned", "other"), "en"), c("Accepted by the provider", "Abandoned", "other"))
+  expect_identical(operation_state_label(c("dead_letter", "retry_wait"), "de"), c("Endg\u00fcltig fehlgeschlagen", "Wartet auf Wiederholung"))
+})
+
+test_that("managers read the status of background work without content", {
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = "manage",
+      get_study_setup = list(protocol = list(study = list(timezone = "UTC"))),
+      list_rounds = data.frame(id = "round", number = 1L, state = "open", instrument_hash = "h", deadline = as.POSIXct("2026-12-01 10:00:00", tz = "UTC")),
+      get_operations_status = list(
+        jobs = data.frame(type = c("analysis", "export"), profile = c("analysis", "study_summary"), state = c("succeeded", "dead_letter"), n = c(1L, 1L), oldest_waiting_seconds = c(0L, 0L), error_codes = c(NA, "DEL_RENDER")),
+        messages = data.frame(state = c("queued", "delivery_unknown"), n = c(2L, 1L), oldest_waiting_seconds = c(40L, 0L)), uncertain_deliveries = 1L
+      ),
+      stop("Unexpected service")
+    )
+  }
+  names <- c("get_capabilities", "get_study_setup", "list_rounds", "transition_round", "get_operations_status")
+  services <- stats::setNames(rep(list(function(...) NULL), length(names)), names)
+  shiny::testServer(delphyrApp:::management_server, args = list(study = function() "study", lang = function() "en", call = call, services = services), {
+    session$flushReact()
+    expect_match(output$body$html, "Status of background work", fixed = TRUE)
+    session$setInputs(background_load = 1)
+    expect_match(output$background_jobs, "Export study_summary", fixed = TRUE)
+    expect_match(output$background_jobs, "Permanently failed", fixed = TRUE)
+    expect_match(output$background_jobs, "DEL_RENDER", fixed = TRUE)
+    expect_match(output$background_messages, "Outcome unknown", fixed = TRUE)
+  })
+})

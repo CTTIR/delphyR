@@ -14,7 +14,8 @@ preview_campaign(repo, actor, campaign_id)
 \item{campaign_id}{Campaign UUID.}
 }
 \value{
-Plain text, hash, pseudonyms and delivery states; no contacts or answers.
+Plain text, hash, the study's reminder rules, the approved send
+  window, pseudonyms and delivery states; no contacts or answers.
 }
 \description{
 Preview exact campaign text and pseudonymous recipients

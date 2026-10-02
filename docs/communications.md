@@ -1,8 +1,9 @@
 # Synthetic campaigns and local outbox
 
-Communication services write only to a PostgreSQL mail sink. They have no SMTP
-client, external provider adapter or recipient addresses. `sink_recorded` means a
-local test receipt, not dispatch, delivery or a read receipt.
+Communication services write only to a PostgreSQL mail sink. They ship no SMTP
+client and no production provider adapter. `sink_recorded` means a local test
+receipt, not dispatch, delivery or a read receipt. Campaign text is final plain
+text for all recipients; per-recipient placeholders are not supported.
 
 ## Exact preview and explicit approval
 
@@ -67,18 +68,88 @@ A successful transaction writes one immutable `ops.message_sink` receipt and
 `sink_recorded` together. Processing outcomes also appear in audit; message text
 and response content are not audit object references.
 
+## Send time, quiet hours and reminder limits
+
+`release_campaign(..., not_before = "2026-12-01T09:00:00+01:00")` approves the
+earliest send time together with the exact text and recipients. The time needs
+an explicit offset, must not lie in the past and may be at most 90 days ahead;
+without it the campaign is eligible at once. The approved window is immutable.
+
+A protocol can state three optional rules under `communications`:
+
+```json
+"communications": {
+  "mode": "sink", "campaign_approval_required": true, "automated_reminders_enabled": false,
+  "quiet_hours": {"start": "20:00", "end": "08:00"},
+  "max_reminders": 2,
+  "min_reminder_interval_hours": 48
+}
+```
+
+Quiet hours are clock times in the study's timezone and may pass midnight. They
+are fixed with the approval; the worker does not claim a message inside them or
+before its send time, and the message stays queued. `max_reminders` counts
+approved, non-cancelled reminders per person and round that were not
+suppressed, failed or abandoned. `min_reminder_interval_hours` is measured
+from the previous reminder's send time. A reminder that would exceed either
+limit for any recipient is refused as a whole with `campaign.reminder_limit`
+or `campaign.reminder_interval`: the limits never shrink an approved audience
+silently, the coordinator selects the recipients again. The recipient list
+shows each person's reminder count. There is no automatic reminder schedule;
+every reminder is an approved campaign.
+
+## Provider adapter contract
+
+`process_campaign_message(repo, adapter, study_id)` is the generic worker step;
+`process_campaign_sink()` uses the built-in database sink. An external adapter
+is created with `new_message_adapter(name, send)`. `send` receives one message
+(`message_id`, `idempotency_key`, `kind`, `locale`, `subject`, `body`, `to`,
+`display_name`) and returns one of:
+
+| Return | Delivery state |
+|---|---|
+| `list(status = "accepted", provider_ref = "...")` | `accepted`, with the provider reference |
+| `list(status = "rejected", reason = "code")` | `failed`; never retried |
+| `list(status = "retry", reason = "code")` | `queued` again after a growing delay with jitter; `failed` with `retries_exhausted` after three attempts |
+| an error, a timeout or anything else | `delivery_unknown` |
+
+Claim, eligibility check and result are three short transactions; no database
+transaction is open while the provider is called. Immediately before sending
+the same eligibility checks as for the sink run again. The recipient address
+comes from the contact of the accepted invitation; a member without a contact
+is suppressed with `no_contact`. The idempotency key is the message's
+deduplication key and is identical on every attempt. A provider's free text is
+never stored: reasons are restricted to short codes.
+
+No production adapter is shipped or approved. Contact addresses are restricted
+by a database constraint to the reserved `.invalid` domain, repositories accept
+only the development and test environments, and the adapter contract is
+exercised with test doubles. Provider acknowledgments after acceptance,
+bounces and complaints are not processed.
+
 ## Crashes and uncertain delivery
 
-An expired `running` claim conservatively becomes `delivery_unknown`. It is not
-automatically resent or reclaimed. An expired lease holder cannot record success.
-The sink is unique per message ID; that does not establish exactly-once delivery
-for a future external provider.
+An expired `running` claim conservatively becomes `delivery_unknown`, and so
+does an adapter call whose outcome is unknown. It is not automatically resent
+or reclaimed. A lease holder whose claim expired cannot record a result. The
+sink is unique per message ID; that does not establish exactly-once delivery
+for an external provider.
 
-Manual resolution of unknown delivery, provider acknowledgments, bounces, contact
-management, quiet hours and automatic reminder schedules remain unimplemented.
-They require separate adapter contracts, approvals and tests.
+`list_uncertain_deliveries()` shows these messages by study pseudonym, without
+contacts. A coordinator resolves each one with `resolve_delivery()` and a
+rationale: `confirmed_delivered` records that delivery was verified and never
+sends again; `requeue` sends again and accepts a possible duplicate, after the
+eligibility checks; `abandon` stops the message. Resolutions are append-only
+and appear in the audit trail with their rationale.
 
-`test-communications.R` requires `DELPHYR_TEST_DB=true` and the synthetic database.
-It covers approval hashes, deduplication, study boundaries, revocation, subsequent
-submission, withdrawal, cancellation, immutability and expired leases. No test
-sends an external message.
+`get_operations_status()` gives study management and coordination the counts
+of jobs and messages by state, the age of the oldest waiting entry, error
+codes and the number of uncertain deliveries, without any content.
+
+`test-communications.R` and `test-delivery.R` require `DELPHYR_TEST_DB=true`
+and the synthetic database. They cover approval hashes, deduplication, study
+boundaries, revocation, subsequent submission, withdrawal, cancellation,
+immutability, expired leases, the send time, quiet hours including windows
+that pass midnight, reminder limits, the adapter contract with accepting,
+rejecting, retrying, failing and malformed doubles, a lease that expires
+during sending, and every resolution. No test sends an external message.
