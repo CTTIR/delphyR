@@ -88,3 +88,54 @@ test_that("feedback removes small cells including complementary totals", {
   f$results$n_valid[1] <- 14
   expect_error(validate_feedback(f), class = "DEL_VALIDATION")
 })
+
+test_that("metamorphic relations hold and the minimum is not mistaken for one", {
+  fields <- c("panelist_id", "item_code", "item_version", "dimension_code", "answer_status", "value_integer", "value_text")
+  rebuild <- function(responses, assignments, s) new_snapshot(responses[, fields], assignments, s$items, s$protocol)
+  statistics <- function(a) {
+    r <- a$results
+    r <- r[order(r$item_code, r$dimension_code, r$stratum), setdiff(names(r), "round_number")]
+    rownames(r) <- NULL
+    r
+  }
+  values <- c(1, 4, 6, 7, 7, 8, 8, 9, 9, 9, 2, 8)
+  groups <- rep(c("professionals", "public_contributors"), 6)
+  s <- demo_snapshot(values, groups)
+  base <- analyse_round(s)
+  responses <- s$data[s$data$submitted, fields]
+  assignments <- unique(s$data[, c("panelist_id", "group_code", "submitted")])
+  # The order of the rows changes nothing, not even the result hash.
+  set.seed(20261003)
+  shuffled <- analyse_round(rebuild(responses[sample(nrow(responses)), ], assignments[sample(nrow(assignments)), ], s))
+  expect_identical(statistics(shuffled), statistics(base))
+  expect_identical(shuffled$provenance$result_hash, base$provenance$result_hash)
+  # A bijective renaming of the pseudonyms leaves every aggregate unchanged.
+  rename <- stats::setNames(sprintf("X%03d", rev(seq_len(nrow(assignments)))), assignments$panelist_id)
+  renamed <- analyse_round(rebuild(transform(responses, panelist_id = unname(rename[panelist_id])), transform(assignments, panelist_id = unname(rename[panelist_id])), s))
+  expect_identical(statistics(renamed), statistics(base))
+  # Members who cannot judge change missingness, not the agreement among valid ratings.
+  extra <- data.frame(panelist_id = c("U001", "U002"), group_code = "professionals", submitted = TRUE)
+  unable <- data.frame(panelist_id = extra$panelist_id, item_code = "I001", item_version = 1L, dimension_code = "relevance", answer_status = "unable_to_judge", value_integer = NA_integer_, value_text = NA_character_)
+  more <- analyse_round(rebuild(rbind(responses, unable), rbind(assignments, extra), s))
+  overall <- function(a) a$results[a$results$stratum == "overall", ]
+  expect_identical(overall(more)$p_agree, overall(base)$p_agree)
+  expect_identical(overall(more)$n_valid, overall(base)$n_valid)
+  expect_identical(overall(more)$n_unable, overall(base)$n_unable + 2L)
+  expect_identical(overall(more)$n_assigned, overall(base)$n_assigned + 2L)
+  # Doubling every observation keeps the proportions but may change whether
+  # the minimum number of valid ratings is reached: no invariance is assumed
+  # for the classification.
+  small <- demo_snapshot(c(9, 9, 9, 8, 8, 7, 7, 2))
+  twice <- function(z) {
+    d <- z$data[z$data$submitted, fields]
+    copy <- transform(d, panelist_id = paste0(panelist_id, "-B"))
+    a <- unique(z$data[, c("panelist_id", "group_code", "submitted")])
+    rebuild(rbind(d, copy), rbind(a, transform(a, panelist_id = paste0(panelist_id, "-B"))), z)
+  }
+  one <- overall(analyse_round(small))
+  two <- overall(analyse_round(twice(small)))
+  expect_identical(two$p_agree, one$p_agree)
+  expect_identical(two$n_valid, 2L * one$n_valid)
+  expect_identical(one$classification, "insufficient_data")
+  expect_identical(two$classification, "consensus_in")
+})
