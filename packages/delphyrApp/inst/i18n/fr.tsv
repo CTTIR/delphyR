@@ -272,3 +272,43 @@ Pending	En attente
 Running	En cours d’exécution
 Succeeded	Réussi
 Failed	Échec
+Your account is not registered for this application. Contact the study coordinators.	Votre compte n’est pas enregistré pour cette application. Contactez la coordination de l’étude.
+Invitations and account binding	Invitations et liaison de compte
+Each invitation is bound to exactly one verified account (identity-provider issuer and subject). An email address never selects an account. No email is sent.	Chaque invitation est liée à un seul compte vérifié (émetteur et sujet du fournisseur d’identité). Une adresse électronique ne sélectionne jamais un compte. Aucun courriel n’est envoyé.
+Invitation draft	Brouillon d’invitation
+Issuer (identity-provider issuer URL)	Émetteur (URL de l’émetteur du fournisseur d’identité)
+Stable subject of the invited account	Sujet stable du compte invité
+Validity in minutes (1 to 1440)	Validité en minutes (1 à 1440)
+Account-binding rationale	Justification de la liaison de compte
+I verified that this stable account belongs to the invited person.	J’ai vérifié que ce compte stable appartient à la personne invitée.
+Register account and issue invitation	Enregistrer le compte et émettre l’invitation
+Revoke an outstanding invitation	Révoquer une invitation en attente
+Outstanding invitation	Invitation en attente
+Revocation rationale	Justification de la révocation
+I want to revoke this invitation.	Je souhaite révoquer cette invitation.
+Revoke invitation	Révoquer l’invitation
+Refresh invitation states	Actualiser l’état des invitations
+Invitation state	État de l’invitation
+Valid until (UTC)	Valable jusqu’au (UTC)
+Invitation issued. The hand-over code is shown only now.	Invitation émise. Le code de remise n’est affiché que maintenant.
+Hand-over code	Code de remise
+Pass this code on through an approved private channel. It is not stored and cannot be displayed again.	Transmettez ce code par un canal privé approuvé. Il n’est pas enregistré et ne peut pas être affiché de nouveau.
+Valid until (UTC):	Valable jusqu’au (UTC) :
+Hide code	Masquer le code
+Invitation revoked.	Invitation révoquée.
+Not yet issued	Pas encore émise
+Awaiting acceptance	En attente d’acceptation
+Expired	Expirée
+Revoked	Révoquée
+Accepted	Acceptée
+This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team.	Cette invitation n’est pas disponible pour votre compte. Elle peut être expirée, révoquée, déjà utilisée ou émise pour un autre compte. Contactez l’équipe de l’étude.
+Accept an invitation	Accepter une invitation
+Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.	Saisissez le code de remise reçu de la coordination de l’étude. La vérification ne modifie rien. Seule votre confirmation explicite vous ajoute au panel ; le consentement et les réponses restent des étapes distinctes.
+Check invitation	Vérifier l’invitation
+Invitation checked. No participation has been created yet.	Invitation vérifiée. Aucune participation n’a encore été créée.
+Invitation accepted. Receipt:	Invitation acceptée. Reçu :
+I want to join this study's panel with my signed-in account.	Je souhaite rejoindre le panel de cette étude avec mon compte connecté.
+Accept invitation	Accepter l’invitation
+Explicitly confirm acceptance first.	Confirmez d’abord explicitement l’acceptation.
+You joined the panel. Select the study to continue.	Vous avez rejoint le panel. Sélectionnez l’étude pour continuer.
+Invitations	Invitations

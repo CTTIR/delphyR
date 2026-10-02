@@ -86,9 +86,11 @@ identities. A source link does not itself import an instrument item or approve a
 Coordinators preview synthetic UTF-8 contact files and resolve blocking row/column
 issues before approval. The whole reviewed file is imported atomically, creating
 contacts and unbound drafts only. It does not create an account or assign a round.
-[Invitation services](invitations.md) use a separate, explicit approval of an
-existing verified issuer/subject identity. The full invitation browser journey
-remains an integration gate.
+In the Invitations section, a coordinator registers the invited person's stable
+issuer/subject account with a rationale and issues a single-use invitation. The
+hand-over code is displayed once and passed on privately. After verified
+sign-in, the invited person checks the code, confirms explicitly and joins the
+panel; consent and responses remain separate steps. See [invitations](invitations.md).
 
 Campaigns select a round, purpose, exact study pseudonyms, and final text. Approval
 requires review of that frozen preview and a reason. Changed text or recipients

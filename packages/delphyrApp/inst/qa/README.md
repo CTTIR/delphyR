@@ -271,3 +271,21 @@ The manager workspace was separately checked in all three languages: navigation,
 section headings, file control labels, retained rationale text, no Shiny output
 errors, and French desktop/mobile rendering. These checks do not constitute a
 complete translated management transaction journey or human linguistic review.
+
+## Invitation issuance and acceptance
+
+`browser-invitation-postgres.R` starts a coordinator host and an invitee host
+itself, drives both in Chromium and stops them. It passed on 2 October 2026
+against PostgreSQL with the restricted runtime role:
+
+```sh
+DELPHYR_TEST_DB=true Rscript packages/delphyrApp/inst/qa/browser-invitation-postgres.R
+```
+
+It checks the unregistered-account notice, mandatory rationale and confirmation,
+issuance and one-time display of the hand-over code, fragment prefill and
+removal, refusal of a changed and of a replayed code, explicit acceptance, the
+resulting study access, both viewport widths, and independent database reads.
+The invitee identity comes from the gateway adapter with a synthetic trusted
+request; this is not an OIDC gateway qualification. Host logs are written to
+ignored `.checks/invitation-*.log` and are scanned for the token and secret.

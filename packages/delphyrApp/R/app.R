@@ -40,7 +40,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       "redact_qualitative_source", "release_qualitative_edit", "create_qualitative_theme",
       "code_qualitative_source", "link_item_source", "record_item_lineage",
       "list_campaign_rounds", "list_campaign_enrollments", "prepare_campaign",
-      "preview_campaign", "release_campaign", "cancel_campaign", "list_protocol_versions", "amend_protocol", "withdraw_participation", "preview_panel_import", "import_panel", "get_panel_import_receipt"
+      "preview_campaign", "release_campaign", "cancel_campaign", "list_protocol_versions", "amend_protocol", "withdraw_participation", "preview_panel_import", "import_panel", "get_panel_import_receipt",
+      "list_panel_invitations", "register_invited_account", "issue_panel_invitation", "revoke_panel_invitation",
+      "preview_panel_invitation", "accept_panel_invitation"
     )
     services <- stats::setNames(lapply(n, function(x) getExportedValue("delphyr", x)), n)
   }
@@ -49,7 +51,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
   shiny::addResourcePath("delphyr-brand", system.file("www", package = "delphyrApp"))
   ui <- shiny::fluidPage(
     theme = bslib::bs_theme(version = 5, bg = "#eceff2", fg = "#22303c", primary = "#0e6e78", success = "#0e6e78", danger = "#b3372b", base_font = "system-ui"),
-    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){document.documentElement.lang=lang;});});", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
+    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){window.delphyrAccepted=true;document.documentElement.lang=lang;});Shiny.addCustomMessageHandler('delphyr-clear-hash',function(x){history.replaceState(null,'',location.pathname+location.search);});}); $(document).on('shiny:disconnected',function(){var box=document.getElementById('unregistered');if(box && !window.delphyrAccepted){box.hidden=false;}});", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
       shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-hex.png")),
     shiny::tags$div(
       class = "del-wrap",
@@ -60,8 +62,13 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         shiny::selectInput("language", tr(language, "Sprache", "Language"), c("English" = "en", "Fran\u00e7ais" = "fr", "Deutsch" = "de"), selected = language, width = "190px")
       ),
       shiny::uiOutput("banner"),
+      # Shown by the browser only when the server closes a session it never accepted.
+      shiny::tags$div(id = "unregistered", class = "del-banner", role = "alert", hidden = "hidden", paste(vapply(c("en", "fr", "de"), function(l) {
+        tr(l, "Ihr Konto ist f\u00fcr diese Anwendung nicht registriert. Wenden Sie sich an die Studienkoordination.", "Your account is not registered for this application. Contact the study coordinators.")
+      }, character(1)), collapse = " \u00b7 ")),
       shiny::tags$main(
-        id = "main", shiny::tags$section(
+        id = "main", invitation_accept_ui("invitation_accept"),
+        shiny::tags$section(
           class = "del-sheet",
           shiny::uiOutput("intro"), shiny::selectInput("study", tr(language, "Studie", "Study"), character()), status_ui("status")
         ),
@@ -71,6 +78,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         shiny::tags$div(id = "section-management", management_ui("management")),
         shiny::tags$div(id = "section-editorial", editorial_ui("editorial")),
         shiny::tags$div(id = "section-panel-import", panel_import_ui("panel_import")),
+        shiny::tags$div(id = "section-invitations", invitations_ui("invitations")),
         shiny::tags$div(id = "section-communications", communications_ui("communications"))
       ),
       shiny::tags$footer(class = "del-note", "CTTIR \u00b7 delphyR \u00b7 0.0.1")
@@ -90,6 +98,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       )
     }
     if (is.null(session_actor)) {
+      # No account is created on login; the page explains the closed session.
       session$close()
       return(invisible(NULL))
     }
@@ -114,20 +123,18 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     ))
     output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
-    shiny::observeEvent(TRUE,
-      {
-        tryCatch(
-          {
-            s <- call("list_studies")
-            studies(s)
-            shiny::updateSelectInput(session, "study", choices = stats::setNames(s$id, s$title))
-            if (!nrow(s)) status(tr(lang(), "Keine berechtigte Studie. Wenden Sie sich an die Studienleitung.", "No accessible study. Contact the study team."))
-          },
-          error = function(e) status(safe_error(e, lang()))
-        )
-      },
-      once = TRUE
-    )
+    load_studies <- function(selected = NULL) {
+      tryCatch(
+        {
+          s <- call("list_studies")
+          studies(s)
+          shiny::updateSelectInput(session, "study", choices = stats::setNames(s$id, s$title), selected = if (length(selected) == 1L && selected %in% s$id) selected else NULL)
+          status(if (!nrow(s)) tr(lang(), "Keine berechtigte Studie. Wenden Sie sich an die Studienleitung.", "No accessible study. Contact the study team.") else "")
+        },
+        error = function(e) status(safe_error(e, lang()))
+      )
+    }
+    shiny::observeEvent(TRUE, load_studies(), once = TRUE)
     study <- shiny::reactive({
       shiny::req(input$study)
       input$study
@@ -154,6 +161,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     communications_server("communications", study, lang, call, services)
     protocols_server("protocols", study, lang, call, services)
     panel_import_server("panel_import", study, lang, call, services)
+    verified <- is.character(session_actor$issuer) && length(session_actor$issuer) == 1L && grepl("^https?://", session_actor$issuer)
+    invitations_server("invitations", study, lang, call, services, default_issuer = if (verified) session_actor$issuer else "")
+    invitation_accept_server("invitation_accept", lang, call, services, verified, on_accepted = load_studies)
   }
   shiny::shinyApp(ui, server)
 }

@@ -121,7 +121,7 @@ command <- function(repo, actor, study, type, key, payload, fun) {
     qualitative_source = "edit", qualitative_edit = "edit", qualitative_release = "manage",
     qualitative_theme = "edit", qualitative_code = "edit", qualitative_item_source = "edit",
     qualitative_lineage = "manage", campaign_prepare = "coordinate",
-    campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage"
+    campaign_release = "coordinate", campaign_cancel = "coordinate", panel_import = "coordinate", invitation_account = "coordinate", invitation_issue = "coordinate", invitation_revoke = "coordinate", withdraw_participation = "panel", panel_group = "manage"
   )[[type]]
   authorize(repo, actor, study, capability)
   h <- content_hash(payload)

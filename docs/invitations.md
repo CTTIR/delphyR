@@ -40,8 +40,47 @@ read-only preview, no consent/enrollment side effects and secret-free receipts.
 The restricted runtime role also passed issuance, acceptance and retry. Run with
 `DELPHYR_TEST_DB=true`; only synthetic fixtures are created.
 
-These are service contracts, not a complete invitation user interface or email
-campaign integration. The real local OIDC gateway is qualified separately in
-[authentication.md](authentication.md). Invitation acceptance through that browser
-path remains an end-to-end gate until the confirmation UI is wired and tested.
-Production and the stock Shiny Server OSS authentication target remain unqualified.
+## Account onboarding and the browser workflow
+
+No account is created by a login. A coordinator onboards an invited person with
+`register_invited_account()`: the exact identity-provider issuer and stable
+subject are recorded with a rationale. The registered principal has no study
+rights and sees no study until its own invitation is accepted; a disabled
+account is not reactivated. `list_panel_invitations()` shows each imported draft
+with its state (`unbound`, `outstanding`, `expired`, `revoked`, `accepted`) and
+never returns tokens, hashes, email addresses or pseudonyms.
+
+In the coordinator's **Invitations** section the draft, issuer, subject,
+validity, rationale and an explicit confirmation are required. The application
+generates the token on the server, issues the invitation and shows one
+hand-over code (`invitation_code()`: study, invitation and token) exactly once.
+The code is not stored and disappears when hidden or when another study is
+selected. The coordinator passes it on through an approved private channel; no
+message is sent by the software. An outstanding invitation can be revoked with
+a reason.
+
+A session resolved by the verified gateway shows **Accept an invitation**. The
+code can be typed or supplied in the URL fragment (`#invitation=...`); a fragment
+is not part of the page request, so it does not reach proxy access logs, and it
+is removed from the address bar after it is read. *Check invitation* calls only
+the read-only preview. Joining requires a separate checkbox and button; one
+idempotency key per previewed invitation makes a lost reply retryable. Every
+refusal produces the same message, whether the code is malformed, expired,
+revoked, consumed or issued for another account. An identity without a
+registered account receives no session and a short notice to contact the
+coordinators. Demo actors without a verified issuer are not offered acceptance.
+
+`inst/qa/browser-invitation-postgres.R` exercised this journey in Chromium with
+the restricted runtime role on 2 October 2026: the unregistered notice, required
+rationale and confirmation, issuance through the interface, fragment prefill and
+removal, refusal of a changed code, explicit confirmation, acceptance, the
+study appearing for the new panel member, refusal of a replayed code, 390-pixel
+and 1280-pixel layouts, and independent database reads (one acceptance, the
+imported stakeholder group, no consent, no enrollment, no plaintext token in the
+database or host logs). The invitee identity in that script is produced by the
+gateway adapter from a synthetic trusted request.
+
+The real local OIDC gateway is qualified separately in
+[authentication.md](authentication.md). Production and the stock Shiny Server
+OSS authentication target remain unqualified. Self-registration, institutional
+account recovery and automated delivery of the hand-over code are not implemented.

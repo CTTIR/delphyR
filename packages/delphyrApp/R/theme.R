@@ -30,6 +30,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .del-note {color:#5b6b7a;font-size:.95rem;}
 .del-actions {display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}
 .del-consent {white-space:pre-wrap;max-width:75ch;}
+.del-code {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;overflow-wrap:anywhere;resize:none;}
 footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 .table {display:block;overflow-x:auto;}
 @media(max-width:600px) {.del-wrap{padding:16px 12px}.del-sheet{padding:16px}.shiny-input-container{max-width:100%}h1{font-size:1.7rem}}
@@ -105,9 +106,9 @@ connection_script <- function(banner_id, workspace_id) {
 }
 
 workspace_sections <- function(capabilities, lang) {
-  ids <- c("section-panel", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-communications")
-  labels <- tr(lang, c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Kommunikation"), c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Communications"))
-  show <- c("panel" %in% capabilities, "manage" %in% capabilities, "manage" %in% capabilities, any(c("edit", "manage") %in% capabilities), "coordinate" %in% capabilities, "coordinate" %in% capabilities)
+  ids <- c("section-panel", "section-protocols", "section-management", "section-editorial", "section-panel-import", "section-invitations", "section-communications")
+  labels <- tr(lang, c("Meine Teilnahme", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Einladungen", "Kommunikation"), c("My participation", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Invitations", "Communications"))
+  show <- c("panel" %in% capabilities, "manage" %in% capabilities, "manage" %in% capabilities, any(c("edit", "manage") %in% capabilities), "coordinate" %in% capabilities, "coordinate" %in% capabilities, "coordinate" %in% capabilities)
   data.frame(id = ids[show], label = labels[show], stringsAsFactors = FALSE)
 }
 

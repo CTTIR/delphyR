@@ -138,3 +138,70 @@ preview_panel_invitation <- function(repo, actor, study_id, invitation_id, token
   invitation_match(repo, actor, inv, h)
   list(id = inv$id, study_title = inv$title, expires_at = as.character(inv$expires_at))
 }
+#' Register a verified external account before issuing its invitation
+#'
+#' Account onboarding is an explicit coordinator decision. The stable issuer and
+#' subject come from the institution's identity provider, never from an email
+#' address. The registered principal has no study rights until its own
+#' invitation is accepted. Existing disabled accounts are not reactivated.
+#' @inheritParams issue_panel_invitation
+#' @param issuer Exact OIDC issuer URL of the qualified authentication gateway.
+#' @param subject Stable provider subject of the invited person.
+#' @return Principal UUID for issue_panel_invitation(); no rights are granted.
+#' @export
+register_invited_account <- function(repo, actor, study_id, issuer, subject, reason, command_id) {
+  ensure(scalar_text(issuer) && nchar(issuer, type = "bytes") <= 512L && grepl("^https?://[^[:space:]?#@]+$", issuer), "invitation.issuer")
+  ensure(scalar_text(subject) && nchar(subject, type = "bytes") <= 1024L && !grepl("[[:space:],[:cntrl:]]", subject), "invitation.subject")
+  ensure(scalar_text(reason) && nchar(reason, type = "bytes") <= 10000L, "invitation.reason")
+  transaction(repo, function() {
+    authorize(repo, actor, study_id, "coordinate")
+    one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active') FOR NO KEY UPDATE", study_id))
+    command(repo, actor, study_id, "invitation_account", command_id, list(issuer, subject, reason), function() {
+      p <- query(repo, "INSERT INTO identity.principals(id,issuer,subject) VALUES($1,$2,$3) ON CONFLICT(issuer,subject) DO UPDATE SET subject=EXCLUDED.subject RETURNING id,active", uid(), issuer, subject)
+      ensure(isTRUE(p$active), "invitation.account_disabled", "DEL_FORBIDDEN")
+      list(id = p$id)
+    })
+  })
+}
+#' List imported invitation drafts and their current invitation state
+#' @inheritParams issue_panel_invitation
+#' @return One row per draft: source reference, display name, group, locale,
+#'   latest invitation id, expiry and state (unbound, outstanding, expired,
+#'   revoked or accepted). Never contains tokens, hashes, emails or pseudonyms.
+#' @export
+list_panel_invitations <- function(repo, actor, study_id) {
+  authorize(repo, actor, study_id, "coordinate")
+  query(repo, "SELECT d.id AS draft_id,c.external_ref,c.display_name,c.stakeholder_group,c.locale,i.id AS invitation_id,i.expires_at::text AS expires_at,
+    CASE WHEN EXISTS(SELECT 1 FROM identity.panel_invitation_acceptances a WHERE a.study_id=d.study_id AND a.draft_id=d.id) THEN 'accepted'
+         WHEN i.id IS NULL THEN 'unbound'
+         WHEN EXISTS(SELECT 1 FROM identity.panel_invitation_revocations r WHERE r.invitation_id=i.id) THEN 'revoked'
+         WHEN i.expires_at<=clock_timestamp() THEN 'expired' ELSE 'outstanding' END AS state
+    FROM identity.panel_invitation_drafts d JOIN identity.panel_contacts c ON c.study_id=d.study_id AND c.id=d.contact_id
+    LEFT JOIN LATERAL (SELECT x.id,x.expires_at FROM identity.panel_invitations x WHERE x.study_id=d.study_id AND x.draft_id=d.id ORDER BY x.created_at DESC,x.id LIMIT 1) i ON true
+    WHERE d.study_id=$1 ORDER BY c.external_ref", study_id)
+}
+#' Encode an invitation hand-over code
+#'
+#' The code combines the study, invitation and private token so that the invited
+#' person enters one value after verified login. Treat the whole code as secret.
+#' @param study_id,invitation_id UUIDs returned by the issuing services.
+#' @param token Private output of new_invitation_token().
+#' @return A single private string with redacted printing; as.character() reveals it.
+#' @export
+invitation_code <- function(study_id, invitation_id, token) {
+  valid_id(study_id)
+  valid_id(invitation_id)
+  invitation_hash(token)
+  structure(paste("dlp1", study_id, invitation_id, as.character(token), sep = "."), class = "delphyr_invitation_token")
+}
+#' Decode an invitation hand-over code
+#' @param code Value produced by invitation_code(); surrounding space is ignored.
+#' @return List study_id, invitation_id and token; DEL_UNAUTHORIZED when malformed.
+#' @export
+parse_invitation_code <- function(code) {
+  ensure(is.character(code) && length(code) == 1L && !is.na(code) && nchar(code, type = "bytes") <= 200L, "invitation.code", "DEL_UNAUTHORIZED")
+  parts <- strsplit(trimws(code), ".", fixed = TRUE)[[1]]
+  uuid <- "^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$"
+  ensure(length(parts) == 4L && identical(parts[1], "dlp1") && grepl(uuid, parts[2]) && grepl(uuid, parts[3]) && grepl("^[0-9a-f]{64}$", parts[4]), "invitation.code", "DEL_UNAUTHORIZED")
+  list(study_id = parts[2], invitation_id = parts[3], token = structure(parts[4], class = "delphyr_invitation_token"))
+}
