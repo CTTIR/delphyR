@@ -66,14 +66,7 @@ new_snapshot <- function(responses, assignments, items, protocol, round_number =
   grid <- merge(assignments, items, by = NULL, sort = FALSE)
   joined <- merge(grid, responses[, required], by = c("panelist_id", "item_code", "item_version", "dimension_code"), all.x = TRUE, sort = TRUE)
   joined$answer_status[is.na(joined$answer_status)] <- "not_answered"
-  scales <- config_scales(protocol)
-  for (i in seq_len(nrow(joined))) {
-    sc <- scales[[joined$scale_code[i]]]
-    value <- if (sc$type == "free_text") joined$value_text[i] else joined$value_integer[i]
-    other <- if (sc$type == "free_text") joined$value_integer[i] else joined$value_text[i]
-    ensure(is.na(other), "responses.wrong_value_type")
-    validate_response(value, joined$answer_status[i], sc)
-  }
+  validate_snapshot_rows(joined, config_scales(protocol))
   ensure(whole(round_number) && length(round_number) == 1 && round_number > 0, "round_number")
   ensure(is.null(snapshot_id) || scalar_text(snapshot_id), "snapshot_id")
   h <- content_hash(list(data = joined, items = items, protocol = protocol, round_number = round_number))
@@ -81,6 +74,38 @@ new_snapshot <- function(responses, assignments, items, protocol, round_number =
     data = joined, items = items, protocol = protocol, round_number = round_number,
     snapshot_id = if (is.null(snapshot_id)) h else snapshot_id, content_hash = h, schema_version = "1.0"
   ), class = "delphyr_snapshot")
+}
+# Every row of a snapshot satisfies validate_response() for its scale. The
+# rules are applied to whole columns; the first offending row decides the
+# reported path, as a row-by-row check would.
+validate_snapshot_rows <- function(joined, scales) {
+  n <- nrow(joined)
+  if (!n) {
+    return(invisible(TRUE))
+  }
+  text <- joined$value_text
+  number <- joined$value_integer
+  free <- vapply(scales, function(s) s$type == "free_text", logical(1))[joined$scale_code]
+  answered <- joined$answer_status == "answered"
+  status_ok <- logical(n)
+  level_ok <- rep(TRUE, n)
+  for (code in names(scales)) {
+    rows <- joined$scale_code == code
+    status_ok[rows] <- joined$answer_status[rows] %in% c("answered", "not_answered", scales[[code]]$missing_options)
+    if (scales[[code]]$type != "free_text") {
+      level_ok[rows] <- is.numeric(number) & suppressWarnings(is.finite(number[rows]) & number[rows] == floor(number[rows]) & number[rows] %in% scales[[code]]$levels)
+    }
+  }
+  text_ok <- is.character(text) & !is.na(text) & nzchar(trimws(text)) & nchar(ifelse(is.na(text), "", text), type = "bytes") <= 20000L
+  failure <- rep(NA_character_, n)
+  failure[answered & !free & !level_ok] <- "value_int"
+  failure[answered & free & !text_ok] <- "value_text"
+  failure[!answered & !ifelse(free, is.na(text), is.na(number))] <- "missing.value"
+  failure[!status_ok] <- "status"
+  failure[!ifelse(free, is.na(number), is.na(text))] <- "responses.wrong_value_type"
+  first <- which(!is.na(failure))
+  if (length(first)) del_abort("DEL_VALIDATION", failure[first[1]])
+  invisible(TRUE)
 }
 #' Synthetic offline snapshot
 #' @param values Integer ratings; NA creates an explicit not_answered response.

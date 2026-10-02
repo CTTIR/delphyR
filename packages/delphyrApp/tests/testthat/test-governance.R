@@ -153,15 +153,15 @@ test_that("a revised item shows the study team's comparability decision", {
   )
   item <- data.frame(id = "item", item_code = "I001", item_version = 2L, scale_code = "rating", texts = '{"en":"Revised question"}', dimension_code = "relevance", required = TRUE)
   shiny::testServer(delphyrApp:::rating_server, args = list(q = q, item = item, lang = function() "en", call = function(...) NULL, autosave_ms = 0), {
-    expect_match(output$prior$html, "assessed both versions as comparable", fixed = TRUE)
+    expect_match(output$title$html, "assessed both versions as comparable", fixed = TRUE)
   })
   q$feedback$comparability$comparable <- FALSE
   shiny::testServer(delphyrApp:::rating_server, args = list(q = q, item = item, lang = function() "en", call = function(...) NULL, autosave_ms = 0), {
-    expect_match(output$prior$html, "not directly comparable", fixed = TRUE)
+    expect_match(output$title$html, "not directly comparable", fixed = TRUE)
   })
   q$feedback$comparability <- NULL
   shiny::testServer(delphyrApp:::rating_server, args = list(q = q, item = item, lang = function() "en", call = function(...) NULL, autosave_ms = 0), {
-    expect_match(output$prior$html, "not directly comparable", fixed = TRUE)
+    expect_match(output$title$html, "not directly comparable", fixed = TRUE)
   })
 })
 

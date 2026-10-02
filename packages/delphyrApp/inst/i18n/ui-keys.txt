@@ -1,4 +1,5 @@
 A changed item version interrupts the paired comparison between rounds. Only an explicit, reasoned decision permits it. A later decision for the same pair of versions supersedes the earlier one; the history is kept.
+A deadline, a reason and confirmation are required.
 A reason and confirmation are required.
 A required group has fewer enrolled members than the minimum valid n; its results would be insufficient data.
 A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.
@@ -29,6 +30,7 @@ Analysis and subsequent round
 Analysis completed
 Analysis queued. Check the operation.
 Analysis requested
+Answered:
 Apply change of rights
 Approval history and technical details
 Approval or cancellation rationale
@@ -43,7 +45,9 @@ Assign to selected subsequent round
 At least one topic needs a statement.
 Authors and responsibilities
 Awaiting acceptance
+Block
 Blocking
+Blocks of this round
 Browse…
 By
 Campaign approved
@@ -51,11 +55,13 @@ Campaign cancelled
 Campaign prepared
 Cancel pending test receipts
 Cancelled
+Cause
 Change
 Change a stakeholder group
 Change of rights confirmed.
 Change stakeholder group
 Change state
+Change the deadline
 Check invitation
 Check operation
 Checksum
@@ -112,6 +118,8 @@ Current documentation version:
 Data and software availability
 Deadline
 Deadline change
+Deadline changed
+Deadline changed.
 Deadline with timezone
 Decide the comparability of two item versions
 Decision
@@ -227,6 +235,7 @@ I reviewed the corrected version and all three texts.
 I reviewed the item, its analysis and the decision.
 I reviewed the pseudonym and the new group.
 I reviewed the round and target state
+I reviewed the round and the new deadline
 I reviewed the text and exact recipient list.
 I reviewed these statements. The new version replaces the previous one completely.
 I reviewed this exact file and every displayed contact.
@@ -317,13 +326,16 @@ Minimum valid n
 Moderated summary (not a quotation):
 My participation
 New
+New deadline with timezone
 New items: one code,version per line
 New stakeholder group
 New state
 New version confirmed:
+Next block
 No accessible study. Contact the study team.
 No approved translation is available; displayed language:
 No assigned round.
+No clear answer from the provider
 No contact rows
 No eligible panel member is enrolled.
 No file selected
@@ -336,14 +348,22 @@ Not applicable
 Not approved: at least one person has reached the maximum number of reminders for this round. Select the recipients again.
 Not approved: the minimum interval since the previous reminder has not passed for at least one person. Choose a later time or other recipients.
 Not approved: the time needs a timezone, must not be in the past and at most 90 days ahead.
+Not changed: the deadline must lie in the future.
+Not changed: the deadline needs a date, a time and a timezone, for example 2026-12-01T18:00:00+01:00.
+Not changed: the deadline of a closed round cannot be changed.
+Not changed: the deadline of an open round can only be moved to a later time.
 Not comparable
 Not yet issued
 Not yet saved
 Note
 Note for participants
 Object
+of
+of which required:
 Oldest waiting (s)
 Open
+Open fields in block:
+Open:
 Operation
 Operation:
 optional
@@ -380,6 +400,7 @@ Preview created. Approval is still required.
 Preview exact version
 Preview passed validation. Nothing has been imported yet.
 Previous
+Previous block
 Processing
 Proposed
 Protocol
@@ -399,6 +420,7 @@ Publish study information
 Publish the study information under Setup first.
 Qualitative content enters feedback only as a version that another person has released. Summaries are labelled as such, never as quotations.
 Qualitative editorial work
+Questions
 Queue again, a duplicate is possible
 Queued
 Quiet hours:
@@ -419,6 +441,7 @@ Readiness review
 Reason
 Reason for changes
 Reason for correction
+Reason for the deadline change
 Receipt state
 Receipt:
 Record an item split or merge
@@ -451,6 +474,8 @@ Request analysis
 Request export
 Request the exports your role permits. Every retrieval is checked and recorded.
 required
+Required fields are open in block:
+Required response fields are still open. They are named in the overview above the submit button.
 Requirement
 Research data export
 Resolve uncertain deliveries
@@ -479,6 +504,7 @@ Right
 Right granted or revoked
 Rights apply to exactly one account with issuer and subject, never to an email address. Each change takes effect at the person’s next protected action and is recorded with its rationale. The last management right of a study cannot be revoked.
 Round
+Round deadline changed
 Round draft created. Review and approve before opening.
 Round frozen
 Round opening
@@ -501,6 +527,7 @@ Save each response field explicitly. Saving is not automatic.
 Save item decision
 Save new documentation version
 Save now
+Save or complete your changes in this block first.
 Save relationship
 Save source linkage
 Save theme version
@@ -516,12 +543,15 @@ Select consent explicitly first.
 Semicolon
 Setup
 Severity
+Show block
 Show history
 Show status
+Sign out
 Snapshot confirmed.
 Source for redaction, coding and item linkage
 Source reference
 Source reference already exists
+Special response:
 Specify another account
 Split
 Stable subject of the invited account
@@ -579,6 +609,7 @@ Take over free-text contributions of a frozen round
 Template version
 Text
 The deadline has passed.
+The deadline is not part of the reviewed instrument. Before a round opens any future time is possible; an open round can only be extended. A closed round is not reopened.
 The panel appears by study pseudonym only. A changed stakeholder group applies to rounds prepared in future; earlier rounds keep their assignment.
 The round has no items.
 The round is closed or its deadline has passed. Saving is unavailable.
@@ -628,9 +659,12 @@ View analysis
 View restricted original text
 View the analysis of the selected round first.
 Waiting to retry
+Was waiting when a backup was restored
 Withdrawn (never opened)
 Wording
+Worker interrupted during delivery
 Worker, approved by
 You joined the panel. Select the study to continue.
 Your account is not registered for this application. Contact the study coordinators.
 Your previous response:
+Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.

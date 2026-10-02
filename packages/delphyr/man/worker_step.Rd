@@ -4,12 +4,17 @@
 \alias{worker_step}
 \title{Process one leased job using its requester's current study rights}
 \usage{
-worker_step(repo, study_id = NULL)
+worker_step(repo, study_id = NULL, lease_seconds = 600L)
 }
 \arguments{
 \item{repo}{Trusted development/test worker repository.}
 
 \item{study_id}{Optional study UUID limiting a worker partition.}
+
+\item{lease_seconds}{Time the job is reserved for this worker. A job whose
+worker stopped is taken up again after that time; a job that needs longer
+cannot record its result. The default leaves a wide margin over the
+analysis and export of a round of 300 members and 300 rating fields.}
 }
 \value{
 FALSE when idle, otherwise a safe operation state.

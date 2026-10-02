@@ -36,7 +36,7 @@ study_create_server <- function(id, lang, call, services, on_created = function(
         shiny::tags$details(
           shiny::tags$summary(tr(l, "Neue Studie anlegen", "Create a new study")),
           shiny::tags$p(tr(l, "Laden Sie ein vollst\u00e4ndiges Studienprotokoll als JSON hoch. Es wird gepr\u00fcft und angezeigt; erst Ihre Best\u00e4tigung legt die Studie mit Protokollversion 1 an. Schwellenwerte sind methodische Entscheidungen des Studienteams. In dieser Entwicklungsumgebung sind nur synthetische Studien zul\u00e4ssig.", "Upload a complete study protocol as JSON. It is validated and displayed; only your confirmation creates the study with protocol version 1. Thresholds are methodological decisions of the study team. Only synthetic studies are permitted in this development environment.")),
-          shiny::fileInput(ns("file"), tr(l, "Studienprotokoll (JSON, h\u00f6chstens 1 MB)", "Study protocol (JSON, maximum 1 MB)"), accept = ".json", buttonLabel = tr(l, "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(l, "Keine Datei ausgew\u00e4hlt", "No file selected")),
+          file_input(ns("file"), tr(l, "Studienprotokoll (JSON, h\u00f6chstens 1 MB)", "Study protocol (JSON, maximum 1 MB)"), accept = ".json", buttonLabel = tr(l, "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(l, "Keine Datei ausgew\u00e4hlt", "No file selected")),
           shiny::actionButton(ns("validate"), tr(l, "Protokoll pr\u00fcfen", "Validate protocol")),
           shiny::tableOutput(ns("summary")),
           shiny::uiOutput(ns("confirmation"))

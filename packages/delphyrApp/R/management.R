@@ -53,7 +53,7 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
           "Review the round state and record a reason for every transition. Permissions and state are checked again when the action runs."
         )),
         shiny::tableOutput(ns("rounds")),
-        shiny::selectInput(ns("round"), tr(lang(), "Runde", "Round"), stats::setNames(r$id, paste(tr(lang(), "Runde", "Round"), r$number, round_state_label(r$state, lang()))), selected = field("round", if (nrow(r)) utils::tail(r$id, 1) else NULL)),
+        shiny::selectInput(ns("round"), tr(lang(), "Runde", "Round"), list_choices(r$id, paste(tr(lang(), "Runde", "Round"), r$number, round_state_label(r$state, lang()))), selected = field("round", if (nrow(r)) utils::tail(r$id, 1) else NULL)),
         if (reviewable) {
           shiny::tagList(
             shiny::tags$div(
@@ -69,6 +69,16 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
         shiny::checkboxInput(ns("confirm"), tr(lang(), "Ich habe die ausgew\u00e4hlte Runde und den Zielstatus gepr\u00fcft", "I reviewed the round and target state"), FALSE),
         shiny::actionButton(ns("transition"), tr(lang(), "Status \u00e4ndern", "Change state"), class = "btn-primary"),
         if ("complete_study" %in% names(services)) shiny::actionButton(ns("complete"), tr(lang(), "Studie abschlie\u00dfen", "Complete study")),
+        if ("change_round_deadline" %in% names(services)) {
+          shiny::tags$details(
+            shiny::tags$summary(tr(lang(), "Frist \u00e4ndern", "Change the deadline")),
+            shiny::tags$p(tr(lang(), "Die Frist geh\u00f6rt nicht zum gepr\u00fcften Instrument. Vor der \u00d6ffnung ist jeder k\u00fcnftige Zeitpunkt m\u00f6glich; eine offene Runde kann nur verl\u00e4ngert werden. Eine geschlossene Runde wird nicht wieder ge\u00f6ffnet.", "The deadline is not part of the reviewed instrument. Before a round opens any future time is possible; an open round can only be extended. A closed round is not reopened.")),
+            shiny::textInput(ns("deadline"), tr(lang(), "Neue Frist mit Zeitzone", "New deadline with timezone"), value = field("deadline"), placeholder = "2026-12-01T18:00:00+01:00"),
+            shiny::textAreaInput(ns("deadline_reason"), tr(lang(), "Begr\u00fcndung der Frist\u00e4nderung", "Reason for the deadline change"), value = field("deadline_reason"), width = "100%"),
+            shiny::checkboxInput(ns("deadline_confirm"), tr(lang(), "Ich habe Runde und neue Frist gepr\u00fcft", "I reviewed the round and the new deadline"), FALSE),
+            shiny::actionButton(ns("deadline_change"), tr(lang(), "Frist \u00e4ndern", "Change the deadline"))
+          )
+        },
         if ("get_operations_status" %in% names(services)) {
           shiny::tags$details(
             shiny::tags$summary(tr(lang(), "Stand der Hintergrundarbeit", "Status of background work")),
@@ -105,6 +115,40 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
           status(tr(lang(), "Studie abgeschlossen.", "Study completed."))
         },
         error = function(e) status(safe_error(e, lang()))
+      )
+    })
+    shiny::observeEvent(input$deadline_change, {
+      shiny::req(allowed(), input$round)
+      reason <- if (is.null(input$deadline_reason)) "" else trimws(input$deadline_reason)
+      deadline <- if (is.null(input$deadline)) "" else trimws(input$deadline)
+      if (!isTRUE(input$deadline_confirm) || !nzchar(reason) || !nzchar(deadline)) {
+        status(tr(lang(), "Frist, Begr\u00fcndung und Best\u00e4tigung sind erforderlich.", "A deadline, a reason and confirmation are required."))
+        return()
+      }
+      r <- rounds()
+      r <- r[r$id == input$round, , drop = FALSE]
+      shiny::req(nrow(r) == 1)
+      tryCatch(
+        {
+          call("change_round_deadline", r$id, deadline, r$instrument_hash, reason, command_id())
+          shiny::updateCheckboxInput(session, "deadline_confirm", value = FALSE)
+          shiny::updateTextAreaInput(session, "deadline_reason", value = "")
+          review(NULL)
+          refresh()
+          touch()
+          status(tr(lang(), "Frist ge\u00e4ndert.", "Deadline changed."))
+        },
+        error = function(e) {
+          path <- if (inherits(e, "delphyr_error")) e$path else ""
+          status(switch(path,
+            deadline.offset = ,
+            deadline.format = tr(lang(), "Nicht ge\u00e4ndert: Die Frist braucht Datum, Uhrzeit und Zeitzone, zum Beispiel 2026-12-01T18:00:00+01:00.", "Not changed: the deadline needs a date, a time and a timezone, for example 2026-12-01T18:00:00+01:00."),
+            deadline.past = tr(lang(), "Nicht ge\u00e4ndert: Die Frist muss in der Zukunft liegen.", "Not changed: the deadline must lie in the future."),
+            deadline.earlier = tr(lang(), "Nicht ge\u00e4ndert: Die Frist einer offenen Runde kann nur auf einen sp\u00e4teren Zeitpunkt verlegt werden.", "Not changed: the deadline of an open round can only be moved to a later time."),
+            round.state = tr(lang(), "Nicht ge\u00e4ndert: Die Frist einer geschlossenen Runde kann nicht ge\u00e4ndert werden.", "Not changed: the deadline of a closed round cannot be changed."),
+            safe_error(e, lang())
+          ))
+        }
       )
     })
     selected <- shiny::reactive({
@@ -279,7 +323,7 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
 # Round states as shown to study staff. A candidate that was never opened is
 # described as withdrawn rather than with the generic job wording.
 round_state_label <- function(state, lang) {
-  extra <- tr(lang, c(cancelled = "Zur\u00fcckgezogen (nie ge\u00f6ffnet)"), c(cancelled = "Withdrawn (never opened)"))
+  extra <- tr(lang, c(cancelled = "Zur\u00fcckgezogen (nie ge\u00f6ffnet)", deadline_changed = "Frist ge\u00e4ndert"), c(cancelled = "Withdrawn (never opened)", deadline_changed = "Deadline changed"))
   out <- state_label(state, lang)
   out[state %in% names(extra)] <- extra[state[state %in% names(extra)]]
   unname(out)

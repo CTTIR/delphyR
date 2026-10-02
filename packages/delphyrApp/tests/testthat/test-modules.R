@@ -515,3 +515,43 @@ test_that("the readiness review is shown only before a round is opened", {
     expect_false(grepl("Readiness review", output$review_panel$html, fixed = TRUE))
   })
 })
+
+test_that("a study without any round shows its management, communications and panel sections without a failure", {
+  no_rounds <- data.frame(id = character(), number = integer(), state = character(), instrument_hash = character(), deadline = as.POSIXct(character(), tz = "UTC"))
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = c("manage", "coordinate", "panel"),
+      get_study_setup = list(protocol = list(study = list(timezone = "Europe/Berlin"))),
+      list_rounds = no_rounds,
+      list_campaign_rounds = data.frame(id = character(), number = integer(), state = character()),
+      list_uncertain_deliveries = data.frame(),
+      list_enrollments = data.frame(id = character(), state = character(), number = integer(), round_state = character()),
+      stop("Unexpected service")
+    )
+  }
+  names_of <- function(x) stats::setNames(rep(list(function(...) NULL), length(x)), x)
+  shiny::testServer(delphyrApp:::management_server, args = list(
+    study = function() "study", lang = function() "en", call = call,
+    services = names_of(c("get_capabilities", "get_study_setup", "list_rounds", "transition_round"))
+  ), {
+    session$flushReact()
+    expect_match(output$body$html, "Study management", fixed = TRUE)
+    expect_match(output$body$html, "id=\"proxy1-round\"", fixed = TRUE)
+    expect_identical(output$status, "")
+  })
+  shiny::testServer(delphyrApp:::communications_server, args = list(
+    study = function() "study", lang = function() "en", call = call,
+    services = names_of(c("get_capabilities", "list_campaign_rounds", "list_campaign_enrollments", "prepare_campaign", "preview_campaign", "release_campaign", "cancel_campaign"))
+  ), {
+    session$flushReact()
+    # The empty list of rounds reaches the server as an empty choice.
+    session$setInputs(round = "")
+    expect_identical(output$status, "")
+  })
+  shiny::testServer(delphyrApp:::panel_server, args = list(
+    study = function() "study", lang = function() "en", call = call, capabilities_available = TRUE
+  ), {
+    session$flushReact()
+    expect_identical(output$status, "No assigned round.")
+  })
+})

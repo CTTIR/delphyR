@@ -95,7 +95,7 @@ test_that("acceptance previews read-only, requires confirmation and reuses one c
   services <- invitation_services(c("preview_panel_invitation", "accept_panel_invitation"))
   shiny::testServer(delphyrApp:::invitation_accept_server, args = list(lang = function() "en", call = call, services = services, verified = TRUE, on_accepted = function(id) joined <<- c(joined, id)), {
     session$setInputs(code = "not-a-code", check = 1)
-    expect_match(output$status, "not available for your account")
+    expect_match(output$status, "not available for your account[.] .* Contact the study team[.] Reference: [0-9a-f]{12}$")
     expect_length(calls, 0L)
     session$setInputs(code = code, check = 2)
     expect_match(output$preview$html, "Synthetic study", fixed = TRUE)
@@ -105,7 +105,7 @@ test_that("acceptance previews read-only, requires confirmation and reuses one c
     expect_length(calls, 1L)
     session$setInputs(confirm = TRUE, accept = 2)
     expect_null(receipt())
-    expect_match(output$status, "not available for your account")
+    expect_match(output$status, "not available for your account[.] .* Contact the study team[.] Reference: [0-9a-f]{12}$")
     fail_accept <<- FALSE
     session$setInputs(accept = 3)
     accepts <- Filter(function(x) x[[1]] == "accept_panel_invitation", calls)

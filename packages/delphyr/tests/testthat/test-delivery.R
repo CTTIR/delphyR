@@ -9,7 +9,7 @@ delivery_stamp <- function(seconds) format(Sys.time() + seconds, "%Y-%m-%dT%H:%M
 delivery_clock <- function(hours, timezone = "Europe/Berlin") format(as.POSIXct(Sys.time(), tz = timezone) + hours * 3600, "%H:%M", tz = timezone)
 # An open round with two consenting synthetic members; `rules` extends the
 # protocol's communication settings.
-delivery_fixture <- function(r, rules = list()) {
+delivery_fixture <- function(r, rules = list(), members = 2L) {
   code <- paste0("DELIVERY-", substr(uid(), 1, 8))
   manager <- demo_actor(r, provision_demo_principal(r, paste0("demo-manager-", code), TRUE))
   p <- demo_protocol()
@@ -18,9 +18,9 @@ delivery_fixture <- function(r, rules = list()) {
   p$communications <- c(p$communications, rules)
   study <- create_study(r, manager, p, "create")$id
   consent <- publish_consent(r, manager, study, "Synthetic information.", "en", "consent")$id
-  panel <- lapply(1:2, function(i) {
+  panel <- lapply(seq_len(members), function(i) {
     actor <- demo_actor(r, provision_demo_principal(r, paste0("demo-", code, "-", i)))
-    add_panelist(r, manager, study, actor$principal_id, unlist(p$panel$groups)[i], paste0("panel-", i))
+    add_panelist(r, manager, study, actor$principal_id, unlist(p$panel$groups)[1 + (i %% 2L == 0L)], paste0("panel-", i))
     actor
   })
   items <- data.frame(item_code = "I001", item_version = 1L, locale = "en", text = "Synthetic item", dimension_code = "relevance", scale_code = "relevance_9", source_ref = "SRC", required = TRUE, display_order = 1L)
@@ -293,4 +293,87 @@ test_that("a lease that expires during sending leaves the delivery uncertain", {
   state <- delivery_states(r, campaign$id)
   expect_identical(state$state, "delivery_unknown")
   expect_true(is.na(state$provider_ref))
+})
+
+# Scenario 8 of the specification: a reminder approved for ten members who had
+# not submitted; two submit and one ends participation before the worker runs.
+test_that("a reminder reaches only those still due, with a reason for each of the others", {
+  r <- delivery_repo()
+  f <- delivery_fixture(r, members = 10L)
+  campaign <- delivery_campaign(r, f, "scenario")
+  expect_identical(nrow(delivery_states(r, campaign$id)), 10L)
+  expect_true(all(delivery_states(r, campaign$id)$state == "queued"))
+  for (i in 1:2) {
+    q <- get_questionnaire(r, f$panel[[i]], f$enrollments[i])
+    saved <- save_response(r, f$panel[[i]], f$enrollments[i], q$items$id, list(value = 7L, status = "answered"), 0L, "save")
+    submit_round(r, f$panel[[i]], f$enrollments[i], setNames(saved$revision, q$items$id), "submit")
+  }
+  withdraw_participation(r, f$panel[[3]], f$study_id, "synthetic_retain_prior_data", "withdraw")
+  while (!identical(process_campaign_sink(r, f$study_id), FALSE)) NULL
+  states <- delivery_states(r, campaign$id)
+  of <- function(i) states[states$id %in% query(r, "SELECT id FROM ops.message_outbox WHERE campaign_id=$1 AND enrollment_id=$2", campaign$id, f$enrollments[i])$id, ]
+  expect_identical(sum(states$state == "sink_recorded"), 7L)
+  expect_identical(sum(states$state == "suppressed"), 3L)
+  expect_identical(c(of(1)$reason, of(2)$reason, of(3)$reason), c("already_submitted", "already_submitted", "participation_inactive"))
+  expect_true(all(is.na(states$reason[states$state == "sink_recorded"])))
+  # The local receipt identifies the message and the approved text, nothing else.
+  sink <- query(r, "SELECT s.* FROM ops.message_sink s JOIN ops.message_outbox o ON o.id=s.message_id WHERE o.campaign_id=$1", campaign$id)
+  expect_identical(nrow(sink), 7L)
+  expect_false(any(grepl("value|rating|response|answer", names(sink))))
+  expect_true(all(sink$campaign_hash == campaign$hash))
+  # Approving again under the same key returns the receipt; nothing is queued twice.
+  expect_identical(release_campaign(r, f$manager, campaign$id, campaign$hash, "Exact text and recipients reviewed", "release scenario")$id, campaign$release$id)
+  expect_error(release_campaign(r, f$manager, campaign$id, campaign$hash, "Exact text and recipients reviewed", "another key"), class = "DEL_CONFLICT")
+  expect_identical(query(r, "SELECT count(*)::int AS n FROM ops.message_outbox WHERE campaign_id=$1", campaign$id)$n, 10L)
+  expect_false(process_campaign_sink(r, f$study_id))
+  expect_identical(nrow(query(r, "SELECT s.message_id FROM ops.message_sink s JOIN ops.message_outbox o ON o.id=s.message_id WHERE o.campaign_id=$1", campaign$id)), 7L)
+  audit <- query(r, "SELECT action,count(*)::int AS n FROM ops.audit WHERE study_id=$1 AND action LIKE 'message_%' GROUP BY action ORDER BY action", f$study_id)
+  expect_identical(audit$n[audit$action == "message_sink_recorded"], 7L)
+  expect_identical(audit$n[audit$action == "message_suppressed"], 3L)
+})
+
+# Scenario 10 of the specification: after a restore the worker must not send
+# what was waiting when the backup was taken without a person looking at it.
+test_that("messages waiting at the time of a backup are held for a decision and none is sent unchecked", {
+  r <- delivery_repo()
+  f <- delivery_fixture(r, members = 3L)
+  other <- delivery_fixture(r)
+  campaign <- delivery_campaign(r, f, "held")
+  untouched <- delivery_campaign(r, other, "untouched")
+  in_flight <- claim_campaign_message(r, f$study_id)
+  expect_identical(sort(delivery_states(r, campaign$id)$state), c("queued", "queued", "running"))
+  # Counting changes nothing.
+  expect_identical(hold_pending_messages(r, study_id = f$study_id), list(queued = 2L, in_flight = 1L, held = 0L))
+  expect_identical(sort(delivery_states(r, campaign$id)$state), c("queued", "queued", "running"))
+  expect_identical(hold_pending_messages(r, dry_run = FALSE, study_id = f$study_id), list(queued = 2L, in_flight = 1L, held = 3L))
+  held <- delivery_states(r, campaign$id)
+  expect_identical(unique(held$state), "delivery_unknown")
+  expect_identical(unique(held$reason), "restored_from_backup")
+  expect_identical(unique(delivery_states(r, untouched$id)$state), "queued")
+  # The worker sends nothing of the held study, and the earlier claim is void.
+  expect_identical(process_campaign_sink(r, f$study_id), FALSE)
+  expect_error(complete_campaign_sink(r, in_flight), class = "DEL_NOT_FOUND")
+  expect_equal(query(r, "SELECT count(*)::int AS n FROM ops.message_sink s JOIN ops.message_outbox o ON o.id=s.message_id WHERE o.campaign_id=$1", campaign$id)$n, 0L)
+  # A coordinator sees each message with its cause and decides with a rationale.
+  uncertain <- list_uncertain_deliveries(r, f$manager, f$study_id)
+  expect_identical(nrow(uncertain), 3L)
+  expect_identical(unique(uncertain$reason), "restored_from_backup")
+  expect_identical(get_system_status(r)$messages$state[get_system_status(r)$messages$state == "delivery_unknown"], "delivery_unknown")
+  expect_true("uncertain_deliveries" %in% get_system_status(r)$attention)
+  resolve_delivery(r, f$manager, f$study_id, uncertain$message_id[1], "requeue", "The sink of the lost system shows no receipt", "again")
+  resolve_delivery(r, f$manager, f$study_id, uncertain$message_id[2], "abandon", "The round closes today", "stop")
+  resolve_delivery(r, f$manager, f$study_id, uncertain$message_id[3], "confirmed_delivered", "The receipt was seen before the loss", "seen")
+  sent <- process_campaign_sink(r, f$study_id)
+  expect_identical(c(sent$id, sent$state), c(uncertain$message_id[1], "sink_recorded"))
+  expect_identical(process_campaign_sink(r, f$study_id), FALSE)
+  expect_equal(query(r, "SELECT count(*)::int AS n FROM ops.message_sink s JOIN ops.message_outbox o ON o.id=s.message_id WHERE o.campaign_id=$1", campaign$id)$n, 1L)
+  # Holding again finds nothing; the other study is still delivered normally.
+  expect_identical(hold_pending_messages(r, dry_run = FALSE, study_id = f$study_id), list(queued = 0L, in_flight = 0L, held = 0L))
+  expect_identical(process_campaign_sink(r, other$study_id)$state, "sink_recorded")
+  expect_error(hold_pending_messages(r, dry_run = NA), class = "DEL_VALIDATION")
+  expect_error(hold_pending_messages(r, study_id = "not-an-id"), class = "DEL_NOT_FOUND")
+  # The restricted application role can run the step.
+  runtime <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "delphyr_runtime", environment = "test")
+  withr::defer(DBI::dbDisconnect(runtime$con))
+  expect_identical(hold_pending_messages(runtime, dry_run = FALSE, study_id = other$study_id), list(queued = 1L, in_flight = 0L, held = 1L))
 })

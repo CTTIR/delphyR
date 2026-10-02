@@ -634,3 +634,37 @@ Messages	Messages
 Waiting to retry	En attente d’une nouvelle tentative
 Permanently failed	Échec définitif
 Reference:	Référence :
+Blocks of this round	Blocs de ce tour
+Block	Bloc
+Show block	Afficher le bloc
+Previous block	Bloc précédent
+Next block	Bloc suivant
+of	sur
+Questions	Questions
+Answered:	Répondu :
+Special response:	Réponse particulière :
+Open:	Ouvert :
+of which required:	dont obligatoires :
+Required fields are open in block:	Des champs obligatoires sont ouverts dans le bloc :
+Save or complete your changes in this block first.	Enregistrez ou complétez d’abord vos modifications dans ce bloc.
+Required response fields are still open. They are named in the overview above the submit button.	Des champs de réponse obligatoires sont encore ouverts. Ils sont indiqués dans l’aperçu au-dessus du bouton de soumission.
+Open fields in block:	Champs ouverts dans le bloc :
+Change the deadline	Modifier la date limite
+The deadline is not part of the reviewed instrument. Before a round opens any future time is possible; an open round can only be extended. A closed round is not reopened.	La date limite ne fait pas partie de l’instrument examiné. Avant l’ouverture d’un tour, toute date future est possible ; un tour ouvert ne peut qu’être prolongé. Un tour fermé n’est pas rouvert.
+New deadline with timezone	Nouvelle date limite avec fuseau horaire
+Reason for the deadline change	Motif de la modification de la date limite
+I reviewed the round and the new deadline	J’ai vérifié le tour et la nouvelle date limite
+A deadline, a reason and confirmation are required.	Une date limite, un motif et une confirmation sont requis.
+Deadline changed.	Date limite modifiée.
+Not changed: the deadline needs a date, a time and a timezone, for example 2026-12-01T18:00:00+01:00.	Non modifiée : la date limite doit comporter une date, une heure et un fuseau horaire, par exemple 2026-12-01T18:00:00+01:00.
+Not changed: the deadline must lie in the future.	Non modifiée : la date limite doit se situer dans le futur.
+Not changed: the deadline of an open round can only be moved to a later time.	Non modifiée : la date limite d’un tour ouvert ne peut être que repoussée.
+Not changed: the deadline of a closed round cannot be changed.	Non modifiée : la date limite d’un tour fermé ne peut pas être modifiée.
+Round deadline changed	Date limite du tour modifiée
+Deadline changed	Date limite modifiée
+Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.	Votre connexion a expiré. Rechargez la page et connectez-vous à nouveau. Les saisies dont l’enregistrement a été confirmé sont conservées ; cette action n’a pas été exécutée.
+Sign out	Se déconnecter
+Cause	Cause
+Worker interrupted during delivery	Worker interrompu pendant la remise
+No clear answer from the provider	Pas de réponse claire du service
+Was waiting when a backup was restored	Était en attente lors de la restauration d’une sauvegarde

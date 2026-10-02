@@ -1,6 +1,6 @@
 editorial_ui <- function(id) shiny::uiOutput(shiny::NS(id)("body"))
 
-editorial_server <- function(id, study, lang, call, services) {
+editorial_server <- function(id, study, lang, call, services, changed = NULL) {
   shiny::moduleServer(id, function(input, output, session) {
     caps <- shiny::reactiveVal(character())
     records <- shiny::reactiveVal(NULL)
@@ -32,6 +32,15 @@ editorial_server <- function(id, study, lang, call, services) {
       caps(character())
       if (ready) attempt(refresh)
     })
+    # A round frozen in another section offers its free-text contributions here.
+    if (!is.null(changed)) {
+      shiny::observeEvent(changed(),
+        {
+          if (ready && importing && "edit" %in% caps()) attempt(function() contributions(call("list_contribution_rounds", study())))
+        },
+        ignoreInit = TRUE
+      )
+    }
     field <- function(name, default = "") {
       value <- shiny::isolate(input[[name]])
       if (is.null(value)) default else value

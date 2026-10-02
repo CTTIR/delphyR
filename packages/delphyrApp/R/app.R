@@ -17,6 +17,13 @@
 #'   as their first two arguments. NULL uses exported delphyr services.
 #' @param autosave_ms Pause in milliseconds after which a settled, complete
 #'   response is saved automatically. 0 leaves only the explicit save button.
+#' @param block_fields Largest number of response fields shown at once. A
+#'   longer round is presented in blocks; the fields of one item stay together.
+#' @param sign_out_url Address of the gateway that ends the sign-in, as a path
+#'   on this host or an http(s) address. NULL (default) shows no sign-out link.
+#'   Signing out ends every session of the account in this process and leaves
+#'   the page; ending the session of the gateway and the identity provider is
+#'   the task of that address.
 #' @return A shiny.appobj, runnable with shiny::runApp().
 #' @export
 #' @examples
@@ -25,9 +32,11 @@
 #'   shiny::runApp(run_app(repo, actor))
 #' }
 run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), services = NULL,
-                    actor_factory = NULL, repo_factory = NULL, autosave_ms = 1500) {
+                    actor_factory = NULL, repo_factory = NULL, autosave_ms = 1500, block_fields = 10L, sign_out_url = NULL) {
   language <- match.arg(language)
+  if (!is.null(sign_out_url) && !(is.character(sign_out_url) && length(sign_out_url) == 1L && !is.na(sign_out_url) && nchar(sign_out_url, type = "bytes") <= 2000L && grepl("^(/|https?://)[^[:space:][:cntrl:]\"'<>]*$", sign_out_url) && !startsWith(sign_out_url, "//"))) stop("Invalid sign-out address.", call. = FALSE)
   if (!is.numeric(autosave_ms) || length(autosave_ms) != 1L || is.na(autosave_ms) || autosave_ms < 0 || autosave_ms > 60000) stop("Invalid autosave delay.", call. = FALSE)
+  if (!is.numeric(block_fields) || length(block_fields) != 1L || is.na(block_fields) || block_fields < 1 || block_fields > 200 || block_fields != floor(block_fields)) stop("Invalid block size.", call. = FALSE)
   if (is.null(actor_factory)) {
     if (is.null(actor) || !is.list(actor)) stop("A trusted server actor is required.", call. = FALSE)
   } else if (!is.function(actor_factory) || !is.null(actor)) {
@@ -51,16 +60,17 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       "request_study_export", "write_participant_feedback", "get_account_rights", "create_study", "publish_consent", "list_study_staff",
       "register_staff_account", "set_capability", "list_panel", "set_panel_group", "record_item_decision", "list_item_decisions",
       "list_contribution_rounds", "import_round_contributions", "list_released_edits", "list_released_feedback", "release_feedback_correction",
-      "list_uncertain_deliveries", "resolve_delivery", "get_operations_status"
+      "list_uncertain_deliveries", "resolve_delivery", "get_operations_status", "change_round_deadline"
     )
     services <- stats::setNames(lapply(n, function(x) getExportedValue("delphyr", x)), n)
   }
   required <- c("list_studies", "list_enrollments", "get_questionnaire", "record_consent", "save_response", "submit_round")
   if (!all(required %in% names(services)) || !all(vapply(services, is.function, logical(1)))) stop("Incomplete service adapter.", call. = FALSE)
   shiny::addResourcePath("delphyr-brand", system.file("www", package = "delphyrApp"))
+  open_sessions <- session_registry()
   ui <- shiny::fluidPage(
     theme = bslib::bs_theme(version = 5, bg = "#eceff2", fg = "#22303c", primary = "#0e6e78", success = "#0e6e78", danger = "#b3372b", base_font = "system-ui"),
-    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){window.delphyrAccepted=true;document.documentElement.lang=lang;});Shiny.addCustomMessageHandler('delphyr-clear-hash',function(x){history.replaceState(null,'',location.pathname+location.search);});}); $(document).on('shiny:disconnected',function(){var box=document.getElementById('unregistered');if(box && !window.delphyrAccepted){box.hidden=false;}}); (function(){var open={};function key(d){var host=d.closest('.shiny-html-output');var s=d.querySelector('summary');return (host?host.id:'')+'|'+(s?s.textContent:'');}document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.tagName==='DETAILS'){open[key(d)]=d.open;}},true);function restore(node){if(!node||node.nodeType!==1)return;var list=node.tagName==='DETAILS'?[node]:node.querySelectorAll('details');Array.prototype.forEach.call(list,function(d){if(open[key(d)]&&!d.open){d.open=true;}});}document.addEventListener('DOMContentLoaded',function(){new MutationObserver(function(changes){changes.forEach(function(c){Array.prototype.forEach.call(c.addedNodes,restore);});}).observe(document.body,{childList:true,subtree:true});});})();", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
+    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){window.delphyrAccepted=true;document.documentElement.lang=lang;});Shiny.addCustomMessageHandler('delphyr-clear-hash',function(x){history.replaceState(null,'',location.pathname+location.search);});Shiny.addCustomMessageHandler('delphyr-focus',function(id){var x=document.getElementById(id);if(x){x.scrollIntoView({block:'start'});x.focus({preventScroll:true});}});Shiny.addCustomMessageHandler('delphyr-leave',function(url){window.location.assign(url);});}); $(document).on('click','#sign_out',function(e){var url=this.getAttribute('href');if(window.Shiny&&Shiny.shinyapp&&Shiny.shinyapp.isConnected()){e.preventDefault();Shiny.setInputValue('sign_out',Date.now(),{priority:'event'});setTimeout(function(){window.location.assign(url);},2000);}}); $(document).on('shiny:disconnected',function(){var box=document.getElementById('unregistered');if(box && !window.delphyrAccepted){box.hidden=false;}}); (function(){var open={};function key(d){var host=d.closest('.shiny-html-output');var s=d.querySelector('summary');return (host?host.id:'')+'|'+(s?s.textContent:'');}document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.tagName==='DETAILS'){open[key(d)]=d.open;}},true);function restore(node){if(!node||node.nodeType!==1)return;var list=node.tagName==='DETAILS'?[node]:node.querySelectorAll('details');Array.prototype.forEach.call(list,function(d){if(open[key(d)]&&!d.open){d.open=true;}});}document.addEventListener('DOMContentLoaded',function(){new MutationObserver(function(changes){changes.forEach(function(c){Array.prototype.forEach.call(c.addedNodes,restore);});}).observe(document.body,{childList:true,subtree:true});});})();", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
       shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-hex.png")),
     shiny::tags$div(
       class = "del-wrap",
@@ -68,7 +78,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         class = "del-header", shiny::tags$div(class = "del-brand",
           shiny::tags$img(class = "del-logo", src = "delphyr-brand/delphyR-hex.png", alt = "", width = 72, height = 84),
           shiny::tags$h1("delphyR")),
-        shiny::selectInput("language", tr(language, "Sprache", "Language"), c("English" = "en", "Fran\u00e7ais" = "fr", "Deutsch" = "de"), selected = language, width = "190px")
+        shiny::tags$div(class = "del-account",
+          shiny::selectInput("language", tr(language, "Sprache", "Language"), c("English" = "en", "Fran\u00e7ais" = "fr", "Deutsch" = "de"), selected = language, width = "190px"),
+          shiny::uiOutput("account", inline = TRUE))
       ),
       shiny::uiOutput("banner"),
       # Shown by the browser only when the server closes a session it never accepted.
@@ -157,6 +169,20 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     ))
     output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
+    # Signing out ends the other sessions of the same account in this process,
+    # for example a second tab, and then leaves the page, which ends this
+    # session and closes its database connection. The address ends the sign-in
+    # at the gateway. Without a connection the link is followed directly.
+    output$account <- shiny::renderUI(if (!is.null(sign_out_url)) shiny::tags$a(id = "sign_out", class = "btn btn-default del-signout", href = sign_out_url, tr(lang(), "Abmelden", "Sign out")))
+    if (!is.null(sign_out_url)) {
+      account <- paste(session_actor$principal_id, collapse = " ")
+      own <- open_sessions$add(account, session)
+      session$onSessionEnded(function() open_sessions$remove(account, own))
+      shiny::observeEvent(input$sign_out, {
+        for (other in open_sessions$others(account, own)) try(other$close(), silent = TRUE)
+        session$sendCustomMessage("delphyr-leave", sign_out_url)
+      })
+    }
     load_studies <- function(selected = NULL) {
       tryCatch(
         {
@@ -197,9 +223,9 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         shiny::tags$ul(lapply(seq_len(nrow(links)), function(i) shiny::tags$li(shiny::tags$a(href = paste0("#", links$id[i]), links$label[i]))))
       )
     })
-    panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services), autosave_ms = autosave_ms, feedback_download_available = "write_participant_feedback" %in% names(services))
+    panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services), autosave_ms = autosave_ms, feedback_download_available = "write_participant_feedback" %in% names(services), block_fields = as.integer(block_fields))
     management_server("management", study, lang, call, services, changed = changed, touch = touch)
-    editorial_server("editorial", study, lang, call, services)
+    editorial_server("editorial", study, lang, call, services, changed = changed)
     communications_server("communications", study, lang, call, services, changed = changed)
     protocols_server("protocols", study, lang, call, services)
     panel_import_server("panel_import", study, lang, call, services, touch = touch)
@@ -213,8 +239,41 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     invitation_accept_server("invitation_accept", lang, call, services, verified, on_accepted = load_studies)
   }
   # An output that fails unexpectedly shows a generic notice, not its message.
-  shiny::shinyApp(ui, server, onStart = function() {
+  app <- shiny::shinyApp(ui, server, onStart = function() {
     previous <- options(shiny.sanitize.errors = TRUE)
     shiny::onStop(function() options(previous))
+    register_page_assets(app)
   })
+  app
+}
+# The open sessions of one process by account. A gateway that sends every
+# request of an account to the same process keeps them together.
+session_registry <- function() {
+  sessions <- new.env(parent = emptyenv())
+  list(
+    add = function(account, session) {
+      key <- uuid::UUIDgenerate()
+      assign(account, c(get0(account, envir = sessions, inherits = FALSE, ifnotfound = list()), stats::setNames(list(session), key)), envir = sessions)
+      key
+    },
+    remove = function(account, key) {
+      rest <- get0(account, envir = sessions, inherits = FALSE, ifnotfound = list())
+      rest[[key]] <- NULL
+      if (length(rest)) assign(account, rest, envir = sessions) else if (exists(account, envir = sessions, inherits = FALSE)) rm(list = account, envir = sessions)
+      invisible(NULL)
+    },
+    others = function(account, key) {
+      all <- get0(account, envir = sessions, inherits = FALSE, ifnotfound = list())
+      unname(all[setdiff(names(all), key)])
+    },
+    accounts = function() length(ls(sessions, all.names = TRUE))
+  )
+}
+# A process serves the scripts and styles of its page only after it has
+# rendered that page once. Behind a gateway with several processes a page can
+# come from one process and its files be asked of another that has just been
+# started; rendering the page once at start makes every process answer.
+register_page_assets <- function(app) {
+  request <- list(REQUEST_METHOD = "GET", PATH_INFO = "/", QUERY_STRING = "")
+  invisible(tryCatch(!is.null(app$httpHandler(request)), error = function(e) FALSE))
 }

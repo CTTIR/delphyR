@@ -67,7 +67,7 @@ audit_action_codes <- function() {
     "request_analysis", "analyse", "feedback_draft", "release_feedback", "assign_feedback", "feedback_displayed", "feedback_download", "decision", "item_comparability", "complete_study",
     "qualitative_source", "qualitative_edit", "qualitative_release", "qualitative_theme", "qualitative_code", "qualitative_item_source", "qualitative_lineage", "qualitative_read", "qualitative_export",
     "campaign_prepare", "campaign_release", "campaign_cancel", "message_sink_recorded", "message_suppressed", "message_accepted", "message_failed", "message_queued",
-    "message_delivery_unknown", "delivery_resolution", "request_export", "artifact_download", "staff_account", "qualitative_import", "correct_feedback"
+    "message_delivery_unknown", "delivery_resolution", "request_export", "artifact_download", "staff_account", "qualitative_import", "correct_feedback", "round_deadline"
   )
 }
 
@@ -86,7 +86,7 @@ audit_action_label <- function(action, lang) {
     campaign_cancel = "Campaign cancelled", message_sink_recorded = "Local message receipt recorded", message_suppressed = "Message suppressed", request_export = "Export requested",
     artifact_download = "Export downloaded", message_accepted = "Message accepted by the provider", message_failed = "Message failed", message_queued = "Message retry scheduled",
     message_delivery_unknown = "Message outcome unknown", delivery_resolution = "Uncertain delivery resolved", staff_account = "Staff account registered",
-    qualitative_import = "Free-text contributions taken over", correct_feedback = "Feedback corrected"
+    qualitative_import = "Free-text contributions taken over", correct_feedback = "Feedback corrected", round_deadline = "Round deadline changed"
   )
   de <- c(
     create_study = "Studie angelegt", amend_protocol = "Protokoll ge\u00e4ndert", study_documentation = "Studiendokumentation erfasst", capability = "Recht erteilt oder entzogen",
@@ -102,7 +102,7 @@ audit_action_label <- function(action, lang) {
     campaign_cancel = "Kampagne abgebrochen", message_sink_recorded = "Lokaler Nachrichtenbeleg gespeichert", message_suppressed = "Nachricht unterdr\u00fcckt", request_export = "Export beauftragt",
     artifact_download = "Export heruntergeladen", message_accepted = "Nachricht vom Dienst angenommen", message_failed = "Nachricht fehlgeschlagen", message_queued = "Wiederholung der Nachricht eingeplant",
     message_delivery_unknown = "Ergebnis der Nachricht unbekannt", delivery_resolution = "Ungewisse Zustellung gekl\u00e4rt", staff_account = "Konto des Studienteams registriert",
-    qualitative_import = "Freitextbeitr\u00e4ge \u00fcbernommen", correct_feedback = "Feedback korrigiert"
+    qualitative_import = "Freitextbeitr\u00e4ge \u00fcbernommen", correct_feedback = "Feedback korrigiert", round_deadline = "Frist der Runde ge\u00e4ndert"
   )
   labels <- tr(lang, de, en)
   # Profile-specific export requests share one label; unknown codes stay visible.

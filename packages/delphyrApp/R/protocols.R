@@ -35,7 +35,7 @@ protocols_server <- function(id, study, lang, call, services) {
         shiny::tableOutput(ns("history")),
         shiny::uiOutput(ns("version_selector")),
         shiny::tags$details(shiny::tags$summary(tr(l, "Gespeicherte Fassung ansehen", "Inspect saved version")), shiny::verbatimTextOutput(ns("saved"))),
-        shiny::fileInput(ns("file"), tr(l, "Vollst\u00e4ndiges neues Protokoll (JSON, h\u00f6chstens 1 MB)", "Complete new protocol (JSON, maximum 1 MB)"), accept = ".json", buttonLabel = tr(lang(), "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(lang(), "Keine Datei ausgew\u00e4hlt", "No file selected")),
+        file_input(ns("file"), tr(l, "Vollst\u00e4ndiges neues Protokoll (JSON, h\u00f6chstens 1 MB)", "Complete new protocol (JSON, maximum 1 MB)"), accept = ".json", buttonLabel = tr(lang(), "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(lang(), "Keine Datei ausgew\u00e4hlt", "No file selected")),
         shiny::actionButton(ns("validate"), tr(l, "Validieren und genaue Vorschau erstellen", "Validate and preview exact protocol")),
         shiny::uiOutput(ns("preview_heading")),
         shiny::tableOutput(ns("changes")),
@@ -52,7 +52,7 @@ protocols_server <- function(id, study, lang, call, services) {
     output$version_selector <- shiny::renderUI({
       v <- versions()
       shiny::req(nrow(v) > 0)
-      shiny::selectInput(session$ns("version"), tr(lang(), "Gespeicherte Version", "Saved version"), stats::setNames(v$id, paste(tr(lang(), "Version", "Version"), v$version)), selected = utils::tail(v$id, 1))
+      shiny::selectInput(session$ns("version"), tr(lang(), "Gespeicherte Version", "Saved version"), list_choices(v$id, paste(tr(lang(), "Version", "Version"), v$version)), selected = utils::tail(v$id, 1))
     })
     output$history <- shiny::renderTable({
       v <- versions()

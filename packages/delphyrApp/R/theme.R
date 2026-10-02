@@ -2,9 +2,11 @@
 app_css <- function() '
 :root {--del-accent:#0e6e78;--del-accent-soft:#eef6f6;--del-warn:#b3372b;--del-warn-soft:#fbefed;--del-line:#dce3e7;}
 body {color:#22303c;background:#eceff2;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
-.del-wrap {max-width:1040px;margin:auto;padding:24px 20px 60px;}
+.del-wrap {max-width:1040px;margin:auto;padding:24px 20px 60px;overflow-wrap:break-word;}
 .del-header {display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;}
 .del-brand {display:flex;align-items:center;gap:16px;}
+.del-account {display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.del-account .form-group {margin-bottom:0;}
 .del-logo {width:72px;height:84px;object-fit:contain;}
 .del-header h1 {font-size:2.1rem;font-weight:750;color:#0e6e78;margin:0;}
 .del-banner {background:var(--del-warn-soft);border-left:3px solid var(--del-warn);padding:12px 16px;margin:20px 0;color:var(--del-warn);border-radius:0 8px 8px 0;}
@@ -29,6 +31,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .shiny-input-container:has(input[type="checkbox"]) {width:100%;}
 .del-note {color:#5b6b7a;font-size:.95rem;}
 .del-actions {display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}
+.del-blocknav {display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:16px 0;}
+.del-blocknav .form-group {margin-bottom:0;}
 .del-consent {white-space:pre-wrap;max-width:75ch;}
 .del-qualitative {padding-left:1.2rem;max-width:75ch;}
 .del-qualitative li {margin:6px 0;line-height:1.5;}
@@ -42,13 +46,29 @@ footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 '
 status_ui <- function(id) shiny::tags$div(class = "del-status", role = "status", `aria-live` = "polite", shiny::textOutput(id))
 command_id <- function() uuid::UUIDgenerate()
+# The choices of a list: identifiers with their labels. An empty list stays
+# empty; a label built with fixed text would otherwise have length one.
+list_choices <- function(ids, labels) if (length(ids)) stats::setNames(ids, labels) else character()
+# A file input shows the chosen file in a read-only text field that the
+# framework leaves without a name; it takes the label of the input.
+file_input <- function(id, label, ...) {
+  x <- shiny::fileInput(id, label, ...)
+  htmltools::tagQuery(x)$find("input.form-control")$addAttrs(`aria-labelledby` = paste0(id, "-label"))$allTags()
+}
 # The message never repeats what the server refused; the reference links it to
 # one entry of the technical log, which holds no content either.
 safe_error <- function(e, lang) {
+  # An input that is not ready yet cancels the step silently; that is not a
+  # failure, so nothing is shown or logged and the cancellation stays one.
+  if (inherits(e, "shiny.silent.error")) stop(e)
   text <- if (inherits(e, "DEL_CONFLICT")) {
     tr(lang, "Konflikt: Bitte Seite neu laden und den gespeicherten Stand pr\u00fcfen. Ihre Eingabe ist noch sichtbar.", "Conflict: reload and review the saved version. Your input remains visible.")
   } else if (inherits(e, "DEL_ROUND_CLOSED")) {
     tr(lang, "Die Runde ist geschlossen oder die Frist abgelaufen. Speichern ist nicht m\u00f6glich.", "The round is closed or its deadline has passed. Saving is unavailable.")
+  } else if (inherits(e, "DEL_UNAUTHORIZED")) {
+    # The identity of a session is valid for a limited time; only a new page
+    # load passes the gateway again.
+    tr(lang, "Ihre Anmeldung ist abgelaufen. Bitte die Seite neu laden und erneut anmelden. Best\u00e4tigt gespeicherte Eingaben bleiben erhalten; diese Aktion wurde nicht ausgef\u00fchrt.", "Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.")
   } else {
     tr(lang, "Aktion fehlgeschlagen. Bitte Angaben, Berechtigung und Rundenstatus pr\u00fcfen. Es wurde kein Erfolg best\u00e4tigt.", "Action failed. Check your entries, permissions and round state. No success was confirmed.")
   }

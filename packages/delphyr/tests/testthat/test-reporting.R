@@ -160,3 +160,41 @@ test_that("report lineage is scoped to exact frozen item versions",{
   expect_setequal(lineage$child_item,c("OLD_A","OLD_B"))
   expect_true(all(lineage$parent_version==1L))
 })
+
+test_that("study text cannot become a link, an image, formatting or a request in a rendered report", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto executable not installed")
+  skip_if_not_installed("rmarkdown")
+  r <- reporting_repo()
+  f <- reporting_fixture(r, submitted = TRUE)
+  hostile <- "[click](javascript:alert(1)) ![pixel](http://127.0.0.1:9/delphyr-probe.png) <http://127.0.0.1:9/auto> **bold** {{< meta title >}} `r 1+1` ``` $x$ <b>tag</b>"
+  check <- function(data, fields) {
+    data$content_hash <- NULL
+    data$content_hash <- content_hash(unclass(data))
+    directory <- tempfile("report-render-")
+    dir.create(directory)
+    withr::defer(unlink(directory, recursive = TRUE))
+    html <- paste(readLines(render_study_report(data, directory, timeout = 120L), warn = FALSE), collapse = "\n")
+    expect_false(grepl("href=\"javascript:", html, fixed = TRUE))
+    expect_false(grepl("<img[^>]*delphyr-probe", html))
+    expect_false(grepl("href=\"http://127.0.0.1:9/auto\"", html, fixed = TRUE))
+    expect_false(grepl("<strong>bold</strong>", html, fixed = TRUE))
+    expect_false(grepl("<b>tag</b>", html, fixed = TRUE))
+    # The text is present as text, once for every field that carried it.
+    shown <- "[click](javascript:alert(1)) ![pixel](http://127.0.0.1:9/delphyr-probe.png) &lt;http://127.0.0.1:9/auto&gt; **bold** {{&lt; meta title &gt;}} `r 1+1` ``` $x$ &lt;b&gt;tag&lt;/b&gt;"
+    expect_gte(lengths(regmatches(html, gregexpr(shown, html, fixed = TRUE))), fields)
+    expect_true(grepl("Report data hash", html, fixed = TRUE))
+    html
+  }
+  round <- prepare_report_data(r, f$manager, f$snapshot)
+  round$instrument$text[1] <- hostile
+  round$metadata$study_title <- hostile
+  check(round, 1L)
+  record_item_decision(r, f$manager, f$analysis, "I001", "retain", hostile, "decision")
+  record_study_documentation(r, f$manager, f$study_id, list(funding = hostile), 0L, "Synthetic", "documentation")
+  study <- prepare_study_report_data(r, f$manager, f$study_id, "research_pseudonymized")
+  expect_true(any(study$decisions$reason == hostile))
+  study$instrument$text[1] <- hostile
+  html <- check(study, 3L)
+  # A large table is written as one block of final markup.
+  expect_true(grepl("data-quarto-disable-processing=\"true\"", html, fixed = TRUE))
+})

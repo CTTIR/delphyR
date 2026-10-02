@@ -152,7 +152,9 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
     previewed <- shiny::reactiveVal(NULL)
     receipt <- shiny::reactiveVal(NULL)
     status <- shiny::reactiveVal("")
-    unavailable <- function() status(tr(lang(), "Diese Einladung ist f\u00fcr Ihr Konto nicht verf\u00fcgbar. Sie kann abgelaufen, widerrufen, bereits verwendet oder f\u00fcr ein anderes Konto ausgestellt sein. Wenden Sie sich an die Studienleitung.", "This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team."))
+    # One message for every cause, so that it reveals nothing about another
+    # account; the reference leads the study team to the entry in the log.
+    unavailable <- function(e) status(paste(tr(lang(), "Diese Einladung ist f\u00fcr Ihr Konto nicht verf\u00fcgbar. Sie kann abgelaufen, widerrufen, bereits verwendet oder f\u00fcr ein anderes Konto ausgestellt sein. Wenden Sie sich an die Studienleitung.", "This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team."), reference_text(error_reference(e), lang())))
     output$body <- shiny::renderUI({
       shiny::req(ready)
       ns <- session$ns
@@ -199,7 +201,7 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
           previewed(list(code = x, preview = p, key = command_id()))
           status(tr(lang(), "Einladung gepr\u00fcft. Noch keine Teilnahme angelegt.", "Invitation checked. No participation has been created yet."))
         },
-        error = function(e) unavailable()
+        error = function(e) unavailable(e)
       )
     })
     output$preview <- shiny::renderUI({
@@ -233,7 +235,7 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
           status(tr(lang(), "Sie sind dem Panel beigetreten. W\u00e4hlen Sie die Studie aus, um fortzufahren.", "You joined the panel. Select the study to continue."))
           on_accepted(x$code$study_id)
         },
-        error = function(e) unavailable()
+        error = function(e) unavailable(e)
       )
     })
     list(receipt = receipt, previewed = previewed)

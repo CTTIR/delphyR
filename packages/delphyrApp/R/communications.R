@@ -91,8 +91,8 @@ communications_server <- function(id, study, lang, call, services, changed = NUL
     output$uncertain <- shiny::renderTable({
       u <- uncertain()
       shiny::req(nrow(u) > 0)
-      out <- data.frame(u$round_number, delivery_kind_label(u$kind, lang()), u$pseudonym, u$adapter, u$updated_at, stringsAsFactors = FALSE)
-      names(out) <- tr(lang(), c("Runde", "Mitteilungsart", "Pseudonym", "Dienst", "Zeitpunkt (UTC)"), c("Round", "Message type", "Pseudonym", "Provider", "Time (UTC)"))
+      out <- data.frame(u$round_number, delivery_kind_label(u$kind, lang()), u$pseudonym, delivery_cause_label(u$reason, lang()), u$adapter, u$updated_at, stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("Runde", "Mitteilungsart", "Pseudonym", "Ursache", "Dienst", "Zeitpunkt (UTC)"), c("Round", "Message type", "Pseudonym", "Cause", "Provider", "Time (UTC)"))
       out
     })
     shiny::observeEvent(input$resolve, attempt(function() {
@@ -203,6 +203,15 @@ delivery_label <- function(state, lang) {
   unname(ifelse(state %in% names(values), values[state], state))
 }
 
+# Why the outcome of a delivery is not known.
+delivery_cause_label <- function(cause, lang) {
+  labels <- tr(
+    lang,
+    c(expired_in_flight_lease = "Worker w\u00e4hrend der Zustellung unterbrochen", adapter_outcome_unknown = "Keine eindeutige Antwort des Dienstes", restored_from_backup = "Wartete bei der Wiederherstellung aus einer Sicherung"),
+    c(expired_in_flight_lease = "Worker interrupted during delivery", adapter_outcome_unknown = "No clear answer from the provider", restored_from_backup = "Was waiting when a backup was restored")
+  )
+  if (is.null(cause)) character() else unname(ifelse(cause %in% names(labels), labels[cause], cause))
+}
 delivery_kind_label <- function(kind, lang) {
   labels <- tr(lang, c(invitation = "Einladung", round_start = "Rundenbeginn", reminder = "Erinnerung", deadline_change = "Frist\u00e4nderung", completion = "Studienabschluss"), c(invitation = "Invitation", round_start = "Round opening", reminder = "Reminder", deadline_change = "Deadline change", completion = "Study completion"))
   unname(ifelse(kind %in% names(labels), labels[kind], kind))

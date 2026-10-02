@@ -196,11 +196,15 @@ reproduce_export <- function(path) {
 #' Process one leased job using its requester's current study rights
 #' @param repo Trusted development/test worker repository.
 #' @param study_id Optional study UUID limiting a worker partition.
+#' @param lease_seconds Time the job is reserved for this worker. A job whose
+#'   worker stopped is taken up again after that time; a job that needs longer
+#'   cannot record its result. The default leaves a wide margin over the
+#'   analysis and export of a round of 300 members and 300 rating fields.
 #' @return FALSE when idle, otherwise a safe operation state.
 #' @export
-worker_step <- function(repo, study_id = NULL) {
+worker_step <- function(repo, study_id = NULL, lease_seconds = 600L) {
   started <- Sys.time()
-  j <- claim_job(repo, study_id = study_id)
+  j <- claim_job(repo, lease_seconds = lease_seconds, study_id = study_id)
   if (!nrow(j)) {
     return(FALSE)
   }
@@ -247,7 +251,7 @@ worker_step <- function(repo, study_id = NULL) {
 #' @export
 download_artifact <- function(repo, actor, artifact_id) {
   valid_id(artifact_id)
-  x <- one(query(repo, "SELECT * FROM ops.artifacts WHERE id=$1 AND expires_at>clock_timestamp()", artifact_id))
+  x <- one(query(repo, "SELECT * FROM ops.artifacts WHERE id=$1 AND expires_at>clock_timestamp() AND removed_at IS NULL", artifact_id))
   admit(repo, actor, x$study_id, export_capability(x$profile))
   ensure(x$actor_id == actor$principal_id, "artifact", "DEL_NOT_FOUND")
   valid_id(x$storage_key)

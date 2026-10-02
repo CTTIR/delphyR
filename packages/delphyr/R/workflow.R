@@ -139,7 +139,7 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
     p <- protocol_for(repo, study_id)
     validate_items(items, p$config)
     one(query(repo, "SELECT id FROM identity.consent_versions WHERE id=$1 AND study_id=$2", consent_version_id, study_id))
-    ensure(scalar_text(deadline) && grepl("(Z|[+-][0-9]{2}:[0-9]{2})$", deadline), "deadline.offset")
+    valid_deadline(deadline)
     command(repo, actor, study_id, "prepare_round", command_id, list(items, consent_version_id, deadline), function() {
       # A withdrawn candidate neither occupies a round number nor blocks its successor.
       number <- query(repo, "SELECT COALESCE(MAX(number),0)+1 AS n FROM research.rounds WHERE study_id=$1 AND state<>'cancelled'", study_id)$n
@@ -180,6 +180,48 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
       for (i in seq_len(nrow(panel))) execute(repo, "INSERT INTO research.enrollments(id,study_id,round_id,panelist_id,group_code) VALUES($1,$2,$3,$4,$5)", uid(), study_id, id, panel$id[i], panel$group_code[i])
       list(id = id, hash = h)
     })
+  })
+}
+# A deadline is a complete time with an explicit offset; the database never
+# has to guess a timezone or reject a text.
+valid_deadline <- function(deadline) {
+  ensure(scalar_text(deadline) && grepl("(Z|[+-][0-9]{2}:[0-9]{2})$", deadline), "deadline.offset")
+  ensure(grepl("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9]([.][0-9]{1,6})?)?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$", deadline) &&
+    !is.na(as.Date(substr(deadline, 1L, 10L), format = "%Y-%m-%d", optional = TRUE)), "deadline.format")
+}
+#' Change the deadline of a round that is not closed
+#'
+#' The deadline is not part of the reviewed instrument, so the approval of a
+#' round stays valid. Before a round opens the deadline may be any future
+#' time. Once the round is open it can only be moved to a later time: nobody
+#' loses time they were told they had. An open round whose deadline has
+#' passed accepts answers again after an extension. A closed round is never
+#' reopened this way. The change is recorded with its rationale in the
+#' round's history and in the audit trail.
+#' @param repo Repository.
+#' @param actor Study manager.
+#' @param round_id Round UUID.
+#' @param deadline New deadline, a timestamp with explicit offset.
+#' @param expected_hash Instrument hash of the round, as shown in its review.
+#' @param reason Nonempty rationale.
+#' @param command_id Idempotency key.
+#' @return Round id and the new deadline in UTC.
+#' @export
+change_round_deadline <- function(repo, actor, round_id, deadline, expected_hash, reason, command_id) {
+  transaction(repo, function() {
+    r <- round_get(repo, actor, round_id, "manage", " FOR UPDATE")
+    ensure(scalar_text(reason), "reason")
+    valid_deadline(deadline)
+    command(repo, actor, r$study_id, "round_deadline", command_id, list(round_id, deadline, expected_hash, reason), function() {
+      ensure(identical(r$instrument_hash, expected_hash), "round.hash", "DEL_CONFLICT")
+      ensure(r$state %in% c("draft", "review", "approved", "open"), "round.state", "DEL_CONFLICT")
+      check <- one(query(repo, "SELECT $2::timestamptz>clock_timestamp() AS future,$2::timestamptz>deadline AS later FROM research.rounds WHERE id=$1", r$id, deadline))
+      ensure(isTRUE(check$future), "deadline.past")
+      ensure(r$state != "open" || isTRUE(check$later), "deadline.earlier", "DEL_CONFLICT")
+      stamp <- query(repo, "UPDATE research.rounds SET deadline=$2::timestamptz WHERE id=$1 RETURNING to_char(deadline AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') AS deadline", r$id, deadline)$deadline
+      execute(repo, "INSERT INTO research.round_events(id,study_id,round_id,target_state,content_hash,actor_id,reason) VALUES($1,$2,$3,'deadline_changed',$4,$5,$6)", uid(), r$study_id, r$id, expected_hash, actor$principal_id, reason)
+      list(id = round_id, deadline = stamp)
+    }, reason = reason, detail = deadline)
   })
 }
 #' Advance an authorized round through its approval lifecycle

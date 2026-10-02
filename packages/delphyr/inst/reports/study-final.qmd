@@ -3,6 +3,7 @@ title: "delphyR – synthetic study report"
 lang: en
 format:
   html:
+    html-table-processing: none
     embed-resources: true
     toc: true
     number-sections: true
@@ -18,28 +19,32 @@ execute:
 ```{r}
 # Only this packaged template is executable. All study content remains JSON data.
 x <- jsonlite::fromJSON("report-data.json", simplifyVector = TRUE)
+# Study text is written as character entities inside raw HTML blocks. No
+# markup, Markdown link or image, shortcode or code in a study text is
+# interpreted, and a text can never end the block that contains it.
 escape <- function(value) {
   value <- as.character(value)
   value[is.na(value)] <- "not available"
-  value <- gsub("&", "&amp;", value, fixed = TRUE)
-  value <- gsub("<", "&lt;", value, fixed = TRUE)
-  value <- gsub(">", "&gt;", value, fixed = TRUE)
-  value <- gsub('"', "&quot;", value, fixed = TRUE)
-  gsub("'", "&#39;", value, fixed = TRUE)
+  rules <- list(c("&", "&amp;"), c("<", "&lt;"), c(">", "&gt;"), c('"', "&quot;"), c("'", "&#39;"), c("`", "&#96;"), c("{", "&#123;"), c("}", "&#125;"))
+  for (rule in rules) value <- gsub(rule[1], rule[2], value, fixed = TRUE)
+  value
 }
+raw_html <- function(...) cat("\n```{=html}\n", ..., "\n```\n", sep = "")
+cell <- function(column) if (is.list(column)) vapply(column, function(v) paste(as.character(unlist(v)), collapse = "; "), character(1)) else column
 show_table <- function(table, empty = "No entries.") {
   if (!is.data.frame(table) || !nrow(table)) {
-    cat("<p>", escape(empty), "</p>\n")
+    raw_html("<p>", escape(empty), "</p>")
     return(invisible(NULL))
   }
-  cat('<div style="overflow-x:auto"><table><thead><tr>',
-      paste0("<th scope=\"col\">", escape(names(table)), "</th>", collapse = ""),
-      "</tr></thead><tbody>")
-  for (i in seq_len(nrow(table))) cat("<tr>", paste0("<td>", escape(unlist(table[i, ], use.names = FALSE)), "</td>", collapse = ""), "</tr>")
-  cat("</tbody></table></div>\n")
+  rows <- do.call(paste0, lapply(table, function(column) paste0("<td>", escape(cell(column)), "</td>")))
+  raw_html(
+    '<div style="overflow-x:auto"><table class="table table-sm table-striped" data-quarto-disable-processing="true"><thead><tr>',
+    paste0('<th scope="col">', escape(names(table)), "</th>", collapse = ""), "</tr></thead><tbody>\n",
+    paste0("<tr>", rows, "</tr>", collapse = "\n"), "\n</tbody></table></div>"
+  )
 }
-show_json <- function(value) cat("<pre>", escape(jsonlite::toJSON(value, auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null")), "</pre>\n")
-show_lines <- function(value) for (line in as.character(unlist(value))) cat("<p>", escape(line), "</p>\n")
+show_json <- function(value) raw_html("<pre>", escape(jsonlite::toJSON(value, auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null")), "</pre>")
+show_lines <- function(value) raw_html(paste0("<p>", escape(as.character(unlist(value))), "</p>", collapse = "\n"))
 ```
 
 # Purpose, design and data scope
@@ -175,7 +180,7 @@ canonical analysis results.
 #| results: asis
 show_lines(x$limitations)
 show_json(x$provenance)
-cat("<p>Report data hash: <code>", escape(x$content_hash), "</code></p>")
+raw_html("<p>Report data hash: <code>", escape(x$content_hash), "</code></p>")
 ```
 
 Pseudonyms are not anonymous. Report release, methodological assessment and

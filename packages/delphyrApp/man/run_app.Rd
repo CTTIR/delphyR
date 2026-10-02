@@ -11,7 +11,9 @@ run_app(
   services = NULL,
   actor_factory = NULL,
   repo_factory = NULL,
-  autosave_ms = 1500
+  autosave_ms = 1500,
+  block_fields = 10L,
+  sign_out_url = NULL
 )
 }
 \arguments{
@@ -32,6 +34,15 @@ its DBI connection is closed when the session ends.}
 
 \item{autosave_ms}{Pause in milliseconds after which a settled, complete
 response is saved automatically. 0 leaves only the explicit save button.}
+
+\item{block_fields}{Largest number of response fields shown at once. A
+longer round is presented in blocks; the fields of one item stay together.}
+
+\item{sign_out_url}{Address of the gateway that ends the sign-in, as a path
+on this host or an http(s) address. NULL (default) shows no sign-out link.
+Signing out ends every session of the account in this process and leaves
+the page; ending the session of the gateway and the identity provider is
+the task of that address.}
 }
 \value{
 A shiny.appobj, runnable with shiny::runApp().

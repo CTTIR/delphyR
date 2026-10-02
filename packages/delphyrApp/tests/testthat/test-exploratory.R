@@ -28,6 +28,30 @@ test_that("editors take over frozen free-text contributions as sources", {
   })
 })
 
+test_that("a round frozen in another section is offered without a manual refresh", {
+  frozen <- 0L
+  call <- function(name, ...) {
+    switch(name,
+      get_capabilities = "edit",
+      get_qualitative_provenance = list(sources = data.frame(id = character(), source_ref = character(), original_text = character()), themes = data.frame(id = character(), label = character(), version = integer())),
+      list_contribution_rounds = data.frame(round_number = seq_len(frozen), snapshot_id = sprintf("snapshot-%d", seq_len(frozen)), contributions = rep(3L, frozen), imported = rep(0L, frozen)),
+      stop("Unexpected service")
+    )
+  }
+  names <- c("get_capabilities", "get_qualitative_provenance", "list_qualitative_reviews", "record_qualitative_source", "redact_qualitative_source", "release_qualitative_edit", "create_qualitative_theme", "code_qualitative_source", "link_item_source", "record_item_lineage", "list_contribution_rounds", "import_round_contributions")
+  changed <- shiny::reactiveVal(0L)
+  shiny::testServer(delphyrApp:::editorial_server, args = list(study = function() "study", lang = function() "en", call = call, services = exploratory_services(names), changed = changed), {
+    session$flushReact()
+    expect_identical(nrow(contributions()), 0L)
+    frozen <<- 1L
+    changed(1L)
+    session$flushReact()
+    expect_identical(contributions()$snapshot_id, "snapshot-1")
+    expect_match(output$contributions, ">   3 </td>", fixed = TRUE)
+    expect_identical(output$status, "")
+  })
+})
+
 exploratory_operations <- function(state) {
   function(name, ...) {
     state$calls[[length(state$calls) + 1L]] <- list(name, ...)
@@ -119,9 +143,9 @@ test_that("participants see released content labelled by kind and the correction
   )
   item <- data.frame(id = "item", item_code = "N001", item_version = 1L, scale_code = "rating", texts = '{"en":"Derived item"}', dimension_code = "relevance", required = TRUE)
   shiny::testServer(delphyrApp:::rating_server, args = list(q = q, item = item, lang = function() "en", call = function(...) NULL, autosave_ms = 0), {
-    expect_match(output$prior$html, "A moderated summary", fixed = TRUE)
-    expect_match(output$prior$html, "A redacted contribution", fixed = TRUE)
-    expect_false(grepl("A general remark", output$prior$html, fixed = TRUE))
+    expect_match(output$title$html, "A moderated summary", fixed = TRUE)
+    expect_match(output$title$html, "A redacted contribution", fixed = TRUE)
+    expect_false(grepl("A general remark", output$title$html, fixed = TRUE))
   })
   q$round <- list(number = 2, deadline = "2026-12-01", study_id = "study")
   q$protocol$study <- list(timezone = "Europe/Berlin")

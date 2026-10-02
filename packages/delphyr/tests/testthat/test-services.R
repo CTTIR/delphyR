@@ -167,11 +167,11 @@ test_that("database constraints and immutable records roll back the whole transa
 })
 
 # Each child starts a new R process and creates its own libpq connection.
-service_child <- function(f, operation, application_name, key, env = parent.frame()) {
+service_child <- function(f, operation, application_name, key, revision = 0L, env = parent.frame()) {
   testthat::skip_if_not_installed("callr")
   root <- Sys.getenv("DELPHYR_SOURCE_ROOT")
   testthat::skip_if(!nzchar(root), "Concurrency tests need DELPHYR_SOURCE_ROOT")
-  child <- callr::r_bg(function(root, libs, f, operation, application_name, key) {
+  child <- callr::r_bg(function(root, libs, f, operation, application_name, key, revision) {
     .libPaths(libs)
     pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
     r <- connect_repository(
@@ -185,7 +185,7 @@ service_child <- function(f, operation, application_name, key, env = parent.fram
         value <- if (operation == "save") {
           save_response(
             r, f$actor, f$enrollment, f$item,
-            list(value = 8L, status = "answered"), 0L, key
+            list(value = 8L, status = "answered"), revision, key
           )
         } else if (operation == "submit") {
           submit_round(r, f$actor, f$enrollment, setNames(1L, f$item), key)
@@ -199,7 +199,7 @@ service_child <- function(f, operation, application_name, key, env = parent.fram
       },
       delphyr_error = function(e) list(ok = FALSE, code = e$code)
     )
-  }, args = list(root, .libPaths(), f, operation, application_name, key), supervise = TRUE)
+  }, args = list(root, .libPaths(), f, operation, application_name, key, revision), supervise = TRUE)
   withr::defer(if (child$is_alive()) child$kill(), envir = env)
   child
 }
@@ -320,6 +320,103 @@ test_that("concurrent duplicate submit creates one exact durable submission", {
     params = list(submitted$id)
   )
   expect_identical(entries$response_revision_id, saved$id)
+})
+
+test_that("a submit queued behind a committed close creates no submission", {
+  r <- service_repo()
+  f <- service_fixture(r)
+  service_save(r, f)
+  DBI::dbBegin(r$con)
+  withr::defer(suppressWarnings(try(DBI::dbRollback(r$con), silent = TRUE)))
+  DBI::dbGetQuery(r$con, "SELECT id FROM research.rounds WHERE id=$1 FOR UPDATE", params = list(f$round$id))
+  name <- paste0("delphyr-submit-close-", f$study_id)
+  child <- service_child(f, "submit", name, "racing-submit")
+  service_wait_lock(r, name, child)
+  DBI::dbExecute(r$con, "UPDATE research.rounds SET state='closed',closed_at=clock_timestamp() WHERE id=$1", params = list(f$round$id))
+  DBI::dbCommit(r$con)
+  result <- service_result(child)
+  expect_false(result$ok)
+  expect_identical(result$code, "DEL_ROUND_CLOSED")
+  expect_equal(nrow(DBI::dbGetQuery(r$con, "SELECT id FROM research.submissions WHERE study_id=$1", params = list(f$study_id))), 0L)
+  # The frozen round holds the saved answer as not submitted.
+  snapshot <- get_snapshot(r, f$manager, freeze_round(r, f$manager, f$round$id, "freeze")$id)
+  expect_equal(sum(snapshot$data$submitted), 0L)
+})
+
+test_that("close waits for an in-flight submit and the snapshot holds exactly that submission", {
+  r <- service_repo()
+  f <- service_fixture(r)
+  saved <- service_save(r, f)
+  DBI::dbBegin(r$con)
+  withr::defer(suppressWarnings(try(DBI::dbRollback(r$con), silent = TRUE)))
+  DBI::dbGetQuery(r$con, "SELECT id FROM research.enrollments WHERE id=$1 FOR UPDATE", params = list(f$enrollment))
+  submit_name <- paste0("delphyr-submit-first-", f$study_id)
+  submit <- service_child(f, "submit", submit_name, "submit-first")
+  service_wait_lock(r, submit_name, submit)
+  close_name <- paste0("delphyr-close-after-submit-", f$study_id)
+  close <- service_child(f, "close", close_name, "close-after-submit")
+  service_wait_lock(r, close_name, close)
+  DBI::dbCommit(r$con)
+  expect_true(service_result(submit)$ok)
+  expect_true(service_result(close)$ok)
+  entries <- DBI::dbGetQuery(r$con, "SELECT e.response_revision_id FROM research.submission_entries e JOIN research.submissions s ON s.id=e.submission_id WHERE s.study_id=$1", params = list(f$study_id))
+  expect_identical(entries$response_revision_id, saved$id)
+  snapshot <- get_snapshot(r, f$manager, freeze_round(r, f$manager, f$round$id, "freeze")$id)
+  expect_equal(sum(snapshot$data$submitted), 1L)
+  expect_equal(snapshot$data$value_integer[snapshot$data$submitted], 7L)
+})
+
+test_that("a save and a submit of the same answers never both take effect", {
+  r <- service_repo()
+  f <- service_fixture(r)
+  saved <- service_save(r, f)
+  DBI::dbBegin(r$con)
+  withr::defer(suppressWarnings(try(DBI::dbRollback(r$con), silent = TRUE)))
+  DBI::dbGetQuery(r$con, "SELECT id FROM research.enrollments WHERE id=$1 FOR UPDATE", params = list(f$enrollment))
+  submit_name <- paste0("delphyr-submit-vs-save-", f$study_id)
+  submit <- service_child(f, "submit", submit_name, "submit-racing-save")
+  service_wait_lock(r, submit_name, submit)
+  save_name <- paste0("delphyr-save-vs-submit-", f$study_id)
+  save <- service_child(f, "save", save_name, "save-racing-submit", revision = 1L)
+  service_wait_lock(r, save_name, save)
+  DBI::dbCommit(r$con)
+  submitted <- service_result(submit)
+  changed <- service_result(save)
+  # Whichever is admitted first, the other is refused as a conflict.
+  expect_true(xor(submitted$ok, changed$ok))
+  expect_identical(c(submitted$code, changed$code), "DEL_CONFLICT")
+  entries <- DBI::dbGetQuery(r$con, "SELECT e.response_revision_id FROM research.submission_entries e JOIN research.submissions s ON s.id=e.submission_id WHERE s.study_id=$1", params = list(f$study_id))
+  revisions <- service_count(r, "research.response_revisions", f$study_id)
+  if (submitted$ok) {
+    # The submission holds the answer it was made for; the later entry was not stored.
+    expect_identical(entries$response_revision_id, saved$id)
+    expect_equal(revisions, 1L)
+  } else {
+    # The new answer was stored; the submission of the earlier one did not happen.
+    expect_equal(nrow(entries), 0L)
+    expect_equal(revisions, 2L)
+  }
+})
+
+test_that("two concurrent close commands close the round once", {
+  r <- service_repo()
+  f <- service_fixture(r)
+  DBI::dbBegin(r$con)
+  withr::defer(suppressWarnings(try(DBI::dbRollback(r$con), silent = TRUE)))
+  DBI::dbGetQuery(r$con, "SELECT id FROM research.rounds WHERE id=$1 FOR UPDATE", params = list(f$round$id))
+  name1 <- paste0("delphyr-close-a-", f$study_id)
+  name2 <- paste0("delphyr-close-b-", f$study_id)
+  a <- service_child(f, "close", name1, "close-a")
+  service_wait_lock(r, name1, a)
+  b <- service_child(f, "close", name2, "close-b")
+  service_wait_lock(r, name2, b)
+  DBI::dbCommit(r$con)
+  results <- list(service_result(a), service_result(b))
+  expect_equal(sum(vapply(results, `[[`, logical(1), "ok")), 1L)
+  expect_identical(results[!vapply(results, `[[`, logical(1), "ok")][[1L]]$code, "DEL_CONFLICT")
+  events <- DBI::dbGetQuery(r$con, "SELECT target_state FROM research.round_events WHERE round_id=$1 AND target_state='closed'", params = list(f$round$id))
+  expect_equal(nrow(events), 1L)
+  expect_identical(DBI::dbGetQuery(r$con, "SELECT state FROM research.rounds WHERE id=$1", params = list(f$round$id))$state, "closed")
 })
 
 test_that("frozen snapshots retain submitted revisions and current study authority", {

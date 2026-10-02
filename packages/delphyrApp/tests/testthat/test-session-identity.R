@@ -82,3 +82,88 @@ test_that("workspace navigation follows selected-study rights and role-specific 
     expect_match(output$intro$html, "Save each response", fixed = TRUE)
   })
 })
+
+test_that("a sign-out link is shown only for a configured, plain address", {
+  services <- list(
+    list_studies = function(...) data.frame(id = "study", title = "Synthetic"),
+    list_enrollments = function(...) data.frame(id = character(), number = integer(), round_state = character()),
+    get_questionnaire = function(...) stop("unused"), record_consent = function(...) stop("unused"),
+    save_response = function(...) stop("unused"), submit_round = function(...) stop("unused")
+  )
+  actor <- list(principal_id = "trusted")
+  shiny::testServer(run_app(actor = actor, services = services), {
+    session$setInputs(language = "en")
+    expect_null(output$account)
+  })
+  shiny::testServer(run_app(actor = actor, services = services, sign_out_url = "/oauth2/sign_out"), {
+    session$setInputs(language = "en")
+    expect_match(output$account$html, "<a id=\"sign_out\" class=\"btn btn-default del-signout\" href=\"/oauth2/sign_out\">Sign out</a>", fixed = TRUE)
+    session$setInputs(language = "de")
+    expect_match(output$account$html, ">Abmelden</a>", fixed = TRUE)
+    session$setInputs(language = "fr")
+    expect_match(output$account$html, ">Se déconnecter</a>", fixed = TRUE)
+  })
+  expect_no_error(run_app(actor = actor, services = services, sign_out_url = "https://gateway.example.invalid/oauth2/sign_out?rd=%2F"))
+  for (address in list("javascript:alert(1)", "//other.example.invalid/x", "/a b", "/a\"onmouseover=\"x", "sign_out", c("/a", "/b"), NA_character_, 1L, "")) {
+    expect_error(run_app(actor = actor, services = services, sign_out_url = address), "Invalid sign-out address.", fixed = TRUE)
+  }
+})
+
+test_that("a process registers the scripts and styles of its page before the first request", {
+  services <- list(
+    list_studies = function(...) data.frame(id = "study", title = "Synthetic"),
+    list_enrollments = function(...) data.frame(id = character(), number = integer(), round_state = character()),
+    get_questionnaire = function(...) stop("unused"), record_consent = function(...) stop("unused"),
+    save_response = function(...) stop("unused"), submit_round = function(...) stop("unused")
+  )
+  app <- run_app(actor = list(principal_id = "trusted"), services = services)
+  page <- c("shiny-javascript-", "jquery-", "bootstrap-", "selectize-")
+  registered <- function() vapply(page, function(prefix) any(startsWith(names(shiny::resourcePaths()), prefix)), logical(1))
+  for (prefix in names(shiny::resourcePaths())) if (any(startsWith(prefix, page))) shiny::removeResourcePath(prefix)
+  expect_false(any(registered()))
+  expect_true(register_page_assets(app))
+  expect_true(all(registered()))
+  # A failure to render never prevents the start of the application.
+  expect_false(register_page_assets(list(httpHandler = function(req) stop("unavailable"))))
+})
+
+test_that("signing out ends the other sessions of the same account and no others", {
+  registry <- session_registry()
+  closed <- character()
+  fake <- function(name) list(close = function() closed <<- c(closed, name))
+  a1 <- registry$add("account-a", fake("a1"))
+  a2 <- registry$add("account-a", fake("a2"))
+  b1 <- registry$add("account-b", fake("b1"))
+  expect_identical(registry$accounts(), 2L)
+  for (other in registry$others("account-a", a1)) other$close()
+  expect_identical(closed, "a2")
+  expect_length(registry$others("account-b", b1), 0L)
+  expect_length(registry$others("unknown", "none"), 0L)
+  registry$remove("account-a", a2)
+  expect_length(registry$others("account-a", a1), 0L)
+  registry$remove("account-a", a1)
+  registry$remove("account-a", a1)
+  registry$remove("account-b", b1)
+  expect_identical(registry$accounts(), 0L)
+
+  # In the application: the session is registered, a sign-out closes the other
+  # one of the same account, and the end of a session removes its entry.
+  services <- list(
+    list_studies = function(...) data.frame(id = "study", title = "Synthetic"),
+    list_enrollments = function(...) data.frame(id = character(), number = integer(), round_state = character()),
+    get_questionnaire = function(...) stop("unused"), record_consent = function(...) stop("unused"),
+    save_response = function(...) stop("unused"), submit_round = function(...) stop("unused")
+  )
+  app <- run_app(actor = list(principal_id = "trusted"), services = services, sign_out_url = "/oauth2/sign_out")
+  registry <- get("open_sessions", envir = environment(app$serverFuncSource()))
+  ended <- FALSE
+  shiny::testServer(app, {
+    expect_identical(registry$accounts(), 1L)
+    second <- registry$add(account, list(close = function() ended <<- TRUE))
+    session$setInputs(sign_out = 1)
+    expect_true(ended)
+    registry$remove(account, second)
+    expect_false(session$isClosed())
+  })
+  expect_identical(registry$accounts(), 0L)
+})

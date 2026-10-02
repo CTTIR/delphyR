@@ -79,7 +79,15 @@ test_that("failure messages outside a service call and failed background work qu
   expect_identical(safe_error(conflict, "de"), paste("Konflikt: Bitte Seite neu laden und den gespeicherten Stand pr\u00fcfen. Ihre Eingabe ist noch sichtbar. Referenz:", conflict$correlation_id))
   closed <- tryCatch(delphyr::log_operation("save_response", function() delphyr::del_abort("DEL_ROUND_CLOSED", "round")), error = function(e) e)
   expect_match(safe_error(closed, "en"), paste0("Saving is unavailable[.] Reference: ", closed$correlation_id, "$"))
-  expect_length(entries(), 3L)
+  # An identity past its lifetime: the person is told to sign in again.
+  expired <- tryCatch(delphyr::log_operation("save_response", function() delphyr::del_abort("DEL_UNAUTHORIZED", "session")), error = function(e) e)
+  expect_identical(safe_error(expired, "en"), paste("Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out. Reference:", expired$correlation_id))
+  expect_match(safe_error(expired, "fr"), paste0("^Votre connexion a expiré[.] .* Référence : ", expired$correlation_id, "$"))
+  expect_length(entries(), 4L)
+  # A step cancelled because an input is not ready is no failure: no message, no entry.
+  cancelled <- tryCatch(shiny::req(FALSE), error = function(e) e)
+  expect_error(safe_error(cancelled, "en"), class = "shiny.silent.error")
+  expect_length(entries(), 4L)
   id <- "0f8fad5b-d9cb-469f-a165-70867728950e"
   expect_identical(operation_status(list(id = id, state = "succeeded"), "en"), "Operation: Succeeded")
   expect_identical(operation_status(list(id = id, state = "queued"), "en"), "Operation: Queued")

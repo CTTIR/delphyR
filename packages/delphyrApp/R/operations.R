@@ -108,7 +108,7 @@ operations_server <- function(id, study, round, lang, call, services, refresh, a
         shiny::tags$details(
           shiny::tags$summary(tr(lang(), "Neue Runde vorbereiten", "Prepare a new round")),
           shiny::tags$p("CSV: item_code, item_version, locale, text, dimension_code, scale_code, source_ref, required, display_order. UTF-8; required: TRUE/FALSE."),
-          shiny::fileInput(ns("csv"), tr(lang(), "Instrument (CSV, Protokollsprachen)", "Instrument (CSV, protocol languages)"), accept = ".csv", buttonLabel = tr(lang(), "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(lang(), "Keine Datei ausgew\u00e4hlt", "No file selected")), shiny::actionButton(ns("validate"), tr(lang(), "Import pr\u00fcfen", "Validate import")),
+          file_input(ns("csv"), tr(lang(), "Instrument (CSV, Protokollsprachen)", "Instrument (CSV, protocol languages)"), accept = ".csv", buttonLabel = tr(lang(), "Durchsuchen\u2026", "Browse\u2026"), placeholder = tr(lang(), "Keine Datei ausgew\u00e4hlt", "No file selected")), shiny::actionButton(ns("validate"), tr(lang(), "Import pr\u00fcfen", "Validate import")),
           shiny::tableOutput(ns("items")), shiny::uiOutput(ns("consents")),
           shiny::textInput(ns("deadline"), tr(lang(), "Frist mit Zeitzone", "Deadline with timezone"), value = field("deadline"), placeholder = "2026-12-01T18:00:00+01:00"),
           shiny::actionButton(ns("prepare"), tr(lang(), "Runde vorbereiten", "Prepare round"))

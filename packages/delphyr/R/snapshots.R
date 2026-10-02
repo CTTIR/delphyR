@@ -179,7 +179,7 @@ get_feedback <- function(repo, actor, enrollment_id) {
   transaction(repo, function() {
     z <- enrollment_get(repo, actor, enrollment_id, FALSE)
     e <- z$enrollment
-    f <- query(repo, "SELECT f.id,f.content::text,s.content::text AS snapshot FROM research.feedback_assignments fa JOIN research.feedback f ON f.study_id=fa.study_id AND f.id=fa.feedback_id JOIN research.analyses a ON a.id=f.analysis_id JOIN research.snapshots s ON s.id=a.snapshot_id WHERE fa.study_id=$1 AND fa.enrollment_id=$2 AND f.state='released'", e$study_id, e$id)
+    f <- query(repo, "SELECT f.id,f.content::text,s.id AS snapshot_id,s.round_id AS snapshot_round,p.config::text AS protocol FROM research.feedback_assignments fa JOIN research.feedback f ON f.study_id=fa.study_id AND f.id=fa.feedback_id JOIN research.analyses a ON a.id=f.analysis_id JOIN research.snapshots s ON s.id=a.snapshot_id JOIN research.rounds r ON r.id=s.round_id JOIN research.protocol_versions p ON p.id=r.protocol_id WHERE fa.study_id=$1 AND fa.enrollment_id=$2 AND f.state='released'", e$study_id, e$id)
     if (!nrow(f)) {
       return(NULL)
     }
@@ -192,9 +192,17 @@ get_feedback <- function(repo, actor, enrollment_id) {
       f$content <- next_version$content
       correction <- list(participant_note = next_version$participant_note, corrected_at = next_version$corrected_at)
     }
-    s <- read_snapshot(f$snapshot)
-    own <- s$data[s$data$panelist_id == e$panelist_id, c("item_code", "item_version", "dimension_code", "answer_status", "value_integer", "value_text"), drop = FALSE]
-    if (!isTRUE(s$protocol$feedback$own_previous_rating)) own <- own[FALSE, , drop = FALSE]
+    # The member's own frozen answers are read directly: the snapshot of a
+    # large round is not parsed and verified again for each person. A field
+    # the member left open, or a round the member did not submit, reads as
+    # not answered, exactly as in the snapshot.
+    own <- query(repo, "SELECT i.item_code,i.item_version,i.dimension_code,COALESCE(x.status,'not_answered') AS answer_status,x.value_int AS value_integer,x.value_text
+      FROM research.enrollments pe JOIN research.round_items i ON i.study_id=pe.study_id AND i.round_id=pe.round_id
+      LEFT JOIN (SELECT v.enrollment_id,v.round_item_id,v.status,v.value_int,v.value_text FROM research.response_revisions v JOIN research.snapshot_entries se ON se.snapshot_id=$3 AND se.response_revision_id=v.id) x ON x.enrollment_id=pe.id AND x.round_item_id=i.id
+      WHERE pe.study_id=$1 AND pe.round_id=$2 AND pe.panelist_id=$4", e$study_id, f$snapshot_round, f$snapshot_id, e$panelist_id)
+    own <- own[order(own$item_code, own$item_version, own$dimension_code), , drop = FALSE]
+    rownames(own) <- NULL
+    if (!isTRUE(from_json(f$protocol)$feedback$own_previous_rating)) own <- own[FALSE, , drop = FALSE]
     audit(repo, actor, e$study_id, "feedback_displayed", f$id)
     # Whether a revised item may be read against its earlier version is the
     # study team's recorded decision, shown without its internal rationale.

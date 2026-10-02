@@ -220,6 +220,11 @@ test_that("an uncertain delivery is resolved only with rationale and confirmatio
     expect_match(output$body$html, "Resolve uncertain deliveries (1)", fixed = TRUE)
     expect_match(output$uncertain, "test_provider", fixed = TRUE)
     expect_match(output$uncertain, "Reminder", fixed = TRUE)
+    # The cause is stated in words; an unknown code is shown as it is.
+    expect_match(output$uncertain, "No clear answer from the provider", fixed = TRUE)
+    expect_identical(delivery_cause_label(c("restored_from_backup", "expired_in_flight_lease", "other_code"), "en"), c("Was waiting when a backup was restored", "Worker interrupted during delivery", "other_code"))
+    expect_identical(delivery_cause_label("restored_from_backup", "de"), "Wartete bei der Wiederherstellung aus einer Sicherung")
+    expect_identical(delivery_cause_label(NULL, "en"), character())
     session$setInputs(uncertain_message = "message", resolution = "abandon", resolution_reason = "", resolution_confirm = TRUE, resolve = 1)
     expect_length(resolved, 0L)
     session$setInputs(resolution_reason = "Provider confirms no acceptance", resolution_confirm = FALSE, resolve = 2)

@@ -318,7 +318,7 @@ security_fixture <- function(r, text = function(kind) c(item = "Synthetic item",
       source_ref = "SRC", fields = list(funding = "None"), expected_version = 0L, issuer = "https://fuzz-idp.example.invalid", subject = "fuzz-subject",
       ttl_seconds = 900L, not_before = NULL, impact_note = "Synthetic", participant_note = "Synthetic", resolution = "abandon",
       response = list(value = 5L, status = "answered"), expected_revision = 0L, capability = "edit", enabled = TRUE, retention_policy = "retain",
-      expected_revision_set = setNames(integer(), character()), target = "closed", output_dir = directory
+      expected_revision_set = setNames(integer(), character()), target = "closed", output_dir = directory, periods = NULL
     )
   }
   list(manager = manager, panel = panel, study_id = study, ids = ids, defaults = defaults, protocol = p, items = items, round = second, first = first, edit = edit, code = code)
