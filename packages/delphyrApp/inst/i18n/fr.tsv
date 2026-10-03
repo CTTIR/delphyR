@@ -112,6 +112,7 @@ Create feedback	Créer la restitution
 Create study	Créer l’étude
 Current documentation version:	Version actuelle de la documentation :
 Data and software availability	Disponibilité des données et des logiciels
+Date (YYYY-MM-DD)	Date (AAAA-MM-JJ)
 Deadline	Date limite
 Deadline change	Modification de la date limite
 Deadline changed	Date limite modifiée
@@ -162,6 +163,7 @@ Email case variants require explicit review	Les variantes de casse des e-mails n
 End participation	Mettre fin à la participation
 Enroll eligible panel members	Inscrire les membres admissibles du panel
 Enrolled panel members	Membres du panel inscrits
+Enter a date (YYYY-MM-DD) and a time (HH:MM).	Indiquez une date (AAAA-MM-JJ) et une heure (HH:MM).
 Enter text or select another response type.	Saisissez un texte ou sélectionnez un autre type de réponse.
 Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.	Saisissez le code de remise reçu de la coordination de l’étude. La vérification ne modifie rien. Seule votre confirmation explicite vous ajoute au panel ; le consentement et les réponses restent des étapes distinctes.
 Error code	Code d’erreur
@@ -614,9 +616,13 @@ This does not import or approve an instrument item.	Cette action n’importe ni 
 This feedback was corrected.	Ce retour a été corrigé.
 This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team.	Cette invitation n’est pas disponible pour votre compte. Elle peut être expirée, révoquée, déjà utilisée ou émise pour un autre compte. Contactez l’équipe de l’étude.
 This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.	Cette action met fin aux réponses et aux invitations dans cette étude synthétique. Les données déjà enregistrées sont conservées. Il ne s’agit pas d’une demande de suppression.
+This time does not exist on that day in the study's time zone because the clocks go forward. Choose another time.	Cette heure n’existe pas ce jour-là dans le fuseau horaire de l’étude, car les horloges sont avancées. Choisissez une autre heure.
+This time occurs twice on that day in the study's time zone because the clocks go back. Choose another time.	Cette heure existe deux fois ce jour-là dans le fuseau horaire de l’étude, car les horloges sont retardées. Choisissez une autre heure.
 This transition is not possible in the round’s current state, or the round has changed in the meantime.	Cette transition n’est pas possible dans l’état actuel du tour, ou le tour a été modifié entre-temps.
 Time	Heure
+Time (24-hour, HH:MM)	Heure (24 h, HH:MM)
 Time (UTC)	Heure (UTC)
+Time zone of the study:	Fuseau horaire de l’étude :
 Timezone	Fuseau horaire
 Title	Titre
 Transition	Transition

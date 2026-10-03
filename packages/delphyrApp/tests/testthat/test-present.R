@@ -64,3 +64,36 @@ test_that("the round table shows deadlines with zone and offset", {
   expect_identical(round_display(rounds, "de", "Europe/Berlin")$Abgabefrist, "10. Dez. 2026, 18:00 (Europe/Berlin, UTC+1)")
   expect_identical(round_display(rounds, "en", NULL)$Deadline, "10 Dec 2026, 17:00 (UTC)")
 })
+
+test_that("a date and a time of day in the study's zone become a moment with its offset", {
+  read <- delphyrApp:::read_moment
+  expect_identical(read("2026-12-10", "18:00", "Europe/Berlin"), list(value = "2026-12-10T18:00:00+01:00"))
+  expect_identical(read(as.Date("2026-07-01"), "9:05", "Europe/Berlin"), list(value = "2026-07-01T09:05:00+02:00"))
+  expect_identical(read("2026-07-01", " 23:59 ", "America/New_York"), list(value = "2026-07-01T23:59:00-04:00"))
+  expect_identical(read("2026-07-01", "12:00", "Asia/Kolkata"), list(value = "2026-07-01T12:00:00+05:30"))
+  expect_identical(read("2026-07-01", "12:00", NULL), list(value = "2026-07-01T12:00:00+00:00"))
+  # The clocks go forward: 02:30 does not exist; they go back: 02:30 occurs twice.
+  expect_identical(read("2026-03-29", "02:30", "Europe/Berlin"), list(error = "nonexistent"))
+  expect_identical(read("2026-10-25", "02:30", "Europe/Berlin"), list(error = "ambiguous"))
+  expect_identical(read("2026-10-25", "03:30", "Europe/Berlin"), list(value = "2026-10-25T03:30:00+01:00"))
+  for (bad in list(list("", "18:00"), list("2026-12-10", ""), list(NULL, "18:00"), list(NA, "18:00"), list("2026-02-30", "18:00"), list("10.12.2026", "18:00"), list("2026-12-10", "24:00"), list("2026-12-10", "18.00"), list("2026-12-10", "6 pm"))) {
+    expect_identical(read(bad[[1]], bad[[2]], "Europe/Berlin"), list(error = "format"), info = paste(format(bad), collapse = " "))
+  }
+  expect_match(delphyrApp:::moment_error_text("ambiguous", "en"), "occurs twice")
+  expect_match(delphyrApp:::moment_error_text("format", "fr"), "AAAA-MM-JJ")
+})
+
+test_that("the moment input shows date, time and the study's zone, prefilled in that zone", {
+  html <- as.character(delphyrApp:::moment_input("deadline", "New deadline", "Europe/Berlin", "en", "2026-12-10T17:00:00Z"))
+  expect_match(html, "id=\"deadline_date\"", fixed = TRUE)
+  expect_match(html, "data-initial-date=\"2026-12-10\"", fixed = TRUE)
+  expect_match(html, "id=\"deadline_time\"", fixed = TRUE)
+  expect_match(html, "value=\"18:00\"", fixed = TRUE)
+  expect_match(html, "Time zone of the study: Europe/Berlin", fixed = TRUE)
+  expect_match(html, "<legend>New deadline</legend>", fixed = TRUE)
+  empty <- as.character(delphyrApp:::moment_input("x", "When", "Nowhere/Unknown", "de"))
+  expect_match(empty, "Zeitzone der Studie: UTC", fixed = TRUE)
+  expect_false(grepl("data-initial-date=\"[0-9]", empty))
+  # The date field's own English tooltip is not shown; the label names the format.
+  expect_false(grepl("Date format", empty, fixed = TRUE))
+})

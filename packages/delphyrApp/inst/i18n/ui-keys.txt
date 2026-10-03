@@ -112,6 +112,7 @@ Create feedback
 Create study
 Current documentation version:
 Data and software availability
+Date (YYYY-MM-DD)
 Deadline
 Deadline change
 Deadline changed
@@ -162,6 +163,7 @@ Email case variants require explicit review
 End participation
 Enroll eligible panel members
 Enrolled panel members
+Enter a date (YYYY-MM-DD) and a time (HH:MM).
 Enter text or select another response type.
 Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.
 Error code
@@ -614,9 +616,13 @@ This does not import or approve an instrument item.
 This feedback was corrected.
 This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team.
 This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.
+This time does not exist on that day in the study's time zone because the clocks go forward. Choose another time.
+This time occurs twice on that day in the study's time zone because the clocks go back. Choose another time.
 This transition is not possible in the round’s current state, or the round has changed in the meantime.
 Time
+Time (24-hour, HH:MM)
 Time (UTC)
+Time zone of the study:
 Timezone
 Title
 Transition

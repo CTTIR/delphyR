@@ -49,6 +49,9 @@ details[open] > summary {border-bottom:1px solid var(--del-line);margin-bottom:1
 .del-qualitative li {margin:6px 0;line-height:1.5;}
 .del-review {border-top:1px solid var(--del-line);border-bottom:1px solid var(--del-line);padding:8px 0 16px;margin:16px 0;}
 .del-review h4 {font-size:1.05rem;margin-top:18px;}
+fieldset.del-moment {border:1px solid var(--del-line);border-radius:10px;padding:4px 14px 0;margin:12px 0;max-width:36rem;}
+.del-moment legend {float:none;width:auto;font-size:1rem;font-weight:600;padding:0 6px;margin:0;}
+.del-moment .form-group {display:inline-block;vertical-align:top;margin-right:16px;max-width:15rem;}
 .del-ref {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;text-decoration:underline dotted;text-underline-offset:3px;cursor:help;}
 .del-statement {border:1px solid var(--del-line);border-radius:12px;padding:18px 20px;margin:18px 0;max-width:75ch;background:#fff;}
 .del-statement > h3:first-child {margin-top:0;}
