@@ -1,6 +1,6 @@
 test_that("amendments preserve historical instruments and reject stale or redefined scales", {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "Opt-in PostgreSQL tests")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   on.exit(DBI::dbDisconnect(r$con))
   f <- demo_study(r, n = 2L, item_count = 1L)
   before <- list_protocol_versions(r, f$manager, f$study_id)

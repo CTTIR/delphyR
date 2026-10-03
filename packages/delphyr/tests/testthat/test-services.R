@@ -3,7 +3,7 @@ service_repo <- function(env = parent.frame()) {
   testthat::skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "PostgreSQL tests require DELPHYR_TEST_DB=true")
   testthat::skip_if_not_installed("RPostgres")
   r <- connect_repository(
-    host = "127.0.0.1", port = 55439, dbname = "delphyr",
+    host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"),
     user = "postgres", environment = "test"
   )
   withr::defer(DBI::dbDisconnect(r$con), envir = env)
@@ -175,7 +175,7 @@ service_child <- function(f, operation, application_name, key, revision = 0L, en
     .libPaths(libs)
     pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
     r <- connect_repository(
-      host = "127.0.0.1", port = 55439, dbname = "delphyr",
+      host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"),
       user = "postgres", environment = "test", application_name = application_name
     )
     on.exit(DBI::dbDisconnect(r$con))

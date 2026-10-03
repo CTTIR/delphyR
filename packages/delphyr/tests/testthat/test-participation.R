@@ -1,6 +1,6 @@
 test_that("withdrawal stops new activity and retains committed synthetic data", {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "Opt-in PostgreSQL tests")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   on.exit(DBI::dbDisconnect(r$con))
   f <- demo_study(r, n = 2L, item_count = 1L)
   for (state in c("review", "approved", "open")) transition_round(r, f$manager, f$round$id, state, f$round$hash, "Synthetic test", state)
@@ -29,7 +29,7 @@ test_that("withdrawal stops new activity and retains committed synthetic data", 
 
 test_that("stakeholder changes leave existing round assignments untouched", {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "Opt-in PostgreSQL tests")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   on.exit(DBI::dbDisconnect(r$con))
   f <- demo_study(r, n = 2L, item_count = 1L)
   enrollment <- list_enrollments(r, f$panel[[1]], f$study_id)$id[1]
@@ -46,7 +46,7 @@ test_that("a save queued behind committed withdrawal is rejected without losing 
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "Opt-in PostgreSQL tests")
   root <- Sys.getenv("DELPHYR_SOURCE_ROOT")
   skip_if(!nzchar(root), "Source root required for independent connections")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   on.exit(DBI::dbDisconnect(r$con))
   f <- demo_study(r, n = 2L, item_count = 1L)
   for (state in c("review", "approved", "open")) transition_round(r, f$manager, f$round$id, state, f$round$hash, "Synthetic race", state)
@@ -61,7 +61,7 @@ test_that("a save queued behind committed withdrawal is rejected without losing 
     callr::r_bg(function(root, libs, f, actor, enrollment, item, action, name) {
       .libPaths(libs)
       pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
-      repo <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "delphyr_runtime", environment = "test", application_name = name)
+      repo <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "delphyr_runtime", environment = "test", application_name = name)
       on.exit(DBI::dbDisconnect(repo$con))
       tryCatch(if (action == "withdraw") withdraw_participation(repo, actor, f$study_id, "synthetic_retain_prior_data", "withdraw") else save_response(repo, actor, enrollment, item, list(status = "answered", value = 8L), 1L, "waiting-save"), delphyr_error = function(e) list(code = e$code))
     }, list(root, .libPaths(), f, actor, enrollment, item, action, name))
@@ -98,7 +98,7 @@ test_that("an admitted save can commit study foreign keys before waiting withdra
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "Opt-in PostgreSQL tests")
   root <- Sys.getenv("DELPHYR_SOURCE_ROOT")
   skip_if(!nzchar(root), "Source root required for independent connections")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   withr::defer(DBI::dbDisconnect(r$con))
   f <- demo_study(r, n = 2L, item_count = 1L)
   for (state in c("review", "approved", "open")) transition_round(r, f$manager, f$round$id, state, f$round$hash, "Synthetic FK race", state)
@@ -113,7 +113,7 @@ test_that("an admitted save can commit study foreign keys before waiting withdra
     callr::r_bg(function(root, libs, actor, study, enrollment, item, action, name) {
       .libPaths(libs)
       pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
-      repo <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "delphyr_runtime", environment = "test", application_name = name)
+      repo <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "delphyr_runtime", environment = "test", application_name = name)
       on.exit(DBI::dbDisconnect(repo$con))
       DBI::dbExecute(repo$con, "SET statement_timeout='20s'")
       tryCatch(

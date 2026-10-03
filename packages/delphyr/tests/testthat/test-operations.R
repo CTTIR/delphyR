@@ -1,6 +1,6 @@
 operations_repo <- function(user = "postgres", env = parent.frame()) {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "PostgreSQL opt-in required")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = user, environment = "test", artifact_root = tempfile("delphyr-operations-"))
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = user, environment = "test", artifact_root = tempfile("delphyr-operations-"))
   withr::defer({
     DBI::dbDisconnect(r$con)
     unlink(r$artifact_root, recursive = TRUE)

@@ -8,7 +8,7 @@ test_that("English, French and German protocol content are explicit supported lo
 })
 test_that("French approved content persists through consent, instrument, import and campaign",{
   skip_if(Sys.getenv("DELPHYR_TEST_DB")!="true","PostgreSQL opt-in")
-  r<-connect_repository(host="127.0.0.1",port=55439,dbname="delphyr",user="postgres",environment="test")
+  r<-connect_repository(host="127.0.0.1",port=55439,dbname=Sys.getenv("DELPHYR_TEST_DB_NAME","delphyr"),user="postgres",environment="test")
   withr::defer(DBI::dbDisconnect(r$con))
   manager<-demo_actor(r,provision_demo_principal(r,paste0("demo-fr-manager-",uid()),TRUE))
   panel<-demo_actor(r,provision_demo_principal(r,paste0("demo-fr-panel-",uid())))

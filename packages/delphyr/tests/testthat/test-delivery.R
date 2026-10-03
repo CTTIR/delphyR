@@ -1,6 +1,6 @@
 delivery_repo <- function(env = parent.frame()) {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "PostgreSQL opt-in required")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   withr::defer(DBI::dbDisconnect(r$con), envir = env)
   r
 }
@@ -280,7 +280,7 @@ test_that("a lease that expires during sending leaves the delivery uncertain", {
   f <- delivery_fixture(r)
   member <- delivery_invited_member(r, f)
   campaign <- delivery_campaign(r, f, "lease", recipients = member$enrollment)
-  second <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  second <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   withr::defer(DBI::dbDisconnect(second$con))
   slow <- new_message_adapter("test_slow", function(message) {
     # Another worker sweeps the expired claim while the provider call runs.
@@ -373,7 +373,7 @@ test_that("messages waiting at the time of a backup are held for a decision and 
   expect_error(hold_pending_messages(r, dry_run = NA), class = "DEL_VALIDATION")
   expect_error(hold_pending_messages(r, study_id = "not-an-id"), class = "DEL_NOT_FOUND")
   # The restricted application role can run the step.
-  runtime <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "delphyr_runtime", environment = "test")
+  runtime <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "delphyr_runtime", environment = "test")
   withr::defer(DBI::dbDisconnect(runtime$con))
   expect_identical(hold_pending_messages(runtime, dry_run = FALSE, study_id = other$study_id), list(queued = 1L, in_flight = 0L, held = 1L))
 })

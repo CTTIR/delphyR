@@ -1,6 +1,6 @@
 security_repo <- function(user = "postgres", env = parent.frame()) {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "PostgreSQL opt-in required")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = user, environment = "test", artifact_root = tempfile("delphyr-security-"))
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = user, environment = "test", artifact_root = tempfile("delphyr-security-"))
   withr::defer({
     DBI::dbDisconnect(r$con)
     unlink(r$artifact_root, recursive = TRUE)
@@ -144,7 +144,7 @@ security_scenario <- function(admin, r) {
   refused(log_operation("import_panel", function() {
     transaction(r, function() execute(r, "INSERT INTO identity.panel_contacts(id,study_id,external_ref,email,display_name,locale,stakeholder_group,import_id,source_row) VALUES($1,$2,$3,$4,$5,'en',$6,$7,1)", uid(), study, canary$external, canary$email, canary$name, unlist(p$panel$groups)[1], receipt$id))
   }, component = "app"))
-  refused(connect_repository(host = "127.0.0.1", port = 1L, dbname = "delphyr", user = "delphyr_runtime", password = canary$password, environment = "test", connect_timeout = 2L))
+  refused(connect_repository(host = "127.0.0.1", port = 1L, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "delphyr_runtime", password = canary$password, environment = "test", connect_timeout = 2L))
   list(
     canary = canary, lines = lines, conditions = conditions, study = study, job = job$id,
     principals = c(manager$principal_id, reviewer$principal_id, vapply(panel, function(a) a$principal_id, character(1)))

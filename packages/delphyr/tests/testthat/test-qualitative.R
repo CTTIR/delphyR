@@ -11,7 +11,7 @@ qual_execute <- function(r, sql, params) {
 qual_repo <- function(env = parent.frame()) {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "Opt-in PostgreSQL tests")
   skip_if_not_installed("RPostgres")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   withr::defer(DBI::dbDisconnect(r$con), envir = env)
   r
 }

@@ -1,6 +1,6 @@
 invitation_fixture <- function(env=parent.frame()) {
   skip_if(Sys.getenv("DELPHYR_TEST_DB")!="true","PostgreSQL opt-in")
-  r<-connect_repository(host="127.0.0.1",port=55439,dbname="delphyr",user="postgres",environment="test")
+  r<-connect_repository(host="127.0.0.1",port=55439,dbname=Sys.getenv("DELPHYR_TEST_DB_NAME","delphyr"),user="postgres",environment="test")
   withr::defer(DBI::dbDisconnect(r$con),envir=env)
   f<-demo_study(r,n=2L,item_count=1L)
   csv<-paste("external_ref,email,display_name,locale,stakeholder_group","a,a@example.invalid,Synthetic,de,professionals",sep="\n")
@@ -72,7 +72,7 @@ test_that("two blocked independent consumers create exactly one membership",{
   names<-paste0("invitation-",uid(),c("-a","-b"))
   run<-function(path,lib,actor,study,id,token,key,name){
     .libPaths(lib);pkgload::load_all(path,quiet=TRUE)
-    r<-delphyr::connect_repository(host="127.0.0.1",port=55439,dbname="delphyr",user="postgres",environment="test",options=paste0("-c application_name=",name))
+    r<-delphyr::connect_repository(host="127.0.0.1",port=55439,dbname=Sys.getenv("DELPHYR_TEST_DB_NAME","delphyr"),user="postgres",environment="test",options=paste0("-c application_name=",name))
     on.exit(DBI::dbDisconnect(r$con))
     tryCatch({delphyr::accept_panel_invitation(r,actor,study,id,token,TRUE,key);"success"},error=function(e)class(e)[1L])
   }

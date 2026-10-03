@@ -1,4 +1,6 @@
 # Run from the repository root. Only the isolated local test PostgreSQL is used.
+# DELPHYR_TEST_DB_NAME selects another database of that server (default
+# delphyr), so that two working copies can be tested at the same time.
 if (Sys.getenv("DELPHYR_TEST_DB") != "true") {
   stop("Opt in explicitly with DELPHYR_TEST_DB=true Rscript scripts/integration.R")
 }
@@ -8,7 +10,7 @@ stopifnot(file.exists(file.path(root, "packages/delphyr/DESCRIPTION")))
 Sys.setenv(DELPHYR_SOURCE_ROOT = root)
 pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
 r <- connect_repository(
-  host = "127.0.0.1", port = 55439, dbname = "delphyr",
+  host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"),
   user = "postgres", environment = "test"
 )
 tryCatch(migrate_repository(r), finally = DBI::dbDisconnect(r$con))

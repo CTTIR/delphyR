@@ -24,7 +24,7 @@ test_that("gateway configuration and unauthenticated transport fail closed", {
 test_that("only the configured issuer and stable subject map to a current principal", {
   skip_if(Sys.getenv("DELPHYR_TEST_DB")!="true","Opt-in PostgreSQL tests")
   skip_if_not_installed("RPostgres")
-  r<-connect_repository(host="127.0.0.1",port=55439,dbname="delphyr",user="postgres",environment="test")
+  r<-connect_repository(host="127.0.0.1",port=55439,dbname=Sys.getenv("DELPHYR_TEST_DB_NAME","delphyr"),user="postgres",environment="test")
   withr::defer(DBI::dbDisconnect(r$con))
   config<-auth_test_config();request<-auth_test_request()
   request$HTTP_X_FORWARDED_USER<-paste0("synthetic-",uuid::UUIDgenerate())

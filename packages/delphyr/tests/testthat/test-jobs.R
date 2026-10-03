@@ -1,6 +1,6 @@
 job_repo <- function(env = parent.frame()) {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "PostgreSQL opt-in required")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test", artifact_root = tempfile("delphyr-test-"))
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test", artifact_root = tempfile("delphyr-test-"))
   withr::defer(
     {
       DBI::dbDisconnect(r$con)

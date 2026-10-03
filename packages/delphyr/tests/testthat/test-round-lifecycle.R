@@ -1,6 +1,6 @@
 lifecycle_repo <- function(env = parent.frame()) {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "Opt-in PostgreSQL tests")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   withr::defer(DBI::dbDisconnect(r$con), envir = env)
   r
 }
@@ -227,7 +227,7 @@ test_that("an enrollment queued behind a committed close adds nobody", {
   child <- callr::r_bg(function(root, libs, f, name) {
     .libPaths(libs)
     pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
-    r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test", application_name = name)
+    r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test", application_name = name)
     on.exit(DBI::dbDisconnect(r$con))
     DBI::dbExecute(r$con, "SET statement_timeout='15s'")
     tryCatch(paste("added", enroll_panel(r, f$manager, f$round$id, "waiting-enroll")$added), delphyr_error = function(e) e$code)

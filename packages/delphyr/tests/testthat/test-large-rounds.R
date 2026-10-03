@@ -132,7 +132,7 @@ test_that("column-wise snapshot validation reports what the row-by-row rules rep
 
 test_that("a participant's own previous answers equal their rows of the frozen snapshot", {
   skip_if(Sys.getenv("DELPHYR_TEST_DB") != "true", "PostgreSQL opt-in required")
-  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test")
+  r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   withr::defer(DBI::dbDisconnect(r$con))
   code <- paste0("OWN-", substr(uid(), 1, 8))
   manager <- demo_actor(r, provision_demo_principal(r, paste0("demo-manager-", code), TRUE))
