@@ -50,7 +50,7 @@ audit_server <- function(id, study, lang, call, services) {
         l <- lang()
         by <- ifelse(x$actor_kind == "panel", tr(l, "Panelmitglied", "Panel member"), paste(ifelse(x$actor_kind == "worker", tr(l, "Worker, freigegeben von", "Worker, approved by"), tr(l, "Studienkonto", "Staff account")), x$actor_ref))
         blank <- function(v) ifelse(is.na(v), "", v)
-        out <- data.frame(x$occurred_at, audit_action_label(x$action, l), blank(x$detail), blank(x$reason), by, x$object_ref, stringsAsFactors = FALSE)
+        out <- data.frame(format_moment(x$occurred_at, "UTC", l, with_zone = FALSE), audit_action_label(x$action, l), blank(x$detail), blank(x$reason), by, x$object_ref, stringsAsFactors = FALSE)
         names(out) <- tr(l, c("Zeitpunkt (UTC)", "Aktion", "Angabe", "Begr\u00fcndung", "Durch", "Objekt"), c("Time (UTC)", "Action", "Detail", "Reason", "By", "Object"))
         out
       },
@@ -172,7 +172,7 @@ documentation_server <- function(id, study, lang, call, services) {
       if (!nrow(x$history)) {
         return(NULL)
       }
-      out <- data.frame(x$history$version, x$history$reason, x$history$recorded_at, stringsAsFactors = FALSE)
+      out <- data.frame(x$history$version, x$history$reason, format_moment(x$history$recorded_at, "UTC", lang(), with_zone = FALSE), stringsAsFactors = FALSE)
       names(out) <- tr(lang(), c("Version", "Begr\u00fcndung", "Zeitpunkt (UTC)"), c("Version", "Reason", "Time (UTC)"))
       out
     })

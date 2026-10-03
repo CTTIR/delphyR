@@ -36,7 +36,7 @@ test_that("a deadline change needs a time, a rationale and confirmation and bind
     expect_identical(unlist(sent[[1]][2:5]), c("round", "2026-12-10T18:00:00+01:00", "listed-hash", "Service was interrupted"))
     expect_identical(output$status, "Deadline changed.")
     expect_identical(touched, 1L)
-    expect_match(output$rounds, "2026-12-10 18:00 \\+0100 Europe/Berlin")
+    expect_match(output$rounds, "10 Dec 2026, 18:00 (Europe/Berlin, UTC+1)", fixed = TRUE)
     # Each refusal says what to change; nothing is reported as changed.
     for (case in list(
       list("deadline.format", "needs a date, a time and a timezone"), list("deadline.offset", "needs a date, a time and a timezone"), list("deadline.past", "must lie in the future"),
@@ -77,11 +77,11 @@ test_that("a deadline in the hour that occurs twice at the end of summer time is
   after <- as.POSIXct("2026-10-25 01:30:00", tz = "UTC")
   rounds <- data.frame(id = c("a", "b"), number = 1:2, state = "open", deadline = c(before, after))
   shown <- round_display(rounds, "en", "Europe/Berlin")$Deadline
-  expect_identical(shown, c("2026-10-25 02:30 +0200 Europe/Berlin", "2026-10-25 02:30 +0100 Europe/Berlin"))
+  expect_identical(shown, c("25 Oct 2026, 02:30 (Europe/Berlin, UTC+2)", "25 Oct 2026, 02:30 (Europe/Berlin, UTC+1)"))
   expect_false(identical(shown[1], shown[2]))
   # The start of summer time: 02:30 does not exist on 29 March 2026.
   spring <- round_display(data.frame(id = "c", number = 1L, state = "open", deadline = as.POSIXct("2026-03-29 01:30:00", tz = "UTC")), "en", "Europe/Berlin")$Deadline
-  expect_identical(spring, "2026-03-29 03:30 +0200 Europe/Berlin")
+  expect_identical(spring, "29 Mar 2026, 03:30 (Europe/Berlin, UTC+2)")
   # A participant sees the same instants with their offsets.
   for (case in list(list(before, "25.10.2026 02:30 +0200 Europe/Berlin"), list(after, "25.10.2026 02:30 +0100 Europe/Berlin"))) {
     q <- list(

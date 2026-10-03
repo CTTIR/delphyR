@@ -16,12 +16,23 @@ body {color:#22303c;background:#eceff2;font-family:system-ui,-apple-system,"Sego
 [id^="section-"] {scroll-margin-top:16px;}
 .del-sheet {background:white;border:1px solid #dce3e7;border-radius:14px;padding:24px;margin:18px 0;box-shadow:0 1px 2px rgba(34,48,60,.10);}
 .del-item {border-top:1px solid #dce3e7;padding:22px 0;max-width:75ch;}
-.del-item h3 {font-size:1.25rem;line-height:1.5;}
+.del-item h3 {line-height:1.5;}
 h1,h2,h3,h4 {letter-spacing:-.01em;overflow-wrap:anywhere;}
-h2 {font-size:1.55rem;} p {max-width:75ch;line-height:1.6;}
+h2 {font-size:1.5rem;} h3 {font-size:1.2rem;} h4 {font-size:1.05rem;} h3,h4 {margin-top:20px;} p {max-width:75ch;line-height:1.6;}
 .btn {min-height:44px;border-radius:8px;font-weight:600;white-space:normal;}
+.btn + .btn {margin-left:12px;}
+.del-actions .btn + .btn,.del-blocknav .btn + .btn,.del-account .btn + .btn {margin-left:0;}
+.btn + h2,.btn + h3,.btn + h4,.btn + p,.btn + .form-group,.btn + .shiny-input-container,.btn + .table {margin-top:16px;}
+.btn-sm {min-height:36px;font-weight:500;}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {outline:3px solid var(--del-accent)!important;outline-offset:3px;}
-.form-control,.form-select,.selectize-input {min-height:44px;border-color:#9cabb7;}
+.form-control,.form-select,.selectize-input {min-height:44px;border-color:#6b7c8a;background-color:#fff;}
+.form-control:disabled,.form-select:disabled,.form-control[readonly] {background-color:#eef1f4;color:#4a5865;}
+.form-control::placeholder {color:#5b6b7a;font-style:italic;opacity:1;}
+.checkbox label,.radio label {display:flex;gap:10px;align-items:flex-start;}
+.checkbox input,.radio input {flex:none;margin-top:.3em;}
+details {border:1px solid var(--del-line);border-radius:10px;padding:0 14px;margin:12px 0;background:#fff;}
+details > summary {font-weight:600;padding:10px 0;min-height:44px;cursor:pointer;}
+details[open] > summary {border-bottom:1px solid var(--del-line);margin-bottom:12px;}
 .del-status {border-left:3px solid #9cabb7;padding:8px 12px;margin:12px 0;overflow-wrap:anywhere;}
 .del-status--saved {border-color:var(--del-accent);background:var(--del-accent-soft);color:var(--del-accent);}
 .del-status--attention,.shiny-output-error {border-color:var(--del-warn);color:var(--del-warn);}
@@ -38,10 +49,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .del-qualitative li {margin:6px 0;line-height:1.5;}
 .del-review {border-top:1px solid var(--del-line);border-bottom:1px solid var(--del-line);padding:8px 0 16px;margin:16px 0;}
 .del-review h4 {font-size:1.05rem;margin-top:18px;}
+.del-ref {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;text-decoration:underline dotted;text-underline-offset:3px;cursor:help;}
+.del-statement {border:1px solid var(--del-line);border-radius:12px;padding:18px 20px;margin:18px 0;max-width:75ch;background:#fff;}
+.del-statement > h3:first-child {margin-top:0;}
+.del-feedback {background:var(--del-accent-soft);border-left:3px solid var(--del-accent);border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0;}
+.del-feedback p {margin:4px 0;}
+.del-feedback blockquote {margin:8px 0 4px;padding-left:12px;border-left:2px solid #9cabb7;font-style:italic;}
+.del-revision {border-left:3px solid #8a6d1d;background:#fbf6e7;border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0;}
+.del-anchors {color:#4a5865;font-size:.95rem;margin:4px 0 8px;}
 .del-code {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;overflow-wrap:anywhere;resize:none;}
 footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 .table {display:block;overflow-x:auto;}
-@media(max-width:600px) {.del-wrap{padding:16px 12px}.del-sheet{padding:16px}.shiny-input-container{max-width:100%}h1{font-size:1.7rem}}
+.table caption {caption-side:top;color:#22303c;font-weight:600;padding-top:0;}
+.table th:first-child,.table td:first-child {position:sticky;left:0;background-color:#fff;z-index:1;}
+@media(max-width:600px) {.del-wrap{padding:16px 12px}.del-sheet{padding:16px}.del-statement{padding:14px}.shiny-input-container{max-width:100%}h1{font-size:1.7rem}h2{font-size:1.35rem}.btn + .btn{margin-left:0;margin-top:8px}}
 @media(prefers-reduced-motion:reduce) {*{animation:none!important;transition:none!important}}
 '
 status_ui <- function(id) shiny::tags$div(class = "del-status", role = "status", `aria-live` = "polite", shiny::textOutput(id))
@@ -91,17 +112,10 @@ state_label <- function(state, lang) {
 }
 
 round_display <- function(rounds, language, timezone = "UTC") {
-  if (is.null(timezone) || !nzchar(timezone)) timezone <- "UTC"
-  deadline <- rounds$deadline
-  if (is.numeric(deadline) && !inherits(deadline, "POSIXt")) {
-    deadline <- as.POSIXct(deadline, origin = "1970-01-01", tz = "UTC")
-  } else {
-    deadline <- as.POSIXct(deadline, tz = "UTC")
-  }
   out <- data.frame(
     round = rounds$number,
     state = round_state_label(rounds$state, language),
-    deadline = paste(format(deadline, "%Y-%m-%d %H:%M %z", tz = timezone), timezone),
+    deadline = format_moment(rounds$deadline, timezone, language),
     stringsAsFactors = FALSE
   )
   names(out) <- c(tr(language, "Runde", "Round"), tr(language, "Status", "State"), tr(language, "Abgabefrist", "Deadline"))

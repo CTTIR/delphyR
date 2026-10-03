@@ -74,7 +74,7 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
         if (!nrow(d)) {
           return(NULL)
         }
-        x <- data.frame(d$external_ref, d$display_name, d$stakeholder_group, invitation_state_label(d$state, lang()), ifelse(is.na(d$expires_at) | d$state != "outstanding", "", d$expires_at), stringsAsFactors = FALSE)
+        x <- data.frame(d$external_ref, d$display_name, d$stakeholder_group, invitation_state_label(d$state, lang()), ifelse(is.na(d$expires_at) | d$state != "outstanding", no_value, format_moment(d$expires_at, "UTC", lang(), with_zone = FALSE)), stringsAsFactors = FALSE)
         names(x) <- tr(lang(), c("Quellenreferenz", "Anzeigename", "Interessengruppe", "Einladungsstatus", "G\u00fcltig bis (UTC)"), c("Source reference", "Display name", "Stakeholder group", "Invitation state", "Valid until (UTC)"))
         x
       },
@@ -109,7 +109,7 @@ invitations_server <- function(id, study, lang, call, services, default_issuer =
         shiny::tags$h3(tr(lang(), "\u00dcbergabecode", "Hand-over code")),
         shiny::tags$p(tr(lang(), "Geben Sie diesen Code \u00fcber einen genehmigten privaten Kanal weiter. Er wird nicht gespeichert und kann nicht erneut angezeigt werden.", "Pass this code on through an approved private channel. It is not stored and cannot be displayed again.")),
         shiny::tags$textarea(id = session$ns("code"), class = "form-control del-code", readonly = "readonly", rows = 3, `aria-label` = tr(lang(), "\u00dcbergabecode", "Hand-over code"), x$code),
-        shiny::tags$p(paste(tr(lang(), "G\u00fcltig bis (UTC):", "Valid until (UTC):"), x$expires_at)),
+        shiny::tags$p(paste(tr(lang(), "G\u00fcltig bis (UTC):", "Valid until (UTC):"), format_moment(x$expires_at, "UTC", lang(), with_zone = FALSE))),
         shiny::actionButton(session$ns("hide"), tr(lang(), "Code ausblenden", "Hide code"))
       )
     })
@@ -214,7 +214,7 @@ invitation_accept_server <- function(id, lang, call, services, verified, on_acce
       ns <- session$ns
       shiny::tagList(
         shiny::tags$h3(x$preview$study_title),
-        shiny::tags$p(paste(tr(lang(), "G\u00fcltig bis (UTC):", "Valid until (UTC):"), x$preview$expires_at)),
+        shiny::tags$p(paste(tr(lang(), "G\u00fcltig bis (UTC):", "Valid until (UTC):"), format_moment(x$preview$expires_at, "UTC", lang(), with_zone = FALSE))),
         shiny::checkboxInput(ns("confirm"), tr(lang(), "Ich m\u00f6chte mit meinem angemeldeten Konto dem Panel dieser Studie beitreten.", "I want to join this study's panel with my signed-in account."), FALSE),
         shiny::actionButton(ns("accept"), tr(lang(), "Einladung verbindlich annehmen", "Accept invitation"), class = "btn-primary")
       )

@@ -152,7 +152,7 @@ test_that("manager table formats database timestamps and states for people", {
   ), {
     session$flushReact()
     html <- output$rounds
-    expect_match(html, "2026-10-02 12:00 +0200 Europe/Berlin", fixed = TRUE)
+    expect_match(html, "2 Oct 2026, 12:00 (Europe/Berlin, UTC+2)", fixed = TRUE)
     expect_match(html, "Draft", fixed = TRUE)
     expect_match(html, "Deadline", fixed = TRUE)
     expect_false(grepl("179093", html, fixed = TRUE))

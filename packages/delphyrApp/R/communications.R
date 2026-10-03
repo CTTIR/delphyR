@@ -91,7 +91,7 @@ communications_server <- function(id, study, lang, call, services, changed = NUL
     output$uncertain <- shiny::renderTable({
       u <- uncertain()
       shiny::req(nrow(u) > 0)
-      out <- data.frame(u$round_number, delivery_kind_label(u$kind, lang()), u$pseudonym, delivery_cause_label(u$reason, lang()), u$adapter, u$updated_at, stringsAsFactors = FALSE)
+      out <- data.frame(u$round_number, delivery_kind_label(u$kind, lang()), u$pseudonym, delivery_cause_label(u$reason, lang()), u$adapter, format_moment(u$updated_at, "UTC", lang(), with_zone = FALSE), stringsAsFactors = FALSE)
       names(out) <- tr(lang(), c("Runde", "Mitteilungsart", "Pseudonym", "Ursache", "Dienst", "Zeitpunkt (UTC)"), c("Round", "Message type", "Pseudonym", "Cause", "Provider", "Time (UTC)"))
       out
     })

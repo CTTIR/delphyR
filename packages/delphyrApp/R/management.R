@@ -254,7 +254,7 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
       shiny::tags$div(
         class = "del-review",
         shiny::tags$h3(paste(tr(l, "Instrument der Runde", "Instrument of round"), i$round$number)),
-        shiny::tags$p(paste(tr(l, "Abgabe bis:", "Submit by:"), format(as.POSIXct(i$round$deadline, tz = "UTC"), "%Y-%m-%d %H:%M %z", tz = zone), zone, "\u00b7", tr(l, "Protokollversion", "Protocol version"), i$protocol$version)),
+        shiny::tags$p(paste(tr(l, "Abgabe bis:", "Submit by:"), format_moment(i$round$deadline, zone, l), "\u00b7", tr(l, "Protokollversion", "Protocol version"), i$protocol$version)),
         shiny::tags$h4(tr(l, "Studieninformation", "Study information")),
         shiny::tags$p(class = "del-consent", lang = i$consent$locale, i$consent$content),
         shiny::tags$h4(tr(l, "Items in allen freigegebenen Sprachfassungen", "Items in every approved language version")),
@@ -313,8 +313,8 @@ management_server <- function(id, study, lang, call, services, changed = NULL, t
       if (!nrow(e)) {
         return(NULL)
       }
-      out <- data.frame(round_state_label(e$target_state, lang()), e$reason, e$occurred_at, stringsAsFactors = FALSE)
-      names(out) <- tr(lang(), c("\u00dcbergang", "Begr\u00fcndung", "Zeitpunkt (UTC)"), c("Transition", "Reason", "Time (UTC)"))
+      out <- data.frame(round_state_label(e$target_state, lang()), e$reason, format_moment(e$occurred_at, timezone(), lang()), stringsAsFactors = FALSE)
+      names(out) <- tr(lang(), c("\u00dcbergang", "Begr\u00fcndung", "Zeitpunkt"), c("Transition", "Reason", "Time"))
       out
     })
   })

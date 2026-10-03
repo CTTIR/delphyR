@@ -110,7 +110,7 @@ panel_import_server <- function(id, study, lang, call, services, touch = functio
         shiny::tags$h3(tr(lang(), "Importbeleg", "Import receipt")),
         shiny::tags$p(paste(r$accepted_rows, tr(lang(), "Kontakte importiert;", "contacts imported;"), length(x$invitation_ids), tr(lang(), "ungebundene Einladungsentw\u00fcrfe.", "unbound invitation drafts."))),
         shiny::tags$p(paste(tr(lang(), "Beleg:", "Receipt:"), r$id)),
-        shiny::tags$p(paste(format(as.POSIXct(r$imported_at, tz = "UTC"), "%Y-%m-%d %H:%M:%S %z", tz = "UTC"), "UTC"))
+        shiny::tags$p(paste(tr(lang(), "Importiert:", "Imported:"), format_moment(r$imported_at, "UTC", lang())))
       )
     })
   })

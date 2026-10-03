@@ -5,6 +5,7 @@ A required group has fewer enrolled members than the minimum valid n; its result
 A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.
 A text and confirmation are required.
 A valid synthetic .invalid email is required
+ACCORD/CREDES review
 Abandon, do not send
 Abandoned
 Abstain
@@ -12,14 +13,11 @@ Accept an invitation
 Accept invitation
 Accepted
 Accepted by the provider
-ACCORD/CREDES review
 Account
 Account-binding rationale
 Action
 Action failed. Check your entries, permissions and round state. No success was confirmed.
-active
 Aggregated study summary
-agreement
 Amendments apply only to future rounds. Existing rounds and frozen data retain their original protocol. This technical approval does not replace institutional or ethics approval.
 An item lacks an approved language version.
 An item uses a dimension or scale that the protocol does not define.
@@ -50,6 +48,8 @@ Blocking
 Blocks of this round
 Browse…
 By
+CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.
+CSV could not be parsed
 Campaign approved
 Campaign cancelled
 Campaign prepared
@@ -95,7 +95,6 @@ Consent saved. Receipt:
 Contact data
 Contact export
 Contact fields of imported panel contacts and their invitation state, without study pseudonyms.
-contacts imported;
 Content checksum:
 Contributions taken over:
 Coordination
@@ -111,9 +110,6 @@ Create corrected version
 Create exact preview
 Create feedback
 Create study
-CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.
-CSV could not be parsed
-current
 Current documentation version:
 Data and software availability
 Deadline
@@ -134,8 +130,6 @@ Design
 Detail
 Dimension
 Dimensions (scales)
-disabled
-disagreement
 Display and review this round’s instrument before approving it.
 Display minimum cell size
 Display name
@@ -171,11 +165,9 @@ Enrolled panel members
 Enter text or select another response type.
 Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.
 Error code
-events shown.
 Events, approvals and rationales without response content, contacts or editorial originals.
 Every frozen round with pseudonyms, decisions, lineage and reviewed editorial versions. Pseudonyms are not anonymous. Unredacted free text, contacts and account mappings are excluded.
 Exact recipient selection (pseudonyms)
-exactly selected recipients
 Exclude
 Existing email case variant requires review
 Expired
@@ -253,11 +245,9 @@ Import rationale
 Import receipt
 Import reviewed invitation drafts
 Import validated. No round created yet.
-in every required group
+Imported:
 In progress
 In review
-in the pooled panel
-inactive
 Include
 Independent review
 Initial version
@@ -358,15 +348,12 @@ Not yet saved
 Note
 Note for participants
 Object
-of
-of which required:
 Oldest waiting (s)
 Open
 Open fields in block:
 Open:
 Operation
 Operation:
-optional
 Original source preserved
 Original text (synthetic only)
 Originals are preserved. Redactions and summaries are stored separately; another person must release the exact version.
@@ -466,20 +453,16 @@ Released previous-round feedback:
 Released versions for this feedback
 Released versions of the corrected version
 Reminder
-reminders:
 Remove
-replaced
 Reports never invent statements on authorship, funding, conflicts of interest, approvals, interpretation or deviations. Enter the study team’s own statements here. Empty topics appear in reports as not documented. Recording a reference to an approval does not grant one.
 Request analysis
 Request export
 Request the exports your role permits. Every retrieval is checked and recorded.
-required
 Required fields are open in block:
 Required response fields are still open. They are named in the overview above the submit button.
 Requirement
 Research data export
 Resolve uncertain deliveries
-response fields confirmed saved.
 Response saved
 Response text
 Response type
@@ -515,7 +498,6 @@ Rounds and analysis
 Rounds enrolled
 Rounds submitted
 Row
-rows in the file.
 Running
 Save all changes and confirm submission first.
 Save coding decision
@@ -536,8 +518,8 @@ Save your changes first. The current round stays open.
 Saved response
 Saved response loaded.
 Saved version
-Saved:
 Saved. Original history is preserved.
+Saved:
 Saving …
 Select consent explicitly first.
 Semicolon
@@ -633,13 +615,13 @@ This feedback was corrected.
 This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team.
 This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.
 This transition is not possible in the round’s current state, or the round has changed in the meantime.
+Time
 Time (UTC)
 Timezone
 Title
 Transition
 Unable to judge
 Unanswered
-unbound invitation drafts.
 Uncertain delivery
 Uncertain delivery resolved
 Unsaved change.
@@ -668,3 +650,23 @@ You joined the panel. Select the study to continue.
 Your account is not registered for this application. Contact the study coordinators.
 Your previous response:
 Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.
+active
+agreement
+contacts imported;
+current
+disabled
+disagreement
+events shown.
+exactly selected recipients
+in every required group
+in the pooled panel
+inactive
+of
+of which required:
+optional
+reminders:
+replaced
+required
+response fields confirmed saved.
+rows in the file.
+unbound invitation drafts.
