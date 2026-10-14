@@ -33,7 +33,7 @@ thresholds are not recommendations. Missing responses are not zero ratings.
 vignette("offline", package = "delphyr")
 ```
 
-The [offline vignette](vignettes/offline.Rmd) executes two-round analysis,
+The [offline vignette](https://github.com/CTTIR/delphyR/blob/main/packages/delphyr/vignettes/offline.Rmd) executes two-round analysis,
 contrasts group rules, reports missingness, checks comparability, and prepares
 suppressed feedback. A feedback draft still needs a reviewed release before
 participant use.
@@ -47,7 +47,7 @@ for public release.
 
 ## Study services
 
-The [repository guide](../../README.md) covers the local PostgreSQL environment,
+The [repository guide](https://github.com/CTTIR/delphyR/blob/main/README.md) covers the local PostgreSQL environment,
 worker, application, and verification commands. Services recheck identity,
 study membership, capability, and state. Save receipts follow database commits;
 submitted revisions and released scientific records remain traceable.
@@ -57,8 +57,8 @@ explicit approval of an existing issuer/subject identity. Campaigns produce only
 local sink receipts. These boundaries do not qualify real recruitment,
 external messages, or production identity infrastructure.
 
-See [implementation status](../../docs/IMPLEMENTATION_STATUS.md) for executed
-checks and remaining acceptance gates. Licensed under the [MIT License](LICENSE).
+See [implementation status](https://github.com/CTTIR/delphyR/blob/main/docs/IMPLEMENTATION_STATUS.md) for executed
+checks and remaining acceptance gates. Licensed under the [MIT License](https://github.com/CTTIR/delphyR/blob/main/LICENSE).
 
 ## Use of LLM tools
 

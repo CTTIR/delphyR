@@ -1,4 +1,4 @@
-# delphyrApp <img src="inst/www/delphyR-hex.png" align="right" width="150" alt="delphyR hex logo" />
+# delphyrApp <img src="man/figures/logo.png" align="right" width="150" alt="delphyR hex logo" />
 
 **A focused workspace for synthetic Delphi studies.**
 
@@ -13,7 +13,7 @@ Scientific text stays in its stored authored language; selecting an interface
 language does not translate a protocol or manufacture an instrument translation.
 This is development software, not a production release.
 
-![Synthetic panel workspace](inst/figures/panel-desktop.png)
+![Synthetic panel workspace](man/figures/panel-desktop.png)
 
 ## Install and start
 
@@ -26,7 +26,7 @@ remotes::install_github("CTTIR/delphyR", subdir = "packages/delphyrApp",
                         build_vignettes = TRUE)
 ```
 
-The [repository guide](../../README.md#run-the-local-application) provisions the
+The [repository guide](https://github.com/CTTIR/delphyR/blob/main/README.md#run-the-local-application) provisions the
 synthetic PostgreSQL fixture and starts a separate worker. With a repository
 and actor already resolved by trusted server code:
 
@@ -101,8 +101,8 @@ reduced-motion preferences are respected. Deadlines include the study time zone
 and UTC offset.
 
 Namespaced modules call injected services and contain no SQL or consensus rules.
-Read the [workflow vignette](vignettes/synthetic-workflow.Rmd) and
-[qualification evidence](inst/qa/README.md) for reproducible local checks.
+Read the [workflow vignette](https://github.com/CTTIR/delphyR/blob/main/packages/delphyrApp/vignettes/synthetic-workflow.Rmd) and
+[qualification evidence](https://github.com/CTTIR/delphyR/blob/main/packages/delphyrApp/inst/qa/README.md) for reproducible local checks.
 
 ```r
 testthat::test_local("packages/delphyrApp")
@@ -112,7 +112,7 @@ The browser checks run in Chromium against PostgreSQL, the core path also in
 Firefox; keyboard operation, names, headings, contrast and reflow are checked
 by script. They do not certify every browser, assistive technology or mobile
 device. A test with a screen reader, real mail and production operation remain
-distinct gates. Licensed under [MIT](LICENSE).
+distinct gates. Licensed under [MIT](https://github.com/CTTIR/delphyR/blob/main/LICENSE).
 
 ## Use of LLM tools
 
