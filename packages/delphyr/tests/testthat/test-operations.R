@@ -122,14 +122,18 @@ test_that("the system status holds counts and ages only and names what needs att
   expect_true(seen$seconds_since_seen <= 5L && seen$seconds_since_start <= 5L)
   expect_identical(seen$software_version, as.character(utils::packageVersion("delphyr")))
   expect_false("no_worker_alive" %in% s$attention)
-  # A job that cannot succeed ends as a dead letter and is named.
+  # A job that cannot succeed ends as a dead letter and is named. The status
+  # covers the whole installation, so this job is counted against the count
+  # before it.
+  dead_exports <- function(s) sum(s$jobs$n[s$jobs$state == "dead_letter" & s$jobs$type == "export"])
+  before <- dead_exports(s)
   snapshot <- freeze_round(r, f$manager, f$round$id, "freeze")$id
   job <- request_export(r, f$manager, snapshot, "export")
   set_capability(r, f$manager, f$study_id, f$manager$principal_id, "export", FALSE, "revoke")
   expect_identical(worker_step(r, study_id = f$study_id)$error_code, "DEL_FORBIDDEN")
   s <- get_system_status(runtime)
   expect_true("dead_letter_jobs" %in% s$attention)
-  expect_true(any(s$jobs$state == "dead_letter" & s$jobs$type == "export"))
+  expect_identical(dead_exports(s), before + 1L)
   expect_true(all(c("type", "state", "n", "oldest_seconds") %in% names(s$jobs)))
   text <- as.character(jsonlite::toJSON(s, auto_unbox = TRUE))
   expect_false(any(vapply(c(f$study_id, f$code, job$id, f$manager$principal_id, snapshot), function(x) grepl(x, text, fixed = TRUE), logical(1))))
@@ -154,8 +158,26 @@ test_that("the system status holds counts and ages only and names what needs att
   # No answer from the database is reported, not raised.
   broken <- structure(list(con = NULL, environment = "test", artifact_root = tempdir()), class = "delphyr_repository")
   expect_identical(get_system_status(broken)[c("ready", "attention")], list(ready = FALSE, attention = "database_unreachable"))
-  # A worker that was last seen long ago counts as silent.
-  expect_true("no_worker_alive" %in% get_system_status(runtime, heartbeat_seconds = 1L)$attention || any(get_system_status(runtime, heartbeat_seconds = 1L)$workers$seconds_since_seen <= 1L))
+  # Every worker last seen long ago counts as silent; the changes stay inside
+  # a transaction that is rolled back.
+  DBI::dbBegin(r$con)
+  withr::defer(suppressWarnings(try(DBI::dbRollback(r$con), silent = TRUE)))
+  execute(r, "UPDATE ops.worker_heartbeats SET last_seen_at=clock_timestamp()-interval '10 minutes'")
+  silent <- get_system_status(r)
+  # A database of the previous release, before 017 added the worker
+  # heartbeats and the end of exports, answers and is behind.
+  for (sql in c("DROP TABLE ops.worker_heartbeats", "DROP TRIGGER artifact_guard ON ops.artifacts", "DROP FUNCTION ops.protect_artifact()", "ALTER TABLE ops.artifacts DROP COLUMN removed_at", "ALTER TABLE ops.artifacts DROP COLUMN created_at", "DELETE FROM ops.schema_migrations WHERE version='017_operations.sql'")) DBI::dbExecute(r$con, sql)
+  previous <- get_system_status(r)
+  # A database that was never migrated is behind as well.
+  DBI::dbExecute(r$con, "ALTER TABLE ops.schema_migrations RENAME TO schema_migrations_hidden")
+  empty <- get_system_status(r)
+  DBI::dbRollback(r$con)
+  expect_true("no_worker_alive" %in% silent$attention)
+  expect_false("no_worker_alive" %in% get_system_status(runtime)$attention)
+  expect_identical(previous, list(ready = FALSE, schema = list(state = "behind", applied = previous$schema$packaged - 1L, packaged = previous$schema$packaged), attention = "schema_behind"))
+  expect_identical(empty[c("ready", "attention")], list(ready = FALSE, attention = "schema_behind"))
+  expect_identical(empty$schema$applied, 0L)
+  expect_identical(get_system_status(r)$schema$state, "current")
 })
 
 test_that("only the files of expired exports are removed and the time is recorded", {
@@ -179,20 +201,32 @@ test_that("only the files of expired exports are removed and the time is recorde
   execute(r, "INSERT INTO ops.artifacts(id,study_id,actor_id,snapshot_id,storage_key,checksum,expires_at,profile) VALUES($1,$2,$3,$4,$1,'synthetic',clock_timestamp()-interval '1 hour','research_round')", expired, f$study_id, f$manager$principal_id, snapshot)
   lost <- uid()
   execute(r, "INSERT INTO ops.artifacts(id,study_id,actor_id,snapshot_id,storage_key,checksum,expires_at,profile) VALUES($1,$2,$3,$4,$1,'synthetic',clock_timestamp()-interval '2 hours','research_round')", lost, f$study_id, f$manager$principal_id, snapshot)
+  # A registered export whose worker stopped before it got its final name.
+  unpublished <- uid()
+  dir.create(file.path(r$artifact_root, paste0(unpublished, ".partial")))
+  writeLines("synthetic export", file.path(r$artifact_root, paste0(unpublished, ".partial"), "manifest.json"))
+  execute(r, "INSERT INTO ops.artifacts(id,study_id,actor_id,snapshot_id,storage_key,checksum,expires_at,profile) VALUES($1,$2,$3,$4,$1,'synthetic',clock_timestamp()-interval '3 hours','research_round')", unpublished, f$study_id, f$manager$principal_id, snapshot)
   expect_error(download_artifact(r, f$manager, expired), class = "DEL_NOT_FOUND")
   # The dry run reports and changes nothing.
   report <- remove_expired_artifacts(r, study_id = f$study_id)
-  expect_identical(report$id, c(lost, expired))
-  expect_identical(report$present, c(FALSE, TRUE))
-  expect_identical(report$removed, c(FALSE, FALSE))
+  expect_identical(report$id, c(unpublished, lost, expired))
+  expect_identical(report$present, c(TRUE, FALSE, TRUE))
+  expect_identical(report$removed, c(FALSE, FALSE, FALSE))
   expect_true(file.exists(file.path(r$artifact_root, expired, "manifest.json")))
   expect_identical(query(r, "SELECT count(*)::int AS n FROM ops.artifacts WHERE study_id=$1 AND removed_at IS NOT NULL", f$study_id)$n, 0L)
-  expect_true(get_system_status(r)$artifacts$expired_not_removed >= 2L)
+  expect_true(get_system_status(r)$artifacts$expired_not_removed >= 3L)
+  # An export without a directory here may have its files in another export
+  # directory: it is not recorded as removed without confirmation.
   applied <- remove_expired_artifacts(r, dry_run = FALSE, study_id = f$study_id)
-  expect_identical(applied$removed, c(TRUE, TRUE))
+  expect_identical(applied$removed, c(TRUE, FALSE, TRUE))
   expect_false(dir.exists(file.path(r$artifact_root, expired)))
+  expect_false(dir.exists(file.path(r$artifact_root, paste0(unpublished, ".partial"))))
   expect_true(dir.exists(file.path(r$artifact_root, current)))
   expect_identical(query(r, "SELECT count(*)::int AS n FROM ops.artifacts WHERE study_id=$1 AND removed_at IS NOT NULL", f$study_id)$n, 2L)
+  confirmed <- remove_expired_artifacts(r, dry_run = FALSE, study_id = f$study_id, record_missing = TRUE)
+  expect_identical(confirmed$id, lost)
+  expect_identical(c(confirmed$present, confirmed$removed), c(FALSE, TRUE))
+  expect_identical(query(r, "SELECT count(*)::int AS n FROM ops.artifacts WHERE study_id=$1 AND removed_at IS NOT NULL", f$study_id)$n, 3L)
   expect_identical(nrow(remove_expired_artifacts(r, dry_run = FALSE, study_id = f$study_id)), 0L)
   expect_true(file.exists(file.path(download_artifact(r, f$manager, current), "manifest.json")))
   # The registration is immutable apart from that one mark.
@@ -208,7 +242,49 @@ test_that("only the files of expired exports are removed and the time is recorde
   expect_error(remove_expired_artifacts(elsewhere, dry_run = FALSE, study_id = f$study_id), class = "DEL_STORAGE")
   expect_identical(query(r, "SELECT removed_at IS NULL AS kept FROM ops.artifacts WHERE id=$1", another)$kept, TRUE)
   expect_error(remove_expired_artifacts(r, dry_run = NA), class = "DEL_VALIDATION")
+  expect_error(remove_expired_artifacts(r, record_missing = NA), class = "DEL_VALIDATION")
   expect_error(remove_expired_artifacts(r, study_id = "not an id"), class = "DEL_NOT_FOUND")
+})
+
+test_that("directories of exports that were never registered are removed after an hour", {
+  r <- operations_repo()
+  f <- operations_fixture(r, "closed")
+  snapshot <- freeze_round(r, f$manager, f$round$id, "freeze")$id
+  dir.create(r$artifact_root, mode = "0700")
+  stale <- paste0(uid(), ".partial")
+  fresh <- paste0(uid(), ".partial")
+  registered <- uid()
+  # Complete directories under the final name: one that no registration
+  # covers, as an earlier release left it, a registered one and a recent
+  # one. A directory that is not named like an export is never touched.
+  orphan <- uid()
+  kept <- uid()
+  recent <- uid()
+  other <- "synthetic-notes"
+  for (directory in c(stale, fresh, paste0(registered, ".partial"), orphan, kept, recent, other)) {
+    dir.create(file.path(r$artifact_root, directory))
+    writeLines("synthetic,export", file.path(r$artifact_root, directory, "responses.csv"))
+  }
+  for (directory in c(stale, paste0(registered, ".partial"), orphan, kept, other)) Sys.setFileTime(file.path(r$artifact_root, directory), Sys.time() - 2 * 3600)
+  # A registered export that still has its temporary name is left to the
+  # removal of expired exports.
+  for (key in c(registered, kept)) execute(r, "INSERT INTO ops.artifacts(id,study_id,actor_id,snapshot_id,storage_key,checksum,expires_at,profile) VALUES($1,$2,$3,$4,$1,'synthetic',clock_timestamp()+interval '1 hour','research_round')", key, f$study_id, f$manager$principal_id, snapshot)
+  status <- get_system_status(r)
+  expect_identical(status$artifacts$unfinished, 2L)
+  expect_true("unfinished_exports" %in% status$attention)
+  listed <- remove_unfinished_exports(r)
+  expect_identical(sort(listed$directory), sort(c(stale, orphan)))
+  expect_true(all(listed$hours_since_change >= 1.9))
+  expect_false(any(listed$removed))
+  expect_true(all(dir.exists(file.path(r$artifact_root, c(stale, orphan)))))
+  removed <- remove_unfinished_exports(r, dry_run = FALSE)
+  expect_identical(sort(removed$directory), sort(c(stale, orphan)))
+  expect_true(all(removed$removed))
+  expect_identical(sort(list.files(r$artifact_root)), sort(c(fresh, paste0(registered, ".partial"), kept, recent, other)))
+  expect_identical(get_system_status(r)$artifacts$unfinished, 0L)
+  expect_identical(nrow(remove_unfinished_exports(r, dry_run = FALSE)), 0L)
+  expect_error(remove_unfinished_exports(r, older_than_hours = 0.5), class = "DEL_VALIDATION")
+  expect_error(remove_unfinished_exports(r, dry_run = NA), class = "DEL_VALIDATION")
 })
 
 test_that("the retention inventory counts and proposes; it deletes nothing", {

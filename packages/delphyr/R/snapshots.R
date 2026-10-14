@@ -44,10 +44,9 @@ freeze_round <- function(repo, actor, round_id, command_id) {
 #' @return Validated delphyr_snapshot.
 #' @export
 get_snapshot <- function(repo, actor, snapshot_id) {
-  valid_id(snapshot_id)
-  x <- one(query(repo, "SELECT study_id,content::text FROM research.snapshots WHERE id=$1", snapshot_id))
-  authorize(repo, actor, x$study_id, "analyse")
-  read_snapshot(x$content)
+  study <- object_study(repo, actor, "research.snapshots", snapshot_id)
+  authorize(repo, actor, study, "analyse")
+  read_snapshot(one(query(repo, "SELECT content::text FROM research.snapshots WHERE id=$1", snapshot_id))$content)
 }
 #' Analyse and persist a frozen snapshot
 #' @param repo Repository.
@@ -58,14 +57,14 @@ get_snapshot <- function(repo, actor, snapshot_id) {
 #' @export
 run_analysis <- function(repo, actor, snapshot_id, command_id) {
   transaction(repo, function() {
-    valid_id(snapshot_id)
-    x <- one(query(repo, "SELECT study_id,round_id,content::text FROM research.snapshots WHERE id=$1", snapshot_id))
-    r <- round_get(repo, actor, x$round_id, "analyse", " FOR UPDATE")
-    command(repo, actor, x$study_id, "analyse", command_id, list(snapshot_id), function() {
+    study <- object_study(repo, actor, "research.snapshots", snapshot_id)
+    round_id <- one(query(repo, "SELECT round_id FROM research.snapshots WHERE id=$1", snapshot_id))$round_id
+    r <- round_get(repo, actor, round_id, "analyse", " FOR UPDATE")
+    command(repo, actor, study, "analyse", command_id, list(snapshot_id), function() {
       ensure(r$state %in% c("frozen", "analysed", "released", "finalized"), "round.state", "DEL_CONFLICT")
-      a <- analyse_round(read_snapshot(x$content))
+      a <- analyse_round(read_snapshot(one(query(repo, "SELECT content::text FROM research.snapshots WHERE id=$1", snapshot_id))$content))
       id <- uid()
-      execute(repo, "INSERT INTO research.analyses VALUES($1,$2,$3,$4::jsonb,$5)", id, x$study_id, snapshot_id, json(a), a$provenance$result_hash)
+      execute(repo, "INSERT INTO research.analyses VALUES($1,$2,$3,$4::jsonb,$5)", id, study, snapshot_id, json(a), a$provenance$result_hash)
       execute(repo, "UPDATE research.rounds SET state='analysed' WHERE id=$1 AND state='frozen'", r$id)
       list(id = id, hash = a$provenance$result_hash)
     })
@@ -78,10 +77,9 @@ run_analysis <- function(repo, actor, snapshot_id, command_id) {
 #' @return delphyr_analysis.
 #' @export
 get_analysis <- function(repo, actor, analysis_id) {
-  valid_id(analysis_id)
-  x <- one(query(repo, "SELECT study_id,content::text FROM research.analyses WHERE id=$1", analysis_id))
-  authorize(repo, actor, x$study_id, "analyse")
-  a <- jsonlite::fromJSON(x$content)
+  study <- object_study(repo, actor, "research.analyses", analysis_id)
+  authorize(repo, actor, study, "analyse")
+  a <- jsonlite::fromJSON(one(query(repo, "SELECT content::text FROM research.analyses WHERE id=$1", analysis_id))$content)
   # A round without rating scales has no distributions; JSON stores that
   # empty table as an empty array.
   if (!is.data.frame(a$distributions)) a$distributions <- data.frame()
@@ -121,7 +119,7 @@ create_feedback <- function(repo, actor, analysis_id, qualitative = list(), comm
       id <- uid()
       execute(repo, "INSERT INTO research.feedback(id,study_id,analysis_id,content,hash) VALUES($1,$2,$3,$4::jsonb,$5)", id, x$study_id, analysis_id, json(f), f$hash)
       list(id = id, hash = f$hash)
-    }, detail = paste(length(released_edits), "released editorial versions"))
+    }, detail = paste(length(released_edits), if (length(released_edits) == 1L) "released editorial version" else "released editorial versions"))
   })
 }
 #' Release an exact reviewed feedback candidate
@@ -134,7 +132,7 @@ create_feedback <- function(repo, actor, analysis_id, qualitative = list(), comm
 #' @export
 release_feedback <- function(repo, actor, feedback_id, expected_hash, command_id) {
   transaction(repo, function() {
-    valid_id(feedback_id)
+    object_study(repo, actor, "research.feedback", feedback_id)
     f <- one(query(repo, "SELECT f.*,s.round_id FROM research.feedback f JOIN research.analyses a ON a.id=f.analysis_id JOIN research.snapshots s ON s.id=a.snapshot_id WHERE f.id=$1", feedback_id))
     r <- round_get(repo, actor, f$round_id, "manage", " FOR UPDATE")
     command(repo, actor, f$study_id, "release_feedback", command_id, list(feedback_id, expected_hash), function() {
@@ -151,7 +149,9 @@ release_feedback <- function(repo, actor, feedback_id, expected_hash, command_id
 #' @param round_id Target round.
 #' @param feedback_id Released feedback in the same study.
 #' @param command_id Idempotency key.
-#' @return Target round UUID.
+#' @return Target round UUID. A round shows one feedback: a second assignment,
+#'   of the same or of another feedback, is refused with DEL_CONFLICT (path
+#'   feedback.assigned). A retry under the same key returns the receipt.
 #' @export
 assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
   transaction(repo, function() {
@@ -161,6 +161,7 @@ assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
       ensure(r$state %in% c("draft", "review", "approved"), "round.state", "DEL_CONFLICT")
       f <- one(query(repo, "SELECT f.id,pr.number FROM research.feedback f JOIN research.analyses a ON a.id=f.analysis_id JOIN research.snapshots s ON s.id=a.snapshot_id JOIN research.rounds pr ON pr.id=s.round_id WHERE f.id=$1 AND f.study_id=$2 AND f.state='released'", feedback_id, r$study_id))
       ensure(f$number < r$number, "feedback.source_round")
+      ensure(!nrow(query(repo, "SELECT feedback_id FROM research.feedback_assignments WHERE study_id=$1 AND round_id=$2 LIMIT 1", r$study_id, r$id)), "feedback.assigned", "DEL_CONFLICT")
       execute(repo, "INSERT INTO research.feedback_assignments SELECT study_id,round_id,id,$3 FROM research.enrollments WHERE study_id=$1 AND round_id=$2", r$study_id, r$id, feedback_id)
       list(id = r$id)
     })
@@ -169,11 +170,11 @@ assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
 #' Read released aggregate feedback plus only the actor's prior answers
 #' @param repo Repository.
 #' @param actor Panel actor.
-#' @param enrollment_id Own target enrollment.
-#' @return Aggregate feedback, own prior response table, the effective
-#'   comparability decisions for revised items, the released qualitative
-#'   content and, where the feedback was corrected, the note for participants;
-#'   or NULL.
+#' @param enrollment_id Own target enrollment in a round that was opened.
+#' @return Aggregate feedback, own prior response table, the comparability
+#'   decisions for revised items that were in force when the target round
+#'   opened, the released qualitative content and, where the feedback was
+#'   corrected, the note for participants; or NULL.
 #' @export
 get_feedback <- function(repo, actor, enrollment_id) {
   transaction(repo, function() {
@@ -205,20 +206,22 @@ get_feedback <- function(repo, actor, enrollment_id) {
     if (!isTRUE(from_json(f$protocol)$feedback$own_previous_rating)) own <- own[FALSE, , drop = FALSE]
     audit(repo, actor, e$study_id, "feedback_displayed", f$id)
     # Whether a revised item may be read against its earlier version is the
-    # study team's recorded decision, shown without its internal rationale.
-    decided <- comparability_history(repo, e$study_id)
-    decided <- decided[decided$effective, c("item_code", "dimension_code", "previous_version", "current_version", "comparable"), drop = FALSE]
+    # study team's recorded decision, shown without its internal rationale and
+    # as it stood when this round opened: everyone rating in the round reads
+    # the same, and a later decision is shown from the next round on.
+    decided <- query(repo, "SELECT DISTINCT ON (c.item_code,c.dimension_code,c.previous_version,c.current_version) c.item_code,c.dimension_code,c.previous_version,c.current_version,c.comparable FROM research.item_comparability c WHERE c.study_id=$1 AND c.recorded_at<=COALESCE((SELECT min(v.occurred_at) FROM research.round_events v WHERE v.study_id=$1 AND v.round_id=$2 AND v.target_state='open'),'infinity') ORDER BY c.item_code,c.dimension_code,c.previous_version,c.current_version,c.recorded_at DESC,c.id DESC", e$study_id, e$round_id)
     list(id = f$id, aggregate = jsonlite::fromJSON(f$content), own = own, comparability = decided, qualitative = feedback_qualitative(from_json(f$content)$qualitative), correction = correction)
   })
 }
 #' List study round states and frozen result references
 #' @param repo Repository.
-#' @param actor Study manager or analyst.
+#' @param actor Study manager or analyst. Analysts read the list to find the
+#'   frozen snapshots and analyses of their work; it holds no panel data.
 #' @param study_id Study UUID.
 #' @return Round table.
 #' @export
 list_rounds <- function(repo, actor, study_id) {
-  authorize(repo, actor, study_id, "manage")
+  authorize_any(repo, actor, study_id, c("manage", "analyse"))
   query(repo, "SELECT r.id,r.number,r.state,r.instrument_hash,r.deadline,s.id AS snapshot_id,(SELECT a.id FROM research.analyses a WHERE a.snapshot_id=s.id ORDER BY a.id LIMIT 1) AS analysis_id FROM research.rounds r LEFT JOIN research.snapshots s ON s.round_id=r.id WHERE r.study_id=$1 ORDER BY r.number,(r.state<>'cancelled'),r.id", study_id)
 }
 #' Record a human decision separately from analytic classification
@@ -229,16 +232,19 @@ list_rounds <- function(repo, actor, study_id) {
 #' @param disposition retain, revise, remove, split, merge, rerate or finalize.
 #' @param reason Human rationale.
 #' @param command_id Idempotency key.
-#' @return Decision UUID.
+#' @return Decision UUID. A completed study refuses new decisions with
+#'   DEL_CONFLICT (path study.state).
 #' @export
 record_item_decision <- function(repo, actor, analysis_id, item_code, disposition, reason, command_id) {
   transaction(repo, function() {
-    valid_id(analysis_id)
+    study <- object_study(repo, actor, "research.analyses", analysis_id)
+    authorize(repo, actor, study, "manage")
     x <- one(query(repo, "SELECT study_id,content::text FROM research.analyses WHERE id=$1", analysis_id))
-    authorize(repo, actor, x$study_id, "manage")
     a <- jsonlite::fromJSON(x$content)
     ensure(item_code %in% a$results$item_code && disposition %in% c("retain", "revise", "remove", "split", "merge", "rerate", "finalize") && scalar_text(reason), "decision")
     command(repo, actor, x$study_id, "decision", command_id, list(analysis_id, item_code, disposition, reason), function() {
+      # A completed study keeps the decisions it was completed with.
+      study_open(repo, x$study_id)
       id <- uid()
       execute(repo, "INSERT INTO research.decisions VALUES($1,$2,$3,$4,$5,$6,$7)", id, x$study_id, analysis_id, item_code, disposition, reason, actor$principal_id)
       list(id = id)
@@ -246,25 +252,28 @@ record_item_decision <- function(repo, actor, analysis_id, item_code, dispositio
   })
 }
 #' Read authorized setup information for the round editor
+#'
+#' Analysts read it as well: the protocol holds the rules and the time zone of
+#' the analyses they work with.
 #' @param repo Repository.
-#' @param actor Study manager.
+#' @param actor Study manager or analyst.
 #' @param study_id Study UUID.
 #' @return Protocol and published information versions, without panel identities.
 #' @export
 get_study_setup <- function(repo, actor, study_id) {
-  authorize(repo, actor, study_id, "manage")
+  authorize_any(repo, actor, study_id, c("manage", "analyse"))
   list(protocol = protocol_for(repo, study_id)$config, consent_versions = query(repo, "SELECT id,locale,content,hash FROM identity.consent_versions WHERE study_id=$1 ORDER BY created_at", study_id))
 }
 #' Preview the exact reviewed feedback artifact before release
 #' @param repo Repository.
-#' @param actor Study manager.
+#' @param actor Study manager or analyst; only a manager releases it.
 #' @param feedback_id Feedback UUID.
 #' @return Content, hash and state of the candidate.
 #' @export
 get_feedback_candidate <- function(repo, actor, feedback_id) {
-  valid_id(feedback_id)
-  x <- one(query(repo, "SELECT study_id,content::text,hash,state FROM research.feedback WHERE id=$1", feedback_id))
-  authorize(repo, actor, x$study_id, "manage")
+  study <- object_study(repo, actor, "research.feedback", feedback_id)
+  authorize_any(repo, actor, study, c("manage", "analyse"))
+  x <- one(query(repo, "SELECT content::text,hash,state FROM research.feedback WHERE id=$1", feedback_id))
   list(content = jsonlite::fromJSON(x$content), hash = x$hash, state = x$state)
 }
 #' Complete a study after finalization and explicit item decisions

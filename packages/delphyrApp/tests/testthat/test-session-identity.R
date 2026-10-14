@@ -76,9 +76,9 @@ test_that("workspace navigation follows selected-study rights and role-specific 
     expect_false(grepl("#section-panel\"", output$navigation$html, fixed = TRUE))
     expect_match(output$intro$html, "Manage the protocol", fixed = TRUE)
     session$setInputs(study = "own")
-    expect_match(output$navigation$html, "#section-panel\"", fixed = TRUE)
-    expect_false(grepl("#section-protocols", output$navigation$html, fixed = TRUE))
-    expect_false(grepl("#section-panel-import", output$navigation$html, fixed = TRUE))
+    # A single section needs no navigation: its own heading follows the study card.
+    expect_identical(workspace_sections(capabilities(), "en")$id, "section-panel")
+    expect_null(output$navigation)
     expect_match(output$intro$html, "Save each response", fixed = TRUE)
   })
 })
@@ -101,7 +101,7 @@ test_that("a sign-out link is shown only for a configured, plain address", {
     session$setInputs(language = "de")
     expect_match(output$account$html, ">Abmelden</a>", fixed = TRUE)
     session$setInputs(language = "fr")
-    expect_match(output$account$html, ">Se déconnecter</a>", fixed = TRUE)
+    expect_match(output$account$html, ">Se d\u00e9connecter</a>", fixed = TRUE)
   })
   expect_no_error(run_app(actor = actor, services = services, sign_out_url = "https://gateway.example.invalid/oauth2/sign_out?rd=%2F"))
   for (address in list("javascript:alert(1)", "//other.example.invalid/x", "/a b", "/a\"onmouseover=\"x", "sign_out", c("/a", "/b"), NA_character_, 1L, "")) {
@@ -117,7 +117,11 @@ test_that("a process registers the scripts and styles of its page before the fir
     save_response = function(...) stop("unused"), submit_round = function(...) stop("unused")
   )
   app <- run_app(actor = list(principal_id = "trusted"), services = services)
-  page <- c("shiny-javascript-", "jquery-", "bootstrap-", "selectize-")
+  # The libraries the page refers to; a list control with search is among
+  # them only while the static page holds one.
+  html <- app$httpHandler(list(REQUEST_METHOD = "GET", PATH_INFO = "/", QUERY_STRING = ""))$content
+  page <- Filter(function(prefix) grepl(paste0("\"", prefix), html, fixed = TRUE), c("shiny-javascript-", "jquery-", "bootstrap-", "selectize-"))
+  expect_true(all(c("shiny-javascript-", "jquery-", "bootstrap-") %in% page))
   registered <- function() vapply(page, function(prefix) any(startsWith(names(shiny::resourcePaths()), prefix)), logical(1))
   for (prefix in names(shiny::resourcePaths())) if (any(startsWith(prefix, page))) shiny::removeResourcePath(prefix)
   expect_false(any(registered()))

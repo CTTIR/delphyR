@@ -9,7 +9,7 @@ get_feedback_candidate(repo, actor, feedback_id)
 \arguments{
 \item{repo}{Repository.}
 
-\item{actor}{Study manager.}
+\item{actor}{Study manager or analyst; only a manager releases it.}
 
 \item{feedback_id}{Feedback UUID.}
 }

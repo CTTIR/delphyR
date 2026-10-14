@@ -4,7 +4,13 @@
 \alias{worker_step}
 \title{Process one leased job using its requester's current study rights}
 \usage{
-worker_step(repo, study_id = NULL, lease_seconds = 600L)
+worker_step(
+  repo,
+  study_id = NULL,
+  lease_seconds = 600L,
+  download_hours = 24,
+  on_claim = NULL
+)
 }
 \arguments{
 \item{repo}{Trusted development/test worker repository.}
@@ -13,12 +19,33 @@ worker_step(repo, study_id = NULL, lease_seconds = 600L)
 
 \item{lease_seconds}{Time the job is reserved for this worker. A job whose
 worker stopped is taken up again after that time; a job that needs longer
-cannot record its result. The default leaves a wide margin over the
-analysis and export of a round of 300 members and 300 rating fields.}
+cannot record its result unless its reservation is renewed. The default
+leaves a wide margin over the analysis and export of a round of 300
+members and 300 rating fields.}
+
+\item{download_hours}{Hours an export can be downloaded after it was
+registered, from 1 to 720; one day by default. The period is the
+decision of the responsible organisation.}
+
+\item{on_claim}{Optional function called with the claimed job (a one-row
+data frame with `id` and `lease_token`) before it runs, for example to
+renew its reservation from another process.}
 }
 \value{
 FALSE when idle, otherwise a safe operation state.
 }
 \description{
-Process one leased job using its requester's current study rights
+The requester's identity is delegated for exactly as long as this worker
+holds the job's reservation, as the database measures it: renewing the
+reservation (renew_job_lease()) extends it, and it ends when the
+reservation ends or another worker takes the job up. A refusal that a retry
+cannot change (`DEL_FORBIDDEN`, `DEL_UNAUTHORIZED`, `DEL_NOT_FOUND`,
+`DEL_VALIDATION`) ends the job; any other failure, including a report that
+could not be rendered (`DEL_RENDER`) and a reservation that ended before
+the result was recorded (`DEL_CONFLICT` with path `job.lease`), is retried
+after ten seconds, up to three attempts. A rights check refused because
+the reservation had ended counts as such a lost reservation (`DEL_CONFLICT`),
+not as a refusal of the requester. An export is written under a temporary
+name and gets its final name only after it is registered; one that cannot
+be registered is removed, whatever failed.
 }

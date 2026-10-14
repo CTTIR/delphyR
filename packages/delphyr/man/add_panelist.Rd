@@ -20,7 +20,8 @@ add_panelist(repo, actor, study_id, principal_id, group_code, command_id)
 \item{command_id}{Idempotency key.}
 }
 \value{
-Study-specific pseudonym.
+Study-specific pseudonym. A completed study refuses new members
+  with DEL_CONFLICT (path study.state).
 }
 \description{
 Register a synthetic panel member

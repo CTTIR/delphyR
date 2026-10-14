@@ -94,6 +94,23 @@ panel_preview_value <- function(repo, study_id, csv, schema_version, delimiter) 
   value$csv <- input$bytes
   structure(value, class = c("delphyr_panel_preview", "list"))
 }
+# A console or log that prints a preview receives counts and hashes, never a
+# contact or the uploaded file.
+#' @export
+print.delphyr_panel_preview <- function(x, ...) {
+  issues <- if (nrow(x$issues)) table(x$issues$code) else integer()
+  cat(
+    "<panel import preview>\n",
+    "  file sha256: ", x$file_hash, " (schema ", x$schema_version, ", delimiter ", x$delimiter, ")\n",
+    "  rows: ", nrow(x$rows), ", accepted ", x$accepted_rows, ", rejected ", x$rejected_rows, "\n",
+    "  valid: ", x$valid, "\n",
+    if (length(issues)) paste0("  issues: ", paste0(names(issues), " (", as.integer(issues), ")", collapse = ", "), "\n"),
+    "  approval hash: ", x$hash, "\n",
+    "  Contacts and the file are not printed.\n",
+    sep = ""
+  )
+  invisible(x)
+}
 #' Preview a synthetic panel CSV with blocking duplicate review
 #' @param repo Development/test repository.
 #' @param actor Current study coordinator.

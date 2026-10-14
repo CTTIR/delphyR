@@ -127,3 +127,54 @@ log_operation <- function(operation, code, correlation_id = new_correlation_id()
   log_event(operation, correlation_id = correlation_id, component = component, duration_ms = elapsed())
   value
 }
+# Printing a frozen snapshot shows what it is, never its content: a console or
+# a log that captures it receives no answer and no free text.
+#' @export
+print.delphyr_snapshot <- function(x, ...) {
+  d <- x$data
+  texts <- sum(d$answer_status == "answered" & !is.na(d$value_text))
+  cat(
+    "<frozen snapshot>\n",
+    "  id: ", x$snapshot_id, "\n",
+    "  content hash: ", x$content_hash, "\n",
+    "  study ", x$protocol$study$code, ", round ", x$round_number, "\n",
+    "  panel: ", length(unique(d$panelist_id)), " assigned, ", length(unique(d$panelist_id[d$submitted])), " submitted\n",
+    "  fields: ", nrow(x$items), " item dimensions, ", nrow(d), " response fields, ", texts, " free-text answers\n",
+    "  Answers and free texts are not printed.\n",
+    sep = ""
+  )
+  invisible(x)
+}
+# A feedback draft and the data of a report are printed the same way: what
+# they are and how much they hold, never a table or a reviewed text.
+#' @export
+print.delphyr_feedback_draft <- function(x, ...) {
+  r <- x$results
+  suppressed <- if (is.null(r$suppressed)) 0L else sum(r$suppressed %in% TRUE)
+  cat(
+    "<feedback draft>\n",
+    "  hash: ", x$hash, "\n",
+    "  analysis hash: ", x$analysis_hash, "\n",
+    "  results: ", NROW(r), " rows, ", suppressed, " suppressed; distributions: ", NROW(x$distributions), " rows\n",
+    "  qualitative texts: ", length(x$qualitative), "\n",
+    "  Results and texts are not printed.\n",
+    sep = ""
+  )
+  invisible(x)
+}
+#' @export
+print.delphyr_report_data <- function(x, ...) {
+  value <- unclass(x)
+  rows <- vapply(Filter(is.data.frame, value), nrow, integer(1))
+  m <- value$metadata
+  cat(
+    "<report data>\n",
+    "  profile: ", value$profile, ", schema version ", value$schema_version, "\n",
+    "  content hash: ", value$content_hash, "\n",
+    "  study ", if (!is.null(m$study_code)) m$study_code else m$study_id, if (!is.null(m$round_number)) paste0(", round ", m$round_number), "\n",
+    "  tables: ", if (length(rows)) paste0(names(rows), " (", rows, ")", collapse = ", ") else "none", "\n",
+    "  Tables and texts are not printed.\n",
+    sep = ""
+  )
+  invisible(x)
+}

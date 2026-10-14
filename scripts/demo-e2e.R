@@ -1,7 +1,8 @@
 dir.create(".checks", showWarnings = FALSE, mode = "0700")
 .libPaths(c(normalizePath(".R-library"), .libPaths()))
 pkgload::load_all("packages/delphyr", quiet = TRUE)
-r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test", artifact_root = file.path(getwd(), ".artifacts"))
+# DELPHYR_TEST_DB_NAME selects another database of the local test server.
+r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test", artifact_root = file.path(getwd(), ".artifacts"))
 migrate_repository(r)
 f <- demo_study(r)
 round <- f$round
@@ -48,7 +49,8 @@ for (number in 1:2) {
 complete_study(r, f$manager, f$study_id, "Synthetic scenario complete; no study approval claimed", "complete")
 comparison <- compare_rounds(snapshots[[1]], snapshots[[2]])
 stopifnot(all(comparison$n_paired == 30), all(comparison$proportion_unchanged == 1))
-job <- request_export(r, f$manager, snap$id, "export")
+purpose <- "Synthetic two-round demonstration of the research export"
+job <- request_export(r, f$manager, snap$id, "export", purpose = purpose)
 for (attempt in 1:100) {
   op <- get_operation(r, f$manager, job$id)
   if (op$state == "succeeded") break
@@ -57,6 +59,9 @@ for (attempt in 1:100) {
 stopifnot(op$state == "succeeded")
 path <- download_artifact(r, f$manager, op$result_ref)
 reproduced <- reproduce_export(path)
+# The export names what it was requested for.
+manifest <- jsonlite::fromJSON(file.path(path, "manifest.json"))
+stopifnot(identical(manifest$purposes, purpose), identical(manifest$profile, "research_round"), identical(manifest$snapshot_id, snap$id))
 stopifnot(identical(reproduced$provenance$result_hash, analysis$provenance$result_hash))
 writeLines(path, ".checks/latest-export-path.txt")
 writeLines(f$study_id, ".checks/latest-e2e-study.txt")

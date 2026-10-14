@@ -7,7 +7,10 @@
 validate_items(items, protocol)
 }
 \arguments{
-\item{items}{Data frame following the v1 item import contract, with item_version.}
+\item{items}{Data frame with the columns that read_item_import() returns,
+including item_version and source_ref. Codes, locales, texts and
+references must be text, as read_item_import() returns them; a code
+read as a number is refused.}
 
 \item{protocol}{Study protocol.}
 }

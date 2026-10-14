@@ -4,7 +4,14 @@
 \alias{request_study_export}
 \title{Queue a private study-level export for one profile}
 \usage{
-request_study_export(repo, actor, study_id, profile, command_id)
+request_study_export(
+  repo,
+  actor,
+  study_id,
+  profile,
+  command_id,
+  purpose = NULL
+)
 }
 \arguments{
 \item{repo}{Repository.}
@@ -17,6 +24,9 @@ request_study_export(repo, actor, study_id, profile, command_id)
 contacts_restricted.}
 
 \item{command_id}{Idempotency key.}
+
+\item{purpose}{What the export is for, 10 to 500 characters; see
+request_export().}
 }
 \value{
 Operation id and state.

@@ -90,6 +90,11 @@ test_that("submission withdrawal and cancellation suppress already approved remi
   communication_release(r, f, cancel, key = "release-cancel")
   receipt <- cancel_campaign(r, f$manager, cancel$id, "Synthetic cancellation", "cancel")
   expect_identical(cancel_campaign(r, f$manager, cancel$id, "Synthetic cancellation", "cancel"), receipt)
+  # Cancelling again, by a second click or a second coordinator, is refused as
+  # a conflict, not reported as a failure of the database.
+  again <- tryCatch(cancel_campaign(r, f$manager, cancel$id, "Synthetic cancellation", "cancel again"), error = function(e) e)
+  expect_identical(c(class(again)[1], again$path), c("DEL_CONFLICT", "campaign.state"))
+  expect_equal(query(r, "SELECT count(*) AS n FROM ops.campaign_cancellations WHERE campaign_id=$1", cancel$id)$n, 1)
   expect_identical(process_campaign_sink(r, f$study_id)$reason, "campaign_cancelled")
   expect_identical(process_campaign_sink(r, f$study_id)$reason, "campaign_cancelled")
 })

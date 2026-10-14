@@ -28,7 +28,8 @@ test_that("save failures never advance revisions or clear pending changes", {
     expect_equal(revision(), 1L)
     expect_false(dirty())
     expect_true(answered())
-    expect_match(output$status, "Saved:")
+    # The confirmed moment in words, never the database's text.
+    expect_identical(output$status, "Saved on 25 Sep 2026, 12:00 (UTC)")
     expect_match(output$save_status$html, "del-status--saved", fixed = TRUE)
     expect_equal(calls[[2]][[2]], "own-enrollment")
     expect_equal(calls[[2]][[4]], list(value = 7, status = "answered"))
@@ -84,12 +85,13 @@ test_that("panel blocks submitting and changing questionnaires with pending chan
   shiny::testServer(delphyrApp:::panel_server, args = list(study = function() "study", lang = function() "en", call = call), {
     session$setInputs(enrollment = "own-enrollment", load = 1)
     expect_equal(loads, 1L)
-    expect_match(output$deadline, "01:00 +0100 Europe/Berlin", fixed = TRUE)
+    expect_identical(output$deadline, "Submit by: 1 Dec 2026, 01:00 (Europe/Berlin, UTC+1)")
     session$setInputs(`item_1_1-kind` = "answered", `item_1_1-value` = "7")
     expect_true(dirty())
     session$setInputs(confirm = TRUE, submit = 1)
     expect_equal(submits, 0L)
-    expect_match(output$status, "Save all changes")
+    # The refusal stands beside the submit button.
+    expect_match(output$submission$html, "Save or complete your changes in this block first", fixed = TRUE)
     session$setInputs(load = 2)
     expect_equal(loads, 1L)
     expect_match(output$status, "Save your changes first")
@@ -98,39 +100,53 @@ test_that("panel blocks submitting and changing questionnaires with pending chan
 test_that("feedback release requires review of the exact candidate and jobs retain results", {
   names <- c("freeze_round", "request_analysis", "get_operation", "get_analysis", "create_feedback", "get_feedback_candidate", "release_feedback", "assign_feedback", "request_export", "download_artifact", "get_study_setup", "prepare_round")
   services <- stats::setNames(rep(list(function(...) NULL), length(names)), names)
-  released <- 0L
+  # The double only records; the module catches every condition raised inside
+  # a service, so the hash is checked here, outside it.
+  released <- character()
   refreshes <- 0L
   call <- function(name, ...) {
     switch(name,
       get_study_setup = list(protocol = list(), consent_versions = data.frame(id = "consent", locale = "en", content = "Synthetic")),
       request_analysis = list(id = "job"),
       get_operation = data.frame(state = "succeeded", result_ref = "analysis"),
-      get_analysis = list(results = data.frame(item = "example", n_valid = 20)),
+      get_analysis = list(results = data.frame(item_code = "I001", stratum = "overall", n_valid = 20, n_assigned = 20, classification = "consensus_in"), decisions = data.frame(item_code = "I001", dimension_code = "relevance", classification = "consensus_in")),
       create_feedback = list(id = "feedback", hash = "exact-hash"),
       get_feedback_candidate = list(content = list(), hash = "exact-hash", state = "reviewed"),
       release_feedback = {
-        expect_equal(list(...)[[2]], "exact-hash")
-        released <<- released + 1L
+        released <<- c(released, list(...)[[2]])
+        list(id = "feedback")
       },
       stop("unexpected service")
     )
   }
-  round <- function() data.frame(id = "round", snapshot_id = "snapshot", analysis_id = "analysis")
+  round <- function() data.frame(id = "round", number = 1L, state = "analysed", snapshot_id = "snapshot", analysis_id = "analysis")
   shiny::testServer(delphyrApp:::operations_server, args = list(study = function() "study", round = round, lang = function() "en", call = call, services = services, refresh = function() {
     refreshes <<- refreshes + 1L
   }, allowed = function() TRUE), {
+    session$flushReact()
+    expect_match(output$body$html, "Review and release feedback", fixed = TRUE)
     session$setInputs(analyse = 1)
-    expect_equal(operation(), "job")
+    expect_identical(analysis_job()$id, "job")
     session$setInputs(poll = 1)
-    expect_equal(analysis()$results$n_valid, 20)
+    expect_equal(analysis()$data$results$n_valid, 20)
+    expect_identical(analysis()$id, "analysis")
+    expect_null(analysis_job())
+    expect_identical(refreshes, 1L)
     session$setInputs(draft = 1, reviewed = FALSE)
+    expect_match(output$preview$html, "Checksum: exact-hash", fixed = TRUE)
+    expect_match(output$preview$html, "Release feedback", fixed = TRUE)
     session$setInputs(release = 1)
-    expect_equal(released, 0L)
+    expect_length(released, 0L)
+    # A candidate that differs from the one shown is not released.
+    preview(list(content = list(), hash = "changed", state = "reviewed"))
     session$setInputs(reviewed = TRUE, release = 2)
-    expect_equal(released, 1L)
-    preview(list(hash = "changed"))
+    expect_length(released, 0L)
+    preview(list(content = list(), hash = "exact-hash", state = "reviewed"))
     session$setInputs(release = 3)
-    expect_equal(released, 1L)
+    expect_identical(released, "exact-hash")
+    expect_null(feedback())
+    session$setInputs(release = 4)
+    expect_identical(released, "exact-hash")
   })
 })
 
@@ -192,15 +208,15 @@ test_that("editing a committed answer never labels the new value saved", {
     session$setInputs(kind = "answered", value = "7", save = 1)
     expect_equal(saves, 0L)
     expect_equal(revision(), 1L)
-    expect_match(output$status, "Saved response", fixed = TRUE)
+    expect_identical(output$status, "Saved")
     session$setInputs(value = "8")
-    expect_match(output$status, "Unsaved change", fixed = TRUE)
-    expect_false(grepl("Saved:", output$status, fixed = TRUE))
+    expect_identical(output$status, "Not saved yet.")
     expect_equal(revision(), 1L)
     session$setInputs(save = 2)
     expect_equal(saves, 1L)
     expect_equal(revision(), 2L)
-    expect_match(output$status, "Saved: committed-time", fixed = TRUE)
+    # A time the interface cannot read is not shown.
+    expect_identical(output$status, "Saved")
   })
 })
 
@@ -223,15 +239,14 @@ test_that("a settled complete answer is saved automatically exactly once", {
     session$elapse(1000)
     expect_length(saved, 0L)
     expect_true(dirty())
-    expect_match(output$status, "Unsaved change", fixed = TRUE)
-    expect_false(grepl("Saved:", output$status, fixed = TRUE))
+    expect_identical(output$status, "Not saved yet.")
     session$elapse(600)
     expect_length(saved, 1L)
     expect_identical(saved[[1]][[3]], list(value = 7, status = "answered"))
     expect_identical(saved[[1]][[4]], 0L)
     expect_false(dirty())
     expect_equal(revision(), 1L)
-    expect_match(output$status, "Saved: commit 1", fixed = TRUE)
+    expect_identical(output$status, "Saved")
     expect_match(output$save_status$html, "del-status--saved", fixed = TRUE)
     session$elapse(5000)
     expect_length(saved, 1L)
@@ -275,10 +290,17 @@ test_that("a conflict stops automatic saving until the saved response is loaded 
     expect_equal(revision(), 3L)
     expect_identical(baseline(), list(status = "answered", value = "4"))
     # The discarded entry is still on screen until the browser applies the
-    # loaded response; it must not be saved in that interval.
+    # loaded response; it is no longer the field's entry and is never saved,
+    # neither automatically nor by an explicit save in that interval.
+    expect_false(dirty())
+    expect_identical(current(), list(status = "answered", value = "4"))
     session$elapse(5000)
+    session$setInputs(save = 1)
     expect_equal(attempts, 1L)
-    expect_match(output$status, "Unsaved change", fixed = TRUE)
+    expect_identical(output$status, "Saved response loaded.")
+    # A late report of the discarded entry is not taken for a new one.
+    session$setInputs(value = "8")
+    expect_false(dirty())
     session$setInputs(value = "4")
     expect_false(dirty())
     session$setInputs(value = "5")
@@ -368,7 +390,7 @@ test_that("submission first saves pending complete answers and uses their confir
     session$setInputs(`item_1_1-kind` = "answered", `item_1_1-value` = "7")
     expect_true(dirty())
     session$setInputs(confirm = TRUE, submit = 1)
-    expect_identical(tail(order, 2), c("save_response", "submit_round"))
+    expect_identical(order[order %in% c("save_response", "submit_round")], c("save_response", "submit_round"))
     expect_identical(submitted, c(item = 1L))
     expect_identical(receipt()$id, "receipt")
     expect_false(dirty())
@@ -410,19 +432,22 @@ test_that("withdrawal needs explicit confirmation and reports the durable receip
     if (name == "withdraw_participation") {
       withdrawals <<- withdrawals + 1L
       expect_equal(list(...)[[2]], "synthetic_retain_prior_data")
-      return(list(id = "withdrawal-receipt"))
+      return(list(id = "5d0f3c2a-9b7e-4f51-8a3c-2e6b1d4f7a90"))
     }
     stop("unexpected service")
   }
   shiny::testServer(delphyrApp:::panel_server, args = list(study = function() "study", lang = function() "en", call = call, withdrawal_available = TRUE), {
     session$flushReact()
+    # Ending participation is its own section at the end, with a heading.
+    expect_match(output$withdrawal$html, "<h3 id=\"proxy1-withdrawal_heading\">End participation</h3>", fixed = TRUE)
     session$setInputs(withdraw = 1)
     expect_equal(withdrawals, 0L)
     expect_match(output$status, "confirm withdrawal")
     session$setInputs(withdraw_confirm = TRUE, withdraw = 2)
     expect_equal(withdrawals, 1L)
-    expect_match(output$status, "withdrawal-receipt")
+    expect_identical(output$status, "Participation ended. Saved data are retained. Receipt: 5d0f3c2a")
     expect_null(q())
+    expect_error(output$withdrawal)
   })
 })
 
@@ -492,7 +517,7 @@ test_that("a blocked opening shows the readiness findings instead of a success",
     expect_match(output$status, "not ready yet", fixed = TRUE)
     expect_match(output$review_readiness, "Blocking", fixed = TRUE)
     expect_match(output$review_readiness, "No eligible panel member is enrolled.", fixed = TRUE)
-    expect_match(output$review_readiness, "professionals: 3 &lt; 10", fixed = TRUE)
+    expect_match(output$review_readiness, "Professionals: 3 enrolled, minimum valid n 10", fixed = TRUE)
     session$setInputs(enroll = 1)
     expect_match(output$status, "Panel members enrolled: 2", fixed = TRUE)
     # Selecting another round discards the review of the previous one.
@@ -535,7 +560,7 @@ test_that("a study without any round shows its management, communications and pa
     services = names_of(c("get_capabilities", "get_study_setup", "list_rounds", "transition_round"))
   ), {
     session$flushReact()
-    expect_match(output$body$html, "Study management", fixed = TRUE)
+    expect_match(output$body$html, "Rounds and analysis", fixed = TRUE)
     expect_match(output$body$html, "id=\"proxy1-round\"", fixed = TRUE)
     expect_identical(output$status, "")
   })

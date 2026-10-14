@@ -9,7 +9,7 @@ get_study_setup(repo, actor, study_id)
 \arguments{
 \item{repo}{Repository.}
 
-\item{actor}{Study manager.}
+\item{actor}{Study manager or analyst.}
 
 \item{study_id}{Study UUID.}
 }
@@ -17,5 +17,6 @@ get_study_setup(repo, actor, study_id)
 Protocol and published information versions, without panel identities.
 }
 \description{
-Read authorized setup information for the round editor
+Analysts read it as well: the protocol holds the rules and the time zone of
+the analyses they work with.
 }

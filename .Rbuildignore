@@ -1,0 +1,7 @@
+
+^\.local-private$
+^AGENTS\.md$
+^CLAUDE.*$
+^admin$
+^HANDOVER\.md$
+^docs/spec$

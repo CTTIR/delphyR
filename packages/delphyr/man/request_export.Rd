@@ -4,7 +4,7 @@
 \alias{request_export}
 \title{Queue a private pseudonymized numeric research export}
 \usage{
-request_export(repo, actor, snapshot_id, command_id)
+request_export(repo, actor, snapshot_id, command_id, purpose = NULL)
 }
 \arguments{
 \item{repo}{Repository.}
@@ -14,6 +14,11 @@ request_export(repo, actor, snapshot_id, command_id)
 \item{snapshot_id}{Immutable snapshot UUID.}
 
 \item{command_id}{Idempotency key.}
+
+\item{purpose}{What the export is for, 10 to 500 characters. It is
+recorded as the rationale of the request in the audit trail and written
+into the manifest of the export, under `purposes`. A request merged into
+a pending export of the same snapshot adds its purpose there.}
 }
 \value{
 Operation id. Free-text exports require a separate reviewed profile.

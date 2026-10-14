@@ -35,15 +35,31 @@ ui_translation_keys <- function(paths) {
   list(keys = unique(keys), unresolved = unresolved)
 }
 
-test_that("all literal and vector interface keys have explicit French translations", {
-  paths <- list.files(testthat::test_path("..", "..", "R"), pattern = "[.]R$", full.names = TRUE)
-  paths <- paths[basename(paths) != "i18n.R"]
+# The R sources of the package: beside the tests when they run in the source
+# tree, under 00_pkg_src when R CMD check runs them on the built package.
+package_sources <- function() {
+  for (dir in c(testthat::test_path("..", "..", "R"), testthat::test_path("..", "..", "00_pkg_src", "delphyrApp", "R"))) {
+    paths <- list.files(dir, pattern = "[.]R$", full.names = TRUE)
+    if (length(paths)) {
+      return(paths)
+    }
+  }
+  character()
+}
+
+test_that("every literal and vector interface key in the sources is registered", {
+  paths <- package_sources()
+  skip_if(!length(paths), "The package sources are not available, so the registered keys cannot be compared with them")
+  extracted <- ui_translation_keys(paths[basename(paths) != "i18n.R"])
   declared <- readLines(system.file("i18n", "ui-keys.txt", package = "delphyrApp"), encoding = "UTF-8")
-  extracted <- if (length(paths)) ui_translation_keys(paths) else list(keys = declared, unresolved = character())
   expect_setequal(extracted$keys, declared)
   expect_length(extracted$unresolved, 0)
-  expect_gt(length(extracted$keys), 250)
-  expect_setequal(setdiff(extracted$keys, names(translation_catalog())), character())
+})
+
+test_that("every registered interface key has an explicit French translation", {
+  declared <- readLines(system.file("i18n", "ui-keys.txt", package = "delphyrApp"), encoding = "UTF-8")
+  expect_gt(length(declared), 250)
+  expect_setequal(setdiff(declared, names(translation_catalog())), character())
   expect_true(all(nzchar(translation_catalog())))
   expect_error(tr("fr", "Unbekannt", "Unregistered UI label"), "Missing French")
 })
@@ -96,8 +112,8 @@ test_that("app defaults to English and switches its live chrome without changing
 })
 
 test_that("package code is ASCII with escaped interface text", {
-  paths <- list.files(testthat::test_path("..", "..", "R"), pattern = "[.]R$", full.names = TRUE)
-  skip_if(!length(paths), "Source files are not available in an installed package")
+  paths <- package_sources()
+  skip_if(!length(paths), "The package sources are not available")
   offending <- paths[vapply(paths, function(path) any(grepl("[^\\x01-\\x7F]", readLines(path, warn = FALSE), perl = TRUE)), logical(1))]
   expect_identical(basename(offending), character())
 })

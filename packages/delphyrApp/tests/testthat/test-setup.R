@@ -135,8 +135,9 @@ test_that("the panel is pseudonymous and a group change needs rationale and conf
   state <- setup_state()
   shiny::testServer(delphyrApp:::study_setup_server, args = list(study = function() "study", lang = function() "en", call = setup_call(state), services = setup_services(setup_needed)), {
     session$flushReact()
-    expect_match(output$panel, "pseudonym-a", fixed = TRUE)
-    expect_match(output$panel, "Participation ended", fixed = TRUE)
+    # Pseudonyms are shown short, with the full value in the title.
+    expect_match(output$panel$html, "title=\"pseudonym-a\">pseudony<", fixed = TRUE)
+    expect_match(output$panel$html, "Participation ended", fixed = TRUE)
     session$setInputs(group_panelist = "pseudonym-a", group_code = "public_contributors", group_reason = "Role changed", group_confirm = FALSE, group_apply = 1)
     expect_length(setup_called(state, "set_panel_group"), 0L)
     session$setInputs(group_confirm = TRUE, group_apply = 2)
@@ -215,9 +216,10 @@ test_that("instrument validation uses the current protocol and study information
     published <<- TRUE
     session$setInputs(csv = file, validate = 1)
     expect_match(output$status, "Import validated", fixed = TRUE)
-    expect_match(output$consents$html, "Synthetic", fixed = TRUE)
-    session$setInputs(consent = "consent", deadline = "2026-12-01T18:00:00+01:00", prepare = 1)
+    expect_match(output$consent_text$html, "Synthetic", fixed = TRUE)
+    session$setInputs(consent = "consent", deadline_date = "2026-12-01", deadline_time = "18:00", prepare = 1)
     expect_length(prepared, 1L)
     expect_identical(prepared[[1]][[3]], "consent")
+    expect_identical(prepared[[1]][[4]], "2026-12-01T18:00:00+01:00")
   })
 })

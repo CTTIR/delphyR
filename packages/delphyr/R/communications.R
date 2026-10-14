@@ -72,20 +72,32 @@ campaign_rules <- function(repo, round_id) {
     max_reminders = rules$max_reminders, min_reminder_interval_hours = rules$min_reminder_interval_hours
   )
 }
-# Earlier reminders that count against the limit: approved, not cancelled, and
-# neither suppressed nor failed nor abandoned for that recipient.
+# An approved reminder counts against the limits of its recipient unless it
+# never left: suppressed, failed or abandoned, or still waiting in a cancelled
+# campaign. A reminder already delivered keeps counting after a cancellation.
+reminder_counts <- "COALESCE(d.state,'queued') NOT IN ('suppressed','failed','abandoned')
+  AND NOT (COALESCE(d.state,'queued')='queued' AND EXISTS(SELECT 1 FROM ops.campaign_cancellations x WHERE x.campaign_id=k.id))"
+# Delivery states of a message that may have reached its recipient.
+reminder_sent <- "('running','sink_recorded','accepted','delivery_unknown','resolved_delivered')"
+# Earlier reminders of the recipients of a campaign, with the later of the
+# approved send time and the time the message actually went out.
 prior_reminders <- function(repo, c) {
-  query(repo, "SELECT cr.enrollment_id,count(*)::int AS n,max(COALESCE(s.not_before,rel.approved_at)) AS latest
+  query(repo, paste0("SELECT cr.enrollment_id,count(*)::int AS n,max(GREATEST(COALESCE(s.not_before,rel.approved_at),CASE WHEN d.state IN ", reminder_sent, " THEN d.updated_at END)) AS latest
     FROM ops.campaign_recipients cr JOIN ops.campaigns k ON k.id=cr.campaign_id AND k.kind='reminder' AND k.id<>$3
     JOIN ops.campaign_releases rel ON rel.campaign_id=k.id
     LEFT JOIN ops.campaign_schedules s ON s.campaign_id=k.id
     LEFT JOIN ops.message_outbox o ON o.campaign_id=k.id AND o.enrollment_id=cr.enrollment_id
     LEFT JOIN ops.message_delivery d ON d.message_id=o.id
-    WHERE k.study_id=$1 AND k.round_id=$2
-      AND NOT EXISTS(SELECT 1 FROM ops.campaign_cancellations x WHERE x.campaign_id=k.id)
-      AND COALESCE(d.state,'queued') NOT IN ('suppressed','failed','abandoned')
+    WHERE k.study_id=$1 AND k.round_id=$2 AND ", reminder_counts, "
       AND cr.enrollment_id IN (SELECT enrollment_id FROM ops.campaign_recipients WHERE campaign_id=$3)
-    GROUP BY cr.enrollment_id", c$study_id, c$round_id, c$id)
+    GROUP BY cr.enrollment_id"), c$study_id, c$round_id, c$id)
+}
+# A send time is a complete calendar time with an explicit offset that the
+# database accepts as it is: nothing is left for a statement to reject. Unlike
+# R, the database knows no year 0.
+valid_send_time <- function(x) {
+  ensure(scalar_text(x) && grepl("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9]([.][0-9]{1,6})?)?(Z|[+-](0[0-9]|1[0-4]):[0-5][0-9])$", x) &&
+    !startsWith(x, "0000-") && !is.na(as.Date(substr(x, 1L, 10L), format = "%Y-%m-%d", optional = TRUE)), "campaign.not_before")
 }
 #' Release an exact synthetic campaign and atomically create its outbox
 #'
@@ -94,6 +106,10 @@ prior_reminders <- function(repo, c) {
 #' reminder is refused when any recipient would exceed the protocol's maximum
 #' number of reminders or receive it sooner than the minimum interval after
 #' the previous one; the limits never shrink an approved audience silently.
+#' Approvals of reminders for one round are decided one at a time. The worker
+#' keeps the interval as well: a reminder that would reach a person sooner
+#' after the previous one, because quiet hours or a stopped worker held both,
+#' waits until the interval has passed.
 #' @param repo Repository.
 #' @param actor Actor with coordinate capability.
 #' @param campaign_id Campaign UUID.
@@ -101,7 +117,9 @@ prior_reminders <- function(repo, c) {
 #' @param reason Human approval rationale.
 #' @param command_id Idempotency key.
 #' @param not_before Earliest send time with an explicit offset, for example
-#'   "2026-10-05T09:00:00+02:00"; NULL means now. At most 90 days ahead.
+#'   "2026-10-05T09:00:00+02:00"; NULL means now. At most 90 days ahead. A
+#'   time that does not exist in the calendar is refused as
+#'   `campaign.not_before` before any statement.
 #' @return Campaign id, approved recipient count and the approved earliest
 #'   send time. No message is sent.
 #' @export
@@ -109,7 +127,7 @@ release_campaign <- function(repo, actor, campaign_id, expected_hash, reason, co
   transaction(repo, function() {
     c <- campaign_get(repo, actor, campaign_id, TRUE)
     ensure(scalar_text(reason), "campaign.reason")
-    if (!is.null(not_before)) ensure(scalar_text(not_before) && grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})$", not_before), "campaign.not_before")
+    if (!is.null(not_before)) valid_send_time(not_before)
     command(repo, actor, c$study_id, "campaign_release", command_id, list(campaign_id, expected_hash, reason, not_before), function() {
       ensure(identical(c$hash, expected_hash) && identical(c$hash, campaign_hash(repo, c)), "campaign.hash", "DEL_CONFLICT")
       ensure(!nrow(query(repo, "SELECT id FROM ops.campaign_cancellations WHERE campaign_id=$1", c$id)) &&
@@ -118,6 +136,9 @@ release_campaign <- function(repo, actor, campaign_id, expected_hash, reason, co
       window <- one(query(repo, "SELECT COALESCE($1::timestamptz,clock_timestamp()) AS send_at,COALESCE($1::timestamptz,clock_timestamp())<=clock_timestamp()+interval '90 days' AS near,COALESCE($1::timestamptz,clock_timestamp())>=clock_timestamp()-interval '5 minutes' AS current", if (is.null(not_before)) NA_character_ else not_before))
       ensure(isTRUE(window$near) && isTRUE(window$current), "campaign.not_before")
       if (c$kind == "reminder" && (!is.null(rules$max_reminders) || !is.null(rules$min_reminder_interval_hours))) {
+        # A concurrent approval in the same round is decided first, so that
+        # two approvals cannot both pass a limit that together they exceed.
+        query(repo, "SELECT pg_advisory_xact_lock(hashtextextended($1,0))", paste0("reminders:", c$round_id))
         prior <- prior_reminders(repo, c)
         if (!is.null(rules$max_reminders)) ensure(rules$max_reminders > 0 && !any(prior$n >= rules$max_reminders), "campaign.reminder_limit", "DEL_CONFLICT")
         if (!is.null(rules$min_reminder_interval_hours) && nrow(prior)) {
@@ -143,42 +164,72 @@ release_campaign <- function(repo, actor, campaign_id, expected_hash, reason, co
 #' @param campaign_id Campaign UUID.
 #' @param reason Human cancellation rationale.
 #' @param command_id Idempotency key.
-#' @return Campaign UUID; already recorded sink receipts remain immutable.
+#' @return Campaign UUID; already recorded sink receipts remain immutable. A
+#'   campaign that is already cancelled is refused as `campaign.state`.
 #' @export
 cancel_campaign <- function(repo, actor, campaign_id, reason, command_id) {
   transaction(repo, function() {
     c <- campaign_get(repo, actor, campaign_id, TRUE)
     ensure(scalar_text(reason), "campaign.reason")
     command(repo, actor, c$study_id, "campaign_cancel", command_id, list(campaign_id, reason), function() {
+      ensure(!nrow(query(repo, "SELECT id FROM ops.campaign_cancellations WHERE campaign_id=$1", c$id)), "campaign.state", "DEL_CONFLICT")
       execute(repo, "INSERT INTO ops.campaign_cancellations(id,study_id,campaign_id,reason,cancelled_by) VALUES($1,$2,$3,$4,$5)", uid(), c$study_id, c$id, reason, actor$principal_id)
       list(id = c$id)
     }, reason = reason)
   })
 }
+# The time until which a reminder has to wait so that its recipient never
+# receives two reminders of the round closer than the protocol's minimum
+# interval, also when quiet hours or a stopped worker held both; NULL when it
+# may go now.
+reminder_wait <- function(repo, j) {
+  c <- one(query(repo, "SELECT kind,round_id FROM ops.campaigns WHERE id=$1", j$campaign_id))
+  hours <- if (identical(c$kind, "reminder")) campaign_rules(repo, c$round_id)$min_reminder_interval_hours
+  if (is.null(hours)) {
+    return(NULL)
+  }
+  # Claims of reminders for one person are decided one at a time.
+  query(repo, "SELECT pg_advisory_xact_lock(hashtextextended($1,0))", paste0("reminder:", j$enrollment_id))
+  x <- query(repo, paste0("SELECT max(d.updated_at)+$3*interval '1 hour' AS until FROM ops.message_outbox o JOIN ops.campaigns k ON k.id=o.campaign_id AND k.kind='reminder' JOIN ops.message_delivery d ON d.message_id=o.id
+    WHERE o.enrollment_id=$1 AND o.id<>$2 AND d.state IN ", reminder_sent, " HAVING max(d.updated_at)+$3*interval '1 hour'>clock_timestamp()"), j$enrollment_id, j$id, hours)
+  if (nrow(x)) x$until else NULL
+}
 claim_campaign_message <- function(repo, study_id = NULL, lease_seconds = 30L) {
   started <- Sys.time()
   expired <- character()
-  claim <- transaction(repo, function() {
-    ensure(repo$environment %in% c("development", "test"), "communications.sink_only", "DEL_FORBIDDEN")
-    if (!is.null(study_id)) valid_id(study_id) else study_id <- NA_character_
-    ensure(whole(lease_seconds) && length(lease_seconds) == 1 && lease_seconds > 0 && lease_seconds <= 300, "message.lease")
-    expired <<- query(repo, "UPDATE ops.message_delivery d SET state='delivery_unknown',reason='expired_in_flight_lease',lease_token=NULL,lease_until=NULL,updated_at=clock_timestamp() FROM ops.message_outbox o WHERE d.message_id=o.id AND d.state='running' AND d.lease_until<=clock_timestamp() AND ($1::uuid IS NULL OR o.study_id=$1) RETURNING d.message_id", study_id)$message_id
-    # A message waits for its approved send time, outside the quiet hours of
-    # the study's timezone, and for its retry time after a transient failure.
-    j <- query(repo, "SELECT o.* FROM ops.message_outbox o JOIN ops.message_delivery d ON d.message_id=o.id LEFT JOIN ops.campaign_schedules s ON s.campaign_id=o.campaign_id
-      WHERE d.state='queued' AND d.available_at<=clock_timestamp() AND ($1::uuid IS NULL OR o.study_id=$1)
-        AND (s.campaign_id IS NULL OR (s.not_before<=clock_timestamp() AND (s.quiet_start IS NULL OR NOT (
-          CASE WHEN s.quiet_start<s.quiet_end THEN (clock_timestamp() AT TIME ZONE s.timezone)::time>=s.quiet_start AND (clock_timestamp() AT TIME ZONE s.timezone)::time<s.quiet_end
-               ELSE (clock_timestamp() AT TIME ZONE s.timezone)::time>=s.quiet_start OR (clock_timestamp() AT TIME ZONE s.timezone)::time<s.quiet_end END))))
-      ORDER BY o.created_at,o.id LIMIT 1 FOR UPDATE OF d SKIP LOCKED", study_id)
-    if (!nrow(j)) {
-      return(j)
-    }
-    token <- uid()
-    execute(repo, "UPDATE ops.message_delivery SET state='running',lease_token=$2,lease_until=clock_timestamp()+$3*interval '1 second',attempts=attempts+1,updated_at=clock_timestamp() WHERE message_id=$1", j$id, token, lease_seconds)
-    j$lease_token <- token
-    j
-  })
+  # One candidate per transaction: a reminder that has to wait is put back
+  # with its new time and the next candidate is taken in a new transaction.
+  repeat {
+    deferred <- FALSE
+    claim <- transaction(repo, function() {
+      ensure(repo$environment %in% c("development", "test"), "communications.sink_only", "DEL_FORBIDDEN")
+      if (!is.null(study_id)) valid_id(study_id) else study_id <- NA_character_
+      ensure(whole(lease_seconds) && length(lease_seconds) == 1 && lease_seconds > 0 && lease_seconds <= 300, "message.lease")
+      expired <<- c(expired, query(repo, "UPDATE ops.message_delivery d SET state='delivery_unknown',reason='expired_in_flight_lease',lease_token=NULL,lease_until=NULL,updated_at=clock_timestamp() FROM ops.message_outbox o WHERE d.message_id=o.id AND d.state='running' AND d.lease_until<=clock_timestamp() AND ($1::uuid IS NULL OR o.study_id=$1) RETURNING d.message_id", study_id)$message_id)
+      # A message waits for its approved send time, outside the quiet hours of
+      # the study's timezone, and for its retry time after a transient failure.
+      j <- query(repo, "SELECT o.* FROM ops.message_outbox o JOIN ops.message_delivery d ON d.message_id=o.id LEFT JOIN ops.campaign_schedules s ON s.campaign_id=o.campaign_id
+        WHERE d.state='queued' AND d.available_at<=clock_timestamp() AND ($1::uuid IS NULL OR o.study_id=$1)
+          AND (s.campaign_id IS NULL OR (s.not_before<=clock_timestamp() AND (s.quiet_start IS NULL OR NOT (
+            CASE WHEN s.quiet_start<s.quiet_end THEN (clock_timestamp() AT TIME ZONE s.timezone)::time>=s.quiet_start AND (clock_timestamp() AT TIME ZONE s.timezone)::time<s.quiet_end
+                 ELSE (clock_timestamp() AT TIME ZONE s.timezone)::time>=s.quiet_start OR (clock_timestamp() AT TIME ZONE s.timezone)::time<s.quiet_end END))))
+        ORDER BY o.created_at,o.id LIMIT 1 FOR UPDATE OF d SKIP LOCKED", study_id)
+      if (!nrow(j)) {
+        return(j)
+      }
+      wait <- reminder_wait(repo, j)
+      if (!is.null(wait)) {
+        execute(repo, "UPDATE ops.message_delivery SET available_at=$2,reason='reminder_interval' WHERE message_id=$1", j$id, wait)
+        deferred <<- TRUE
+        return(j[0, , drop = FALSE])
+      }
+      token <- uid()
+      execute(repo, "UPDATE ops.message_delivery SET state='running',lease_token=$2,lease_until=clock_timestamp()+$3*interval '1 second',attempts=attempts+1,updated_at=clock_timestamp() WHERE message_id=$1", j$id, token, lease_seconds)
+      j$lease_token <- token
+      j
+    })
+    if (!deferred) break
+  }
   # An uncertain delivery needs a person; the technical log names the message.
   for (id in expired) log_work("message.deliver", started, "delivery_unknown", id, reason = "expired_in_flight_lease")
   claim
@@ -419,12 +470,13 @@ list_campaign_rounds <- function(repo, actor, study_id) {
 #' @param actor Actor with coordinate capability.
 #' @param round_id Round UUID.
 #' @return Enrollment UUID, study pseudonym, participation state and the
-#'   number of approved reminders that count against the protocol's limit.
+#'   number of approved reminders that count against the protocol's limit,
+#'   including reminders delivered before their campaign was cancelled.
 #' @export
 list_campaign_enrollments <- function(repo, actor, round_id) {
   r <- round_get(repo, actor, round_id, "coordinate")
-  query(repo, "SELECT e.id AS enrollment_id,e.panelist_id AS pseudonym,e.state,
+  query(repo, paste0("SELECT e.id AS enrollment_id,e.panelist_id AS pseudonym,e.state,
       (SELECT count(*) FROM ops.campaign_recipients cr JOIN ops.campaigns k ON k.id=cr.campaign_id AND k.kind='reminder' JOIN ops.campaign_releases rel ON rel.campaign_id=k.id LEFT JOIN ops.message_outbox o ON o.campaign_id=k.id AND o.enrollment_id=cr.enrollment_id LEFT JOIN ops.message_delivery d ON d.message_id=o.id
-        WHERE cr.enrollment_id=e.id AND NOT EXISTS(SELECT 1 FROM ops.campaign_cancellations x WHERE x.campaign_id=k.id) AND COALESCE(d.state,'queued') NOT IN ('suppressed','failed','abandoned'))::int AS reminders
-    FROM research.enrollments e WHERE e.study_id=$1 AND e.round_id=$2 ORDER BY e.id", r$study_id, r$id)
+        WHERE cr.enrollment_id=e.id AND ", reminder_counts, ")::int AS reminders
+    FROM research.enrollments e WHERE e.study_id=$1 AND e.round_id=$2 ORDER BY e.id"), r$study_id, r$id)
 }

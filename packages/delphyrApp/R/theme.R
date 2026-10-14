@@ -7,30 +7,48 @@ body {color:#22303c;background:#eceff2;font-family:system-ui,-apple-system,"Sego
 .del-brand {display:flex;align-items:center;gap:16px;}
 .del-account {display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;}
 .del-account .form-group {margin-bottom:0;}
-.del-logo {width:72px;height:84px;object-fit:contain;}
+.del-logo {width:64px;height:72px;object-fit:contain;}
 .del-header h1 {font-size:2.1rem;font-weight:750;color:#0e6e78;margin:0;}
 .del-banner {background:var(--del-warn-soft);border-left:3px solid var(--del-warn);padding:12px 16px;margin:20px 0;color:var(--del-warn);border-radius:0 8px 8px 0;}
+.del-closed-notice {background:#fff;border:1px solid var(--del-line);border-left:4px solid var(--del-warn);border-radius:0 14px 14px 0;padding:4px 24px 18px;margin:20px 0;}
+.del-closed-notice section + section {border-top:1px solid var(--del-line);margin-top:14px;}
+.del-closed-notice h2 {font-size:1.2rem;margin:16px 0 6px;}
+.del-closed-notice p {margin:6px 0;}
+.del-closed #main,.del-closed .del-account,.del-closed #shiny-disconnected-overlay {display:none;}
 .del-nav {background:white;border:1px solid #dce3e7;border-radius:14px;padding:8px 16px;}
 .del-nav ul {list-style:none;display:flex;flex-wrap:wrap;gap:4px 20px;margin:0;padding:0;}
 .del-nav a {display:inline-flex;align-items:center;min-height:44px;color:#0e6e78;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
 [id^="section-"] {scroll-margin-top:16px;}
-.del-sheet {background:white;border:1px solid #dce3e7;border-radius:14px;padding:24px;margin:18px 0;box-shadow:0 1px 2px rgba(34,48,60,.10);}
+.del-sheet {--bs-body-bg:#fff;background:white;border:1px solid #dce3e7;border-radius:14px;padding:24px;margin:18px 0;box-shadow:0 1px 2px rgba(34,48,60,.10);}
 .del-item {border-top:1px solid #dce3e7;padding:22px 0;max-width:75ch;}
 .del-item h3 {line-height:1.5;}
-h1,h2,h3,h4 {letter-spacing:-.01em;overflow-wrap:anywhere;}
-h2 {font-size:1.5rem;} h3 {font-size:1.2rem;} h4 {font-size:1.05rem;} h3,h4 {margin-top:20px;} p {max-width:75ch;line-height:1.6;}
+h1,h2,h3,h4,h5,h6 {letter-spacing:-.01em;overflow-wrap:anywhere;}
+h2 {font-size:1.5rem;} h3 {font-size:1.2rem;} h4 {font-size:1.05rem;} h5,h6 {font-size:1rem;font-weight:600;} h3,h4,h5 {margin-top:20px;} p {max-width:75ch;line-height:1.6;}
+#study {max-width:40rem;}
 .btn {min-height:44px;border-radius:8px;font-weight:600;white-space:normal;}
 .btn + .btn {margin-left:12px;}
 .del-actions .btn + .btn,.del-blocknav .btn + .btn,.del-account .btn + .btn {margin-left:0;}
-.btn + h2,.btn + h3,.btn + h4,.btn + p,.btn + .form-group,.btn + .shiny-input-container,.btn + .table {margin-top:16px;}
+.btn + h2,.btn + h3,.btn + h4,.btn + h5,.btn + p,.btn + .form-group,.btn + .shiny-input-container,.btn + .table,.btn + .shiny-html-output:not(:empty) > :first-child,.btn + .shiny-text-output:not(:empty) {margin-top:16px;}
+/* A table scrolls in its frame, whose edge shadow starts with the table. */
+.btn + .shiny-html-output:has(> .table) {margin-top:16px;}
+.btn + .shiny-html-output:has(> .table) > .table {margin-top:0;}
+.btn:has(+ .shiny-html-output:empty) {margin-bottom:16px;}
 .btn-sm {min-height:36px;font-weight:500;}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {outline:3px solid var(--del-accent)!important;outline-offset:3px;}
+[tabindex="-1"]:focus {outline:none;}
+[tabindex="-1"]:focus-visible {box-shadow:-4px 0 0 #fff,-8px 0 0 var(--del-accent);}
 .form-control,.form-select,.selectize-input {min-height:44px;border-color:#6b7c8a;background-color:#fff;}
 .form-control:disabled,.form-select:disabled,.form-control[readonly] {background-color:#eef1f4;color:#4a5865;}
+/* A list with search looks like a plain list: the same arrow, and no empty
+   line below a long choice from the search field that waits for the focus. */
+.selectize-control.single .selectize-input {padding-right:36px;}
+.selectize-control.single .selectize-input:not(.no-arrow):after,.selectize-control.single .selectize-input.dropdown-active:after {border:0;width:16px;height:12px;right:12px;margin-top:-6px;background:url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3e%3cpath fill=%27none%27 stroke=%27%234A5660%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27m2 5 6 6 6-6%27/%3e%3c/svg%3e") center/16px 12px no-repeat;}
+.selectize-control.single .selectize-input.has-items:not(.focus) > input {position:absolute!important;left:-10000px!important;opacity:0!important;}
 .form-control::placeholder {color:#5b6b7a;font-style:italic;opacity:1;}
 .checkbox label,.radio label {display:flex;gap:10px;align-items:flex-start;}
 .checkbox input,.radio input {flex:none;margin-top:.3em;}
 details {border:1px solid var(--del-line);border-radius:10px;padding:0 14px;margin:12px 0;background:#fff;}
+details[open] {padding-bottom:14px;}
 details > summary {font-weight:600;padding:10px 0;min-height:44px;cursor:pointer;}
 details[open] > summary {border-bottom:1px solid var(--del-line);margin-bottom:12px;}
 .del-status {border-left:3px solid #9cabb7;padding:8px 12px;margin:12px 0;overflow-wrap:anywhere;}
@@ -63,9 +81,13 @@ fieldset.del-moment {border:1px solid var(--del-line);border-radius:10px;padding
 .del-code {font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;overflow-wrap:anywhere;resize:none;}
 footer.del-note {text-align:center;font-size:.8rem;padding:12px 0;}
 .table {display:block;overflow-x:auto;}
+.shiny-html-output > .table {display:table;width:100%!important;margin-bottom:0;--bs-table-bg:transparent;}
+.shiny-html-output:has(> .table) {display:block;overflow-x:auto;margin-bottom:1rem;background:linear-gradient(to left,#fff 30%,rgba(255,255,255,0)) 100% 0/40px 100% no-repeat local,linear-gradient(to left,rgba(34,48,60,.22),rgba(34,48,60,0)) 100% 0/16px 100% no-repeat scroll;}
 .table caption {caption-side:top;color:#22303c;font-weight:600;padding-top:0;}
-.table th:first-child,.table td:first-child {position:sticky;left:0;background-color:#fff;z-index:1;}
-@media(max-width:600px) {.del-wrap{padding:16px 12px}.del-sheet{padding:16px}.del-statement{padding:14px}.shiny-input-container{max-width:100%}h1{font-size:1.7rem}h2{font-size:1.35rem}.btn + .btn{margin-left:0;margin-top:8px}}
+.table > thead > tr > * {background-color:rgba(34,48,60,.05);}
+.table th:first-child,.table td:first-child {position:sticky;left:0;z-index:1;background-color:#fff;background-image:linear-gradient(to left,var(--del-line) 1px,transparent 1px);}
+.table > thead > tr > th:first-child {background-color:#f4f5f6;}
+@media(max-width:600px) {.del-wrap{padding:16px 12px}.del-sheet{padding:16px}.del-statement{padding:14px}.shiny-input-container{max-width:100%}h1{font-size:1.7rem}h2{font-size:1.35rem}.btn + .btn{margin-left:0;margin-top:8px}.table > :not(caption) > * > *{padding-left:6px;padding-right:6px}}
 @media(prefers-reduced-motion:reduce) {*{animation:none!important;transition:none!important}}
 '
 status_ui <- function(id) shiny::tags$div(class = "del-status", role = "status", `aria-live` = "polite", shiny::textOutput(id))
@@ -131,6 +153,8 @@ connection_script <- function(banner_id, workspace_id) {
     lost = tr(lang, "Verbindung unterbrochen. \u00c4nderungen werden nicht gespeichert. Sichern Sie offene Texte vor dem Neuladen; danach sind nur best\u00e4tigte Antworten wiederhergestellt.", "Connection lost. Changes are not being saved. Keep a copy of pending text before reloading; a reload restores only confirmed responses.")
   ))
   names(messages) <- c("en", "fr", "de")
+  # Only a session the server accepted can lose its connection; the end of
+  # one it never accepted is explained by the page's own notice.
   sprintf(
     "(function(){
       var lost=false, restored=false;
@@ -145,10 +169,11 @@ connection_script <- function(banner_id, workspace_id) {
         var workspace=document.getElementById(workspaceId);
         if(workspace) workspace.querySelectorAll('.del-status, .del-progress').forEach(function(x){x.hidden=!restored;});
       }
-      $(document).on('shiny:disconnected',function(){lost=true;restored=false;show();});
+      function drop(){if(!window.delphyrAccepted)return;lost=true;restored=false;show();}
+      $(document).on('shiny:disconnected',drop);
       $(document).on('shiny:connected',function(){if(lost){restored=true;show();}});
       $(document).on('change','#language',show);
-      window.addEventListener('offline',function(){lost=true;restored=false;show();});
+      window.addEventListener('offline',drop);
     })();",
     jsonlite::toJSON(banner_id, auto_unbox = TRUE),
     jsonlite::toJSON(workspace_id, auto_unbox = TRUE),
@@ -163,7 +188,9 @@ workspace_sections <- function(capabilities, lang) {
     lang, c("Meine Teilnahme", "Einrichtung", "Protokoll", "Runden und Auswertung", "Redaktion", "Panelimport", "Einladungen", "Kommunikation", "Dokumentation", "Exporte", "Verlauf"),
     c("My participation", "Setup", "Protocol", "Rounds and analysis", "Editorial review", "Panel import", "Invitations", "Communications", "Documentation", "Exports", "History")
   )
-  show <- c(has("panel"), has("manage"), has("manage"), has("manage"), has("edit", "manage"), has("coordinate"), has("coordinate"), has("coordinate"), has("manage"), has("export", "analyse", "manage", "audit", "contacts_export"), has("audit", "manage"))
+  # Rounds and analyses are read with the analysis right; changing them needs
+  # study leadership.
+  show <- c(has("panel"), has("manage"), has("manage"), has("manage", "analyse"), has("edit", "manage"), has("coordinate"), has("coordinate"), has("coordinate"), has("manage"), has("export", "analyse", "manage", "audit", "contacts_export"), has("audit", "manage"))
   data.frame(id = ids[show], label = labels[show], stringsAsFactors = FALSE)
 }
 
@@ -183,7 +210,10 @@ workspace_intro <- function(capabilities, lang) {
   if ("audit" %in% capabilities) {
     return(tr(lang, "Pr\u00fcfen Sie den aufgezeichneten Verlauf dieser Studie. Antwortinhalte und Kontakte geh\u00f6ren nicht zu dieser Ansicht.", "Review the recorded history of this study. Response content and contacts are not part of this view."))
   }
-  if (any(c("analyse", "export", "contacts_export") %in% capabilities)) {
+  if ("analyse" %in% capabilities) {
+    return(tr(lang, "Lesen Sie die Runden und Analysen dieser Studie und fordern Sie die Exporte an, die Ihre Rolle erlaubt. Jeder Abruf wird gepr\u00fcft und aufgezeichnet.", "Read the rounds and analyses of this study and request the exports your role permits. Every retrieval is checked and recorded."))
+  }
+  if (any(c("export", "contacts_export") %in% capabilities)) {
     return(tr(lang, "Fordern Sie die Exporte an, die Ihre Rolle erlaubt. Jeder Abruf wird gepr\u00fcft und aufgezeichnet.", "Request the exports your role permits. Every retrieval is checked and recorded."))
   }
   tr(lang, "W\u00e4hlen Sie eine Studie, um Ihre verf\u00fcgbaren Arbeitsbereiche zu sehen.", "Choose a study to see your available work areas.")

@@ -12,7 +12,9 @@ audit_panel_actions <- c("consent", "save", "submit", "withdraw_participation", 
 #' @param actor Actor with audit or manage capability.
 #' @param study_id Study UUID.
 #' @param from,to Optional inclusive time limits with an explicit offset,
-#'   for example "2026-10-02T00:00:00Z".
+#'   for example "2026-10-02T00:00:00Z". A time that does not exist, such as
+#'   30 February or an offset beyond 15:59, is refused with DEL_VALIDATION
+#'   (path audit.from or audit.to) before any statement.
 #' @param actions Optional action codes to include.
 #' @param limit Maximum number of events, newest first, from 1 to 100000.
 #' @return Data frame occurred_at, action, detail, object_ref, reason,
@@ -24,7 +26,7 @@ list_audit_events <- function(repo, actor, study_id, from = NULL, to = NULL, act
     if (is.null(x)) {
       return(NA_character_)
     }
-    ensure(scalar_text(x) && grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})$", x), path)
+    ensure(valid_time(x), path)
     x
   }
   from <- stamp(from, "audit.from")

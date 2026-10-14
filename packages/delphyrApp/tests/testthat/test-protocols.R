@@ -21,15 +21,22 @@ test_that("protocol approval uses the reviewed prior hash and rejects replaced u
     )
   }
   shiny::testServer(delphyrApp:::protocols_server, args = list(study = function() "study", lang = function() "en", call = call, services = protocol_services()), {
+    # The rationale and confirmation of the approval form carry its key.
+    approval <- function(...) {
+      values <- list(...)
+      keyed <- names(values) %in% c("reason", "confirm")
+      names(values)[keyed] <- paste0(names(values)[keyed], "_", form())
+      do.call(session$setInputs, values)
+    }
     session$setInputs(file = upload, validate = 1)
     expect_match(output$changes, "stopping.max_rounds", fixed = TRUE)
     expect_equal(candidate()$expected_hash, "reviewed-base-hash")
-    session$setInputs(confirm = FALSE, reason = "Permit another future round", approve = 1)
+    approval(confirm = FALSE, reason = "Permit another future round", approve = 1)
     expect_length(saved, 0L)
     changed <- proposed
     changed$stopping$max_rounds <- 5L
     jsonlite::write_json(changed, path, auto_unbox = TRUE, digits = NA, null = "null")
-    session$setInputs(confirm = TRUE, approve = 2)
+    approval(confirm = TRUE, approve = 2)
     expect_length(saved, 0L)
     jsonlite::write_json(proposed, path, auto_unbox = TRUE, digits = NA, null = "null")
     session$setInputs(approve = 3)

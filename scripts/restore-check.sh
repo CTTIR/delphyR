@@ -3,26 +3,57 @@ set -euo pipefail
 # Non-destructive P0 recovery exercise for the existing synthetic development DB.
 # All source reads share one exported PostgreSQL snapshot. No production endpoint.
 cd "$(dirname "$0")/.."
-python3 - <<'PY'
+umask 077
+mkdir -p .checks
+out="$(cd "$(mktemp -d ".checks/restore-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXXXX")" && pwd)"
+name="delphyr-restore-$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')"
+# The restore instance, its volume and the socket directory are removed on
+# every way out of this script: success, failure or interruption. The
+# database server takes over the socket directory; it is handed back to the
+# invoking user first, by a short-lived instance if the restore instance no
+# longer runs, so that nothing is left that the user cannot delete.
+cleanup() {
+  status=$?
+  trap - EXIT INT TERM
+  if docker container inspect "$name" >/dev/null 2>&1; then
+    hand_back="rm -f /var/run/postgresql/.s.PGSQL.5432 /var/run/postgresql/.s.PGSQL.5432.lock; chown $(id -u):$(id -g) /var/run/postgresql; chmod 0700 /var/run/postgresql"
+    if [ "$(docker container inspect --format '{{.State.Running}}' "$name" 2>/dev/null)" = "true" ]; then
+      docker exec --user root "$name" sh -c "$hand_back" >/dev/null 2>&1 || true
+    elif [ -d "$out/s" ]; then
+      image="$(docker container inspect --format '{{.Image}}' "$name" 2>/dev/null || true)"
+      if [ -n "$image" ]; then
+        docker run --rm --network=none --user root --entrypoint sh --volume "$out/s:/var/run/postgresql" "$image" -c "$hand_back" >/dev/null 2>&1 || true
+      fi
+    fi
+    docker rm --force --volumes "$name" >/dev/null 2>&1 || echo "Could not remove the restore instance $name and its volume." >&2
+  fi
+  rm -rf "$out/s" 2>/dev/null || true
+  if [ -e "$out/s" ]; then echo "Could not remove the socket directory $out/s." >&2; fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+RESTORE_OUT="$out" RESTORE_NAME="$name" python3 - <<'PY'
 from pathlib import Path
-import datetime
 import hashlib
 import json
 import os
+import signal
 import subprocess
 import shutil
-import tempfile
+import sys
 import time
 import uuid
 
 os.umask(0o077)
+# A termination ends like an error, so that the source session is closed.
+signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(143))
 source = "delphyr-dev-postgres"
 database = "delphyr"
 root = Path.cwd()
-(root / ".checks").mkdir(exist_ok=True)
-out = Path(tempfile.mkdtemp(prefix="restore-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-", dir=root / ".checks"))
-name = "delphyr-restore-" + uuid.uuid4().hex[:12]
-created = False
+out = Path(os.environ["RESTORE_OUT"])
+name = os.environ["RESTORE_NAME"]
 holder = None
 started = time.monotonic()
 
@@ -61,7 +92,10 @@ try:
         artifact_study = str(uuid.UUID(artifact_study))
     checks = {"tables": counts_sql, "migrations": migrations_sql, "snapshots": snapshots_sql, "schema": schema_sql}
     if artifact_study:
-        checks["artifacts"] = "SELECT id,storage_key,checksum FROM ops.artifacts WHERE study_id='" + artifact_study + "' ORDER BY id;\n"
+        # Exports whose files were removed after their download period keep
+        # their registration; they are compared but have no files to copy.
+        checks["artifacts"] = "SELECT id,storage_key,checksum FROM ops.artifacts WHERE study_id='" + artifact_study + "' AND removed_at IS NULL ORDER BY id;\n"
+        checks["removed_artifacts"] = "SELECT id FROM ops.artifacts WHERE study_id='" + artifact_study + "' AND removed_at IS NOT NULL ORDER BY id;\n"
     expected = {}
     for key, sql in checks.items():
         value = psql(source, prefix + sql + "COMMIT;\n")
@@ -73,15 +107,27 @@ try:
         run(["docker", "exec", source, "pg_dump", "-U", "postgres", "-d", database,
              "--format=custom", "--no-owner", "--no-privileges", "--snapshot=" + snapshot], stdout=stream)
     artifact_records = []
+    removed_artifacts = len(expected.get("removed_artifacts", "").splitlines())
     if artifact_study:
-        if not expected["artifacts"].strip():
+        if not expected["artifacts"].strip() and not removed_artifacts:
             raise RuntimeError("Selected synthetic study has no registered artifacts")
-        artifact_root = (root / ".artifacts").resolve(strict=True)
+        artifact_dir = Path(os.environ.get("DELPHYR_ARTIFACT_ROOT") or root / ".artifacts")
+        if expected["artifacts"].strip() and not artifact_dir.is_dir():
+            raise RuntimeError("The private export directory " + str(artifact_dir) + " does not exist")
         for row in expected["artifacts"].splitlines():
+            artifact_root = artifact_dir.resolve(strict=True)
             artifact_id, key, checksum = row.split("|")
             key = str(uuid.UUID(key))
             source_dir = artifact_root / key
-            if source_dir.is_symlink() or source_dir.resolve(strict=True).parent != artifact_root:
+            # A registered export whose worker stopped before renaming it
+            # keeps its temporary name.
+            if not os.path.lexists(source_dir) and (artifact_root / (key + ".partial")).is_dir():
+                source_dir = artifact_root / (key + ".partial")
+            if source_dir.is_symlink():
+                raise RuntimeError("Unsafe artifact directory")
+            if not source_dir.is_dir():
+                raise RuntimeError("Export " + artifact_id + " has no directory in " + str(artifact_root) + "; its files may lie in another export directory")
+            if source_dir.resolve(strict=True).parent != artifact_root:
                 raise RuntimeError("Unsafe artifact directory")
             manifest_path = source_dir / "manifest.json"
             if manifest_path.is_symlink() or hashlib.sha256(manifest_path.read_bytes()).hexdigest() != checksum:
@@ -118,7 +164,6 @@ try:
     run(["docker", "run", "--detach", "--name", name, "--network=none",
          "--label", "delphyr.purpose=synthetic-restore-check", "--env", "POSTGRES_DB=" + database,
          "--env", "POSTGRES_HOST_AUTH_METHOD=trust", "--volume", str(socket) + ":/var/run/postgresql", image], capture_output=True)
-    created = True
     for _ in range(120):
         ready = subprocess.run(["docker", "exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", database], capture_output=True)
         if ready.returncode == 0:
@@ -163,28 +208,27 @@ try:
     if verify.returncode != 0 or not function_check.get("passed"):
         raise RuntimeError("Function check of the restored database failed: " + json.dumps(function_check.get("checks", {})))
     digest = hashlib.sha256((out / "database.dump").read_bytes()).hexdigest()
-    summary = dict(status="PASS", scope=("synthetic PostgreSQL and selected-study artifact recovery" if artifact_study else "synthetic PostgreSQL database recovery only"), source_container=source,
+    if not artifact_study:
+        scope = "synthetic PostgreSQL database recovery only"
+    elif artifact_records:
+        scope = "synthetic PostgreSQL and selected-study artifact recovery"
+    else:
+        scope = "synthetic PostgreSQL database recovery; the selected study's exports were removed after their download period"
+    summary = dict(status="PASS", scope=scope, source_container=source,
         restore_container=name, image_id=image, exported_snapshot=snapshot, dump_sha256=digest,
         compared=list(checks), table_count=len(expected["tables"].splitlines()),
         frozen_snapshot_count=len(expected["snapshots"].splitlines()), migrations_verified=migration_checks,
-        artifact_study=artifact_study or None, restored_artifacts=len(artifact_records), function_check=function_check,
-        elapsed_seconds=round(time.monotonic()-started, 3),
-        exclusions=(["private artifact bytes"] if not artifact_study else ["artifacts of other studies"]) + ["OIDC sign-in on the restored instance", "SMTP", "production permissions", "PITR", "production RPO/RTO"])
+        artifact_study=artifact_study or None, restored_artifacts=len(artifact_records), removed_artifacts_excluded=removed_artifacts,
+        function_check=function_check, elapsed_seconds=round(time.monotonic()-started, 3),
+        exclusions=(["private artifact bytes"] if not artifact_study else ["artifacts of other studies"] + (["files of exports removed after their download period"] if removed_artifacts else [])) + ["OIDC sign-in on the restored instance", "SMTP", "production permissions", "PITR", "production RPO/RTO"])
     (out / "result.json").write_text(json.dumps(summary, indent=2) + "\n")
     print("RESTORE PASS: " + str(out), flush=True)
 finally:
+    # The restore instance and the socket directory are removed by the shell.
     if holder is not None:
         try:
             holder.communicate("ROLLBACK;\n\\q\n", timeout=10)
         except (subprocess.TimeoutExpired, BrokenPipeError):
             holder.kill()
             holder.wait()
-    if created:
-        # The database server took over the socket directory; hand it back
-        # before the instance is removed, so that nothing is left that the
-        # invoking user cannot delete.
-        subprocess.run(["docker", "exec", "--user", "root", name, "sh", "-c",
-            "rm -f /var/run/postgresql/.s.PGSQL.5432 /var/run/postgresql/.s.PGSQL.5432.lock; chown %d:%d /var/run/postgresql; chmod 0700 /var/run/postgresql" % (os.getuid(), os.getgid())], capture_output=True)
-        run(["docker", "rm", "--force", "--volumes", name], capture_output=True)
-    shutil.rmtree(out / "s", ignore_errors=True)
 PY

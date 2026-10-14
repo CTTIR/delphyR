@@ -20,8 +20,11 @@ Round UUID and the number of enrollments added.
 }
 \description{
 Applies the round's protocol entry policy and each member's current
-stakeholder group. Enrollment is possible until the round closes. Feedback
-already assigned to an unopened round is assigned to the new enrollments as
-well; an open round with assigned feedback accepts no further enrollment, so
-that everyone rating in a round has the same information.
+stakeholder group. Enrollment, withdrawal and group changes of one study
+take effect one after the other: a member who withdraws meanwhile is either
+not enrolled or enrolled and withdrawn. Enrollment is possible until the
+round closes. Feedback already assigned to an unopened round is assigned to
+the new enrollments as well; an open round with assigned feedback accepts no
+further enrollment, so that everyone rating in a round has the same
+information.
 }

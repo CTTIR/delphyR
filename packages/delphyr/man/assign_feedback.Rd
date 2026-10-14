@@ -18,7 +18,9 @@ assign_feedback(repo, actor, round_id, feedback_id, command_id)
 \item{command_id}{Idempotency key.}
 }
 \value{
-Target round UUID.
+Target round UUID. A round shows one feedback: a second assignment,
+  of the same or of another feedback, is refused with DEL_CONFLICT (path
+  feedback.assigned). A retry under the same key returns the receipt.
 }
 \description{
 Assign released feedback to an unopened subsequent round

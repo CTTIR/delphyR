@@ -14,7 +14,15 @@ r <- connect_repository(
   user = "postgres", environment = "test"
 )
 tryCatch(migrate_repository(r), finally = DBI::dbDisconnect(r$con))
-for (file in c("test-services.R", "test-service-contracts.R", "test-jobs.R", "test-qualitative.R", "test-communications.R", "test-authentication.R", "test-reporting.R", "test-protocols.R", "test-panel-import.R", "test-participation.R", "test-invitations.R", "test-languages.R", "test-round-lifecycle.R", "test-audit-documentation.R", "test-study-export.R", "test-administration.R", "test-exploratory.R", "test-delivery.R", "test-security.R", "test-large-rounds.R", "test-operations.R")) {
-  path <- file.path(root, "packages/delphyr/tests/testthat", file)
-  if (file.exists(path)) testthat::test_file(path, stop_on_failure = TRUE)
-}
+# The listed files run in this order and each must exist. A contract file
+# that needs the database but is not listed runs after them: no contract is
+# skipped without notice.
+directory <- file.path(root, "packages/delphyr/tests/testthat")
+listed <- c("test-services.R", "test-service-contracts.R", "test-jobs.R", "test-qualitative.R", "test-communications.R", "test-authentication.R", "test-reporting.R", "test-protocols.R", "test-panel-import.R", "test-participation.R", "test-invitations.R", "test-languages.R", "test-round-lifecycle.R", "test-audit-documentation.R", "test-study-export.R", "test-administration.R", "test-exploratory.R", "test-delivery.R", "test-security.R", "test-large-rounds.R", "test-operations.R")
+missing <- listed[!file.exists(file.path(directory, listed))]
+if (length(missing)) stop("Listed contract files are missing: ", paste(missing, collapse = ", "))
+present <- list.files(directory, pattern = "^test-.*[.]R$")
+gated <- present[vapply(file.path(directory, present), function(f) any(grepl("DELPHYR_TEST_DB", readLines(f, warn = FALSE), fixed = TRUE)), logical(1))]
+files <- c(listed, sort(setdiff(gated, listed)))
+for (file in files) testthat::test_file(file.path(directory, file), stop_on_failure = TRUE)
+cat(sprintf("PostgreSQL contracts: %d files passed.\n", length(files)))

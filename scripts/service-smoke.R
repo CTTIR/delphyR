@@ -1,6 +1,6 @@
 .libPaths(c(normalizePath(".R-library"), .libPaths()))
 pkgload::load_all("packages/delphyr", quiet = TRUE)
-r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = "delphyr", user = "postgres", environment = "test", artifact_root = file.path(getwd(), ".artifacts"))
+r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test", artifact_root = file.path(getwd(), ".artifacts"))
 migrate_repository(r)
 f <- demo_study(r, n = 4, item_count = 2)
 for (st in c("review", "approved", "open")) transition_round(r, f$manager, f$round$id, st, f$round$hash, "Synthetic test", st)

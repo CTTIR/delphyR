@@ -7,7 +7,9 @@
 #' qualification are outside this interface's acceptance scope.
 #'
 #' @param repo A connected delphyr repository; lifetime is managed by the caller.
-#' @param actor Trusted actor supplied by server-side session setup.
+#' @param actor Trusted actor supplied by server-side session setup. An actor
+#'   made by delphyr::demo_actor() is made anew for every session, for the same
+#'   synthetic account, so that a demonstration outlives the actor's hour.
 #' @param actor_factory Optional trusted function(session, repo) resolving each
 #'   session identity independently. Mutually exclusive with actor.
 #' @param repo_factory Optional function creating a repository for each session;
@@ -42,6 +44,15 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
   } else if (!is.function(actor_factory) || !is.null(actor)) {
     stop("Use one trusted server identity factory or one fixed demo actor.", call. = FALSE)
   }
+  # A demonstration identity lives for one hour at most. Every session of a
+  # demonstration receives a new one for the same synthetic account, as every
+  # page load behind a gateway passes the gateway again; demo_actor() checks
+  # the repository and the account each time.
+  if (is.null(actor_factory) && demo_identity(actor)) {
+    principal <- actor$principal_id
+    actor_factory <- function(session, repo) delphyr::demo_actor(repo, principal)
+    actor <- NULL
+  }
   if (!is.null(repo_factory) && !is.function(repo_factory)) stop("Invalid repository factory.", call. = FALSE)
   if (is.null(services)) {
     n <- c(
@@ -70,28 +81,37 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
   open_sessions <- session_registry()
   ui <- shiny::fluidPage(
     theme = bslib::bs_theme(version = 5, bg = "#eceff2", fg = "#22303c", primary = "#0e6e78", success = "#0e6e78", danger = "#b3372b", base_font = "system-ui"),
-    shiny::tags$head(shiny::tags$script(shiny::HTML(sprintf("document.documentElement.lang=%s; $(document).on('shiny:connected',function(){Shiny.addCustomMessageHandler('delphyr-language',function(lang){window.delphyrAccepted=true;document.documentElement.lang=lang;});Shiny.addCustomMessageHandler('delphyr-clear-hash',function(x){history.replaceState(null,'',location.pathname+location.search);});Shiny.addCustomMessageHandler('delphyr-focus',function(id){var x=document.getElementById(id);if(x){x.scrollIntoView({block:'start'});x.focus({preventScroll:true});}});Shiny.addCustomMessageHandler('delphyr-leave',function(url){window.location.assign(url);});}); $(document).on('click','#sign_out',function(e){var url=this.getAttribute('href');if(window.Shiny&&Shiny.shinyapp&&Shiny.shinyapp.isConnected()){e.preventDefault();Shiny.setInputValue('sign_out',Date.now(),{priority:'event'});setTimeout(function(){window.location.assign(url);},2000);}}); $(document).on('shiny:disconnected',function(){var box=document.getElementById('unregistered');if(box && !window.delphyrAccepted){box.hidden=false;}}); (function(){var open={};function key(d){var host=d.closest('.shiny-html-output');var s=d.querySelector('summary');return (host?host.id:'')+'|'+(s?s.textContent:'');}document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.tagName==='DETAILS'){open[key(d)]=d.open;}},true);function restore(node){if(!node||node.nodeType!==1)return;var list=node.tagName==='DETAILS'?[node]:node.querySelectorAll('details');Array.prototype.forEach.call(list,function(d){if(open[key(d)]&&!d.open){d.open=true;}});}document.addEventListener('DOMContentLoaded',function(){new MutationObserver(function(changes){changes.forEach(function(c){Array.prototype.forEach.call(c.addedNodes,restore);});}).observe(document.body,{childList:true,subtree:true});});})();", jsonlite::toJSON(language, auto_unbox = TRUE)))), shiny::tags$style(shiny::HTML(app_css())),
-      shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-hex.png")),
+    shiny::tags$head(
+      shiny::tags$script(shiny::HTML(page_script(language))), shiny::tags$style(shiny::HTML(app_css())),
+      shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-mark.png"),
+      shiny::tags$link(rel = "icon", type = "image/svg+xml", href = "delphyr-brand/delphyR-mark.svg")
+    ),
     shiny::tags$div(
       class = "del-wrap",
       shiny::tags$header(
-        class = "del-header", shiny::tags$div(class = "del-brand",
-          shiny::tags$img(class = "del-logo", src = "delphyr-brand/delphyR-hex.png", alt = "", width = 72, height = 84),
-          shiny::tags$h1("delphyR")),
-        shiny::tags$div(class = "del-account",
-          shiny::selectInput("language", tr(language, "Sprache", "Language"), c("English" = "en", "Fran\u00e7ais" = "fr", "Deutsch" = "de"), selected = language, width = "190px"),
-          shiny::uiOutput("account", inline = TRUE))
+        class = "del-header", shiny::tags$div(
+          class = "del-brand",
+          shiny::tags$img(class = "del-logo", src = "delphyr-brand/delphyR-mark.svg", alt = "", width = 64, height = 72),
+          shiny::tags$h1("delphyR")
+        ),
+        shiny::tags$div(
+          class = "del-account",
+          shiny::selectInput("language", tr(language, "Sprache", "Language"), c("English" = "en", "Fran\u00e7ais" = "fr", "Deutsch" = "de"), selected = language, width = "190px", selectize = FALSE),
+          # Nothing else stands beside the language unless the sign-in can end here.
+          if (!is.null(sign_out_url)) shiny::uiOutput("account", inline = TRUE)
+        )
       ),
       shiny::uiOutput("banner"),
-      # Shown by the browser only when the server closes a session it never accepted.
-      shiny::tags$div(id = "unregistered", class = "del-banner", role = "alert", hidden = "hidden", paste(vapply(c("en", "fr", "de"), function(l) {
-        tr(l, "Ihr Konto ist f\u00fcr diese Anwendung nicht registriert. Wenden Sie sich an die Studienkoordination.", "Your account is not registered for this application. Contact the study coordinators.")
-      }, character(1)), collapse = " \u00b7 ")),
+      closed_notices(language, sign_out_url),
       shiny::tags$main(
         id = "main", invitation_accept_ui("invitation_accept"),
         shiny::tags$section(
           class = "del-sheet",
-          shiny::uiOutput("intro"), shiny::selectInput("study", tr(language, "Studie", "Study"), character()), status_ui("status")
+          shiny::uiOutput("intro"),
+          # The list of studies appears once there is a study to choose.
+          shiny::tags$div(hidden = "hidden", shiny::textOutput("has_studies")),
+          shiny::conditionalPanel("output.has_studies === 'yes'", shiny::selectInput("study", tr(language, "Studie", "Study"), character(), width = "100%", selectize = FALSE)),
+          status_ui("status")
         ),
         study_create_ui("study_create"),
         shiny::uiOutput("navigation"),
@@ -111,21 +131,25 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     )
   )
   server <- function(input, output, session) {
-    session_repo <- if (is.null(repo_factory)) repo else repo_factory()
-    if (!is.null(repo_factory) && inherits(session_repo$con, "DBIConnection")) {
+    # The repository and the identity of this session. If either cannot be
+    # had, the session ends before any service is reached, and the page says
+    # whether the account was refused or the service could not start it.
+    session_repo <- if (is.null(repo_factory)) repo else tryCatch(delphyr::log_operation("session_repository", repo_factory, component = "app"), error = function(e) e)
+    if (!is.null(repo_factory) && !inherits(session_repo, "error") && inherits(session_repo$con, "DBIConnection")) {
       session$onSessionEnded(function() DBI::dbDisconnect(session_repo$con))
     }
-    session_actor <- if (is.null(actor_factory)) {
+    session_actor <- if (inherits(session_repo, "error")) {
+      session_repo
+    } else if (is.null(actor_factory)) {
       actor
     } else {
       # A refused identity is recorded by its class only, never by its headers.
-      tryCatch(
-        delphyr::log_operation("session_identity", function() actor_factory(session, session_repo), component = "app"),
-        error = function(e) NULL
-      )
+      tryCatch(delphyr::log_operation("session_identity", function() actor_factory(session, session_repo), component = "app"), error = function(e) e)
     }
-    if (is.null(session_actor)) {
+    refusal <- if (inherits(session_repo, "error")) session_unavailable(session_repo) else session_refusal(session_actor)
+    if (!is.null(refusal)) {
       # No account is created on login; the page explains the closed session.
+      session$sendCustomMessage("delphyr-closed", refusal)
       session$close()
       return(invisible(NULL))
     }
@@ -151,22 +175,42 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       shiny::updateSelectInput(session, "study", label = tr(lang(), "Studie", "Study"))
     })
     capabilities <- shiny::reactiveVal(character())
-    studies <- shiny::reactiveVal(data.frame())
+    studies <- shiny::reactiveVal(NULL)
     # Sections of one session share a signal: a confirmed change in one
     # section lets the others read their lists again instead of showing
     # stale rounds, drafts or rights. Services check every action regardless.
     changed <- shiny::reactiveVal(0L)
     touch <- function() changed(shiny::isolate(changed()) + 1L)
+    # Every confirmed change made through a staff section is that signal,
+    # whether or not the section sends it itself; a read is no change. The
+    # changes made outside Setup are also counted on their own (setup_study).
+    changed_outside_setup <- shiny::reactiveVal(0L)
+    signalling <- function(section) {
+      function(name, ...) {
+        result <- call(name, ...)
+        if (!grepl("^(get|list|preview|download)_", name)) {
+          touch()
+          if (!identical(section, "study_setup")) changed_outside_setup(shiny::isolate(changed_outside_setup()) + 1L)
+        }
+        result
+      }
+    }
     status <- shiny::reactiveVal("")
     output$banner <- shiny::renderUI(shiny::tags$aside(class = "del-banner", tr(
       lang(),
       "Synthetische Entwicklungsumgebung. Keine realen Teilnehmendendaten eingeben. E-Mails werden nicht versendet.",
       "Synthetic development environment. Do not enter real participant data. No email is sent."
     )))
-    output$intro <- shiny::renderUI(shiny::tagList(
-      shiny::tags$h2(tr(lang(), "Gemeinsam Wissen bewerten", "Assess evidence together")),
-      shiny::tags$p(workspace_intro(capabilities(), lang()))
-    ))
+    output$intro <- shiny::renderUI({
+      l <- lang()
+      s <- studies()
+      shiny::tagList(
+        shiny::tags$h2(tr(l, "Ihre Studien", "Your studies")),
+        if (length(s) && nrow(s)) shiny::tags$p(workspace_intro(capabilities(), l))
+      )
+    })
+    output$has_studies <- shiny::renderText(if (length(studies()) && nrow(studies())) "yes" else "no")
+    shiny::outputOptions(output, "has_studies", suspendWhenHidden = FALSE)
     output$status <- shiny::renderText(localize_status(status(), lang()))
     shiny::outputOptions(output, "status", suspendWhenHidden = FALSE)
     # Signing out ends the other sessions of the same account in this process,
@@ -183,13 +227,20 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         session$sendCustomMessage("delphyr-leave", sign_out_url)
       })
     }
+    verified <- is.character(session_actor$issuer) && length(session_actor$issuer) == 1L && grepl("^https?://", session_actor$issuer)
+    accepting <- verified && all(c("preview_panel_invitation", "accept_panel_invitation") %in% names(services))
+    # The account's right to create a study, as the section that creates one read it.
+    can_create <- function() {
+      allowed <- creation$allowed
+      is.function(allowed) && isTRUE(shiny::isolate(allowed()))
+    }
     load_studies <- function(selected = NULL) {
       tryCatch(
         {
           s <- call("list_studies")
           studies(s)
           shiny::updateSelectInput(session, "study", choices = stats::setNames(s$id, s$title), selected = if (length(selected) == 1L && selected %in% s$id) selected else NULL)
-          status(if (!nrow(s)) tr(lang(), "Keine berechtigte Studie. Wenden Sie sich an die Studienleitung.", "No accessible study. Contact the study team.") else "")
+          status(if (!nrow(s)) empty_state(lang(), can_create(), accepting) else "")
         },
         error = function(e) status(safe_error(e, lang()))
       )
@@ -198,6 +249,33 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     study <- shiny::reactive({
       shiny::req(input$study)
       input$study
+    })
+    # A staff section reads its rights and lists when a study is selected.
+    # When this session's own rights change, a section whose rights changed
+    # reads the study again as on a new selection; the others keep what they
+    # show, such as a hand-over code, a requested operation or a status.
+    # Exports follow the change signal themselves, and the participant section
+    # keeps answers that are not saved yet. A section that starts to read
+    # another right needs it listed here.
+    section_rights <- list(
+      management = c("manage", "analyse", "export"), editorial = c("edit", "manage"), communications = "coordinate",
+      protocols = "manage", panel_import = c("coordinate", "manage"), study_setup = "manage",
+      documentation = "manage", audit = c("audit", "manage"), invitations = "coordinate"
+    )
+    reselected <- lapply(section_rights, function(x) shiny::reactiveVal(0L))
+    section_study <- lapply(stats::setNames(nm = names(section_rights)), function(section) {
+      shiny::reactive({
+        reselected[[section]]()
+        study()
+      })
+    })
+    # Setup shows the team, the panel and the current protocol's languages
+    # and groups, which other sections change as well. A confirmed change
+    # made elsewhere counts as a new selection for Setup; after a change of
+    # its own Setup reads them itself and keeps its confirmation.
+    setup_study <- shiny::reactive({
+      changed_outside_setup()
+      section_study$study_setup()
     })
     shiny::observeEvent(study(), {
       capabilities(character())
@@ -208,14 +286,26 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
     shiny::observeEvent(changed(),
       {
         if ("get_capabilities" %in% names(services) && length(input$study) == 1L && nzchar(input$study)) {
-          tryCatch(capabilities(call("get_capabilities", input$study)), error = function(e) capabilities(character()))
+          before <- capabilities()
+          tryCatch(
+            {
+              now <- call("get_capabilities", input$study)
+              capabilities(now)
+              for (section in names(section_rights)) {
+                rights <- section_rights[[section]]
+                if (!setequal(intersect(before, rights), intersect(now, rights))) reselected[[section]](reselected[[section]]() + 1L)
+              }
+            },
+            error = function(e) capabilities(character())
+          )
         }
       },
       ignoreInit = TRUE
     )
     output$navigation <- shiny::renderUI({
       links <- workspace_sections(capabilities(), lang())
-      if (!nrow(links)) {
+      # A single section needs no navigation: its own heading follows.
+      if (nrow(links) < 2L) {
         return(NULL)
       }
       shiny::tags$nav(
@@ -224,18 +314,17 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
       )
     })
     panel_server("panel", study, lang, call, feedback_available = "get_feedback" %in% names(services), capabilities_available = "get_capabilities" %in% names(services), withdrawal_available = "withdraw_participation" %in% names(services), autosave_ms = autosave_ms, feedback_download_available = "write_participant_feedback" %in% names(services), block_fields = as.integer(block_fields))
-    management_server("management", study, lang, call, services, changed = changed, touch = touch)
-    editorial_server("editorial", study, lang, call, services, changed = changed)
-    communications_server("communications", study, lang, call, services, changed = changed)
-    protocols_server("protocols", study, lang, call, services)
-    panel_import_server("panel_import", study, lang, call, services, touch = touch)
-    study_create_server("study_create", lang, call, services, on_created = load_studies)
-    study_setup_server("study_setup", study, lang, call, services, touch = touch)
-    documentation_server("documentation", study, lang, call, services)
-    exports_server("exports", study, lang, call, services, changed = changed)
-    audit_server("audit", study, lang, call, services)
-    verified <- is.character(session_actor$issuer) && length(session_actor$issuer) == 1L && grepl("^https?://", session_actor$issuer)
-    invitations_server("invitations", study, lang, call, services, default_issuer = if (verified) session_actor$issuer else "", changed = changed)
+    management_server("management", section_study$management, lang, signalling("management"), services, changed = changed, touch = touch)
+    editorial_server("editorial", section_study$editorial, lang, signalling("editorial"), services, changed = changed)
+    communications_server("communications", section_study$communications, lang, signalling("communications"), services, changed = changed)
+    protocols_server("protocols", section_study$protocols, lang, signalling("protocols"), services)
+    panel_import_server("panel_import", section_study$panel_import, lang, signalling("panel_import"), services, touch = touch)
+    creation <- study_create_server("study_create", lang, call, services, on_created = load_studies)
+    study_setup_server("study_setup", setup_study, lang, signalling("study_setup"), services, touch = touch)
+    documentation_server("documentation", section_study$documentation, lang, signalling("documentation"), services)
+    exports_server("exports", study, lang, signalling("exports"), services, changed = changed)
+    audit_server("audit", section_study$audit, lang, signalling("audit"), services)
+    invitations_server("invitations", section_study$invitations, lang, signalling("invitations"), services, default_issuer = if (verified) session_actor$issuer else "", changed = changed)
     invitation_accept_server("invitation_accept", lang, call, services, verified, on_accepted = load_studies)
   }
   # An output that fails unexpectedly shows a generic notice, not its message.
@@ -246,6 +335,100 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
   })
   app
 }
+
+# An actor made by delphyr::demo_actor(): a server identity with a lifetime
+# but without the issuer that a sign-in through a gateway carries.
+demo_identity <- function(actor) inherits(actor, "delphyr_actor") && is.null(actor$issuer) && length(actor$expires_at) == 1L
+
+# Why a session cannot start, as told to the page; NULL when it can. An
+# identity that the gateway or the register of accounts refuses is
+# "refused". Any other failure, of the database, its connection or the
+# identity lookup, says nothing about the account: the service is
+# "unavailable", and the reference names the entry of the technical log.
+session_refusal <- function(actor) {
+  if (is.null(actor) || inherits(actor, c("DEL_UNAUTHORIZED", "DEL_FORBIDDEN", "DEL_NOT_FOUND"))) {
+    return(list(reason = "refused"))
+  }
+  if (inherits(actor, "error")) {
+    return(session_unavailable(actor))
+  }
+  NULL
+}
+session_unavailable <- function(e) list(reason = "unavailable", reference = error_reference(e))
+
+# What a person without any study can do next: create one, enter the code of
+# an invitation, or turn to the study team.
+empty_state <- function(lang, can_create, can_accept) {
+  if (can_create && can_accept) {
+    tr(lang, "Noch keine berechtigte Studie. Sie k\u00f6nnen unten eine Studie anlegen oder oben den \u00dcbergabecode einer Einladung eingeben.", "No accessible study yet. You can create a study below or enter the hand-over code of an invitation above.")
+  } else if (can_create) {
+    tr(lang, "Noch keine berechtigte Studie. Sie k\u00f6nnen unten eine Studie anlegen.", "No accessible study yet. You can create a study below.")
+  } else if (can_accept) {
+    tr(lang, "Noch keine berechtigte Studie. Geben Sie oben den \u00dcbergabecode Ihrer Einladung ein oder wenden Sie sich an die Studienleitung.", "No accessible study yet. Enter the hand-over code of your invitation above, or contact the study team.")
+  } else {
+    tr(lang, "Noch keine berechtigte Studie. Wenden Sie sich an die Studienleitung.", "No accessible study yet. Contact the study team.")
+  }
+}
+
+# The notices of a session that the server ended before accepting it. The
+# session is gone, so they are part of the page, in every interface language
+# with the configured one first; the page script shows the one that applies.
+closed_notices <- function(language, sign_out_url = NULL) {
+  order <- c(language, setdiff(c("en", "fr", "de"), language))
+  notice <- function(id, content) {
+    shiny::tags$div(id = id, class = "del-closed-notice", role = "alert", hidden = "hidden", lapply(order, function(l) shiny::tags$section(lang = l, content(l))))
+  }
+  shiny::tagList(
+    notice("unregistered", function(l) {
+      shiny::tagList(
+        shiny::tags$h2(tr(l, "Kein Zugang zu dieser Anwendung", "No access to this application")),
+        shiny::tags$p(tr(l, "Ihr Konto ist f\u00fcr diese Anwendung nicht registriert. Wenden Sie sich an die Studienkoordination.", "Your account is not registered for this application. Contact the study coordinators.")),
+        if (!is.null(sign_out_url)) shiny::tags$p(shiny::tags$a(href = sign_out_url, tr(l, "Abmelden, um ein anderes Konto zu verwenden", "Sign out to use another account")))
+      )
+    }),
+    notice("unavailable", function(l) {
+      shiny::tagList(
+        shiny::tags$h2(tr(l, "Die Anwendung ist gerade nicht erreichbar", "The application is not available right now")),
+        shiny::tags$p(tr(l, "Es wurde nichts ge\u00e4ndert. Laden Sie die Seite in einigen Minuten neu.", "Nothing was changed. Reload the page in a few minutes.")),
+        shiny::tags$p(`data-reference` = NA, hidden = "hidden", tr(l, "Wenn das Problem bleibt, nennen Sie der Studienleitung diese Referenz:", "If the problem persists, give the study team this reference:"), " ", shiny::tags$code(class = "del-reference"))
+      )
+    })
+  )
+}
+
+# The script of the page: its language, the messages of the server, the
+# sign-out link, the notice of a session the server never accepted, and the
+# open state of collapsible groups across a new rendering.
+page_script <- function(language) {
+  sprintf("document.documentElement.lang=%s;
+$(document).on('shiny:connected',function(){
+Shiny.addCustomMessageHandler('delphyr-language',function(lang){window.delphyrAccepted=true;document.documentElement.lang=lang;});
+Shiny.addCustomMessageHandler('delphyr-closed',function(x){delphyrClosed(x);});
+Shiny.addCustomMessageHandler('delphyr-clear-hash',function(x){history.replaceState(null,'',location.pathname+location.search);});
+Shiny.addCustomMessageHandler('delphyr-focus',function(id){var x=document.getElementById(id);if(x){x.scrollIntoView({block:'start'});x.focus({preventScroll:true});}});
+Shiny.addCustomMessageHandler('delphyr-leave',function(url){window.location.assign(url);});
+});
+$(document).on('click','#sign_out',function(e){var url=this.getAttribute('href');if(window.Shiny&&Shiny.shinyapp&&Shiny.shinyapp.isConnected()){e.preventDefault();Shiny.setInputValue('sign_out',Date.now(),{priority:'event'});setTimeout(function(){window.location.assign(url);},2000);}});
+/* A session the server never accepted ends with one notice and nothing else:
+   a refused account, or a service that could not start the session. A close
+   without word from the server is taken as the service being unavailable;
+   the word may arrive after the close. */
+var delphyrClosed=(function(){var reason=null;return function(x){
+if(window.delphyrAccepted)return;
+if(x){reason=x;}else if(!reason){reason={reason:'unavailable'};}
+var refused=reason.reason==='refused';
+var shown=document.getElementById(refused?'unregistered':'unavailable');
+var other=document.getElementById(refused?'unavailable':'unregistered');
+if(other)other.hidden=true;
+if(!shown)return;
+if(reason.reference){shown.querySelectorAll('[data-reference]').forEach(function(p){p.querySelector('.del-reference').textContent=reason.reference;p.hidden=false;});}
+shown.hidden=false;
+document.body.classList.add('del-closed');
+};})();
+$(document).on('shiny:disconnected',function(){delphyrClosed(null);});
+(function(){var open={};function key(d){var host=d.closest('.shiny-html-output');var s=d.querySelector('summary');return (host?host.id:'')+'|'+(s?s.textContent:'');}document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.tagName==='DETAILS'){open[key(d)]=d.open;}},true);function restore(node){if(!node||node.nodeType!==1)return;var list=node.tagName==='DETAILS'?[node]:node.querySelectorAll('details');Array.prototype.forEach.call(list,function(d){if(open[key(d)]&&!d.open){d.open=true;}});}document.addEventListener('DOMContentLoaded',function(){new MutationObserver(function(changes){changes.forEach(function(c){Array.prototype.forEach.call(c.addedNodes,restore);});}).observe(document.body,{childList:true,subtree:true});});})();", jsonlite::toJSON(language, auto_unbox = TRUE))
+}
+
 # The open sessions of one process by account. A gateway that sends every
 # request of an account to the same process keeps them together.
 session_registry <- function() {

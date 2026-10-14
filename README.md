@@ -142,8 +142,7 @@ The manifest records the renderer and checksums every delivered file.
   [participation](docs/participation.md), and [synthetic communications](docs/communications.md).
 - [Authentication](docs/authentication.md), [invitations](docs/invitations.md),
   [roles and rights](docs/roles-and-rights.md), [audit trail](docs/audit.md),
-  [security](docs/security.md), and the
-  [historical specification index](docs/spec/README.md).
+  [security](docs/security.md).
 - [Load qualification](docs/load.md), [runbooks](docs/runbooks/README.md),
   [governance material](docs/governance/README.md), and the
   [release report](docs/validation/2026-10-03.md).

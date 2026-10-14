@@ -18,7 +18,8 @@ cancel_campaign(repo, actor, campaign_id, reason, command_id)
 \item{command_id}{Idempotency key.}
 }
 \value{
-Campaign UUID; already recorded sink receipts remain immutable.
+Campaign UUID; already recorded sink receipts remain immutable. A
+  campaign that is already cancelled is refused as `campaign.state`.
 }
 \description{
 Cancel remaining synthetic campaign delivery

@@ -119,9 +119,16 @@ authorize <- function(repo, actor, study_id, capability = NULL) {
   }
   m$id
 }
-# An audit event names actor, time, object and action, plus the recorded
-# rationale and a short non-sensitive detail such as a target state. Tokens,
-# contacts and response content never belong here.
+# The study of an object addressed by its identifier. The identity is checked
+# first and the object is looked up only among the actor's own studies, so an
+# object of another study reads exactly like one that does not exist, and an
+# expired sign-in is reported as such whatever the identifier.
+object_study <- function(repo, actor, table, id) {
+  ensure(table %in% c("research.rounds", "research.enrollments", "research.snapshots", "research.analyses", "research.feedback", "ops.jobs", "ops.artifacts", "ops.campaigns", "identity.panel_import_receipts"), "object.table")
+  identity_check(repo, actor)
+  valid_id(id)
+  one(query(repo, paste0("SELECT o.study_id FROM ", table, " o JOIN identity.memberships m ON m.study_id=o.study_id AND m.principal_id=$2 AND m.active WHERE o.id=$1"), id, actor$principal_id))$study_id
+}
 # Admission for services open to more than one staff role.
 authorize_any <- function(repo, actor, study_id, capabilities) {
   identity_check(repo, actor)
@@ -132,6 +139,9 @@ authorize_any <- function(repo, actor, study_id, capabilities) {
   ensure(any(capabilities %in% c$capability), "capability", "DEL_FORBIDDEN")
   m$id
 }
+# An audit event names actor, time, object and action, plus the recorded
+# rationale and a short non-sensitive detail such as a target state. Tokens,
+# contacts and response content never belong here.
 audit <- function(repo, actor, study, action, object, reason = NULL, detail = NULL) {
   text <- function(x) if (is.null(x) || !length(x) || is.na(x[[1]])) NA_character_ else as.character(x[[1]])
   execute(repo, "INSERT INTO ops.audit(id,study_id,actor_id,action,object_ref,reason,detail) VALUES($1,$2,$3,$4,$5,$6,$7)", uid(), study, actor$principal_id, action, as.character(object), text(reason), text(detail))
@@ -231,7 +241,9 @@ set_capability <- function(repo, actor, study_id, principal_id, capability, enab
     one(query(repo, "SELECT id FROM research.studies WHERE id=$1 FOR NO KEY UPDATE", study_id))
     authorize(repo, actor, study_id, "manage")
     ensure(length(capability) == 1L && capability %in% c("manage", "analyse", "export", "coordinate", "edit", "panel", "audit", "contacts_export") && is.logical(enabled) && length(enabled) == 1 && !is.na(enabled), "capability")
-    command(repo, actor, study_id, "capability", command_id, list(principal_id, capability, enabled), function() {
+    # A rationale is part of the request; without one the payload is the
+    # one earlier releases stored, so their receipts still answer a retry.
+    command(repo, actor, study_id, "capability", command_id, c(list(principal_id, capability, enabled), if (!is.null(reason)) list(reason)), function() {
       if (capability == "manage" && !enabled) {
         others <- query(repo, "SELECT count(*)::int AS n FROM identity.capabilities c JOIN identity.memberships m ON m.study_id=c.study_id AND m.id=c.membership_id JOIN identity.principals p ON p.id=m.principal_id WHERE c.study_id=$1 AND c.capability='manage' AND c.revoked_at IS NULL AND m.active AND p.active AND m.principal_id<>$2", study_id, principal_id)$n
         ensure(others > 0L, "capability.last_manager", "DEL_CONFLICT")

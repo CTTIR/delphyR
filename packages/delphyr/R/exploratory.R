@@ -30,15 +30,14 @@ list_contribution_rounds <- function(repo, actor, study_id) {
 #' @export
 import_round_contributions <- function(repo, actor, snapshot_id, command_id) {
   transaction(repo, function() {
-    valid_id(snapshot_id)
-    x <- one(query(repo, "SELECT study_id FROM research.snapshots WHERE id=$1", snapshot_id))
-    authorize(repo, actor, x$study_id, "edit")
-    command(repo, actor, x$study_id, "qualitative_import", command_id, list(snapshot_id), function() {
-      rows <- query(repo, "SELECT v.id AS revision_id,v.value_text,r.number,i.item_code,i.dimension_code FROM research.snapshot_entries se JOIN research.response_revisions v ON v.id=se.response_revision_id JOIN research.round_items i ON i.id=v.round_item_id JOIN research.rounds r ON r.id=se.round_id WHERE se.study_id=$1 AND se.snapshot_id=$2 AND v.status='answered' AND v.value_text IS NOT NULL AND NOT EXISTS(SELECT 1 FROM research.qualitative_sources q WHERE q.study_id=v.study_id AND q.response_revision_id=v.id) ORDER BY i.item_code,i.dimension_code,v.id", x$study_id, snapshot_id)
+    study <- object_study(repo, actor, "research.snapshots", snapshot_id)
+    authorize(repo, actor, study, "edit")
+    command(repo, actor, study, "qualitative_import", command_id, list(snapshot_id), function() {
+      rows <- query(repo, "SELECT v.id AS revision_id,v.value_text,r.number,i.item_code,i.dimension_code FROM research.snapshot_entries se JOIN research.response_revisions v ON v.id=se.response_revision_id JOIN research.round_items i ON i.id=v.round_item_id JOIN research.rounds r ON r.id=se.round_id WHERE se.study_id=$1 AND se.snapshot_id=$2 AND v.status='answered' AND v.value_text IS NOT NULL AND NOT EXISTS(SELECT 1 FROM research.qualitative_sources q WHERE q.study_id=v.study_id AND q.response_revision_id=v.id) ORDER BY i.item_code,i.dimension_code,v.id", study, snapshot_id)
       for (i in seq_len(nrow(rows))) {
         reference <- paste0("R", rows$number[i], "-", rows$item_code[i], "-", rows$dimension_code[i], "-", substr(rows$revision_id[i], 1L, 8L))
         payload <- list(text = rows$value_text[i], source_ref = reference, response_revision_id = rows$revision_id[i])
-        execute(repo, "INSERT INTO research.qualitative_sources(id,study_id,original_text,source_ref,response_revision_id,created_by,hash) VALUES($1,$2,$3,$4,$5,$6,$7)", uid(), x$study_id, rows$value_text[i], reference, rows$revision_id[i], actor$principal_id, content_hash(payload))
+        execute(repo, "INSERT INTO research.qualitative_sources(id,study_id,original_text,source_ref,response_revision_id,created_by,hash) VALUES($1,$2,$3,$4,$5,$6,$7)", uid(), study, rows$value_text[i], reference, rows$revision_id[i], actor$principal_id, content_hash(payload))
       }
       list(id = snapshot_id, imported = nrow(rows))
     })
@@ -78,7 +77,7 @@ list_released_edits <- function(repo, actor, study_id) {
 #' @export
 release_feedback_correction <- function(repo, actor, feedback_id, replacement_id, expected_hash, reason, impact_note, participant_note, command_id) {
   transaction(repo, function() {
-    valid_id(feedback_id)
+    object_study(repo, actor, "research.feedback", feedback_id)
     valid_id(replacement_id)
     old <- one(query(repo, "SELECT f.*,s.round_id FROM research.feedback f JOIN research.analyses a ON a.id=f.analysis_id JOIN research.snapshots s ON s.id=a.snapshot_id WHERE f.id=$1", feedback_id))
     r <- round_get(repo, actor, old$round_id, "manage", " FOR UPDATE")

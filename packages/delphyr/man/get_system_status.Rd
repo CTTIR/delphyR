@@ -19,12 +19,20 @@ get_system_status(
 }
 \value{
 A list with `ready`, `schema`, `workers`, `jobs`, `messages`,
-  `artifacts` and `attention`.
+  `artifacts` and `attention`; only `ready`, `schema` and `attention` when
+  the schema is not current or the database does not answer.
 }
 \description{
 For monitoring and the first look at an incident. The result holds counts
 and ages only: no study content, contact, account or study identifier.
 `ready` is TRUE when the database answers and its schema is exactly the
 one this software version ships. `attention` lists what a person should
-look at; it does not make the application unready.
+look at; it does not make the application unready. A database whose
+schema is not the one of this software, for example one of the previous
+release, is reported with its schema state alone: the tables of later
+migrations may not exist there yet. `artifacts` counts exports that can be
+downloaded, expired ones whose files were not yet removed, removed ones,
+and `unfinished`: directories in the private export directory of `repo`
+that no registration covers, left by a stopped worker or an earlier release
+(see remove_unfinished_exports()).
 }

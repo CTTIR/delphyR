@@ -11,13 +11,13 @@ get_feedback(repo, actor, enrollment_id)
 
 \item{actor}{Panel actor.}
 
-\item{enrollment_id}{Own target enrollment.}
+\item{enrollment_id}{Own target enrollment in a round that was opened.}
 }
 \value{
-Aggregate feedback, own prior response table, the effective
-  comparability decisions for revised items, the released qualitative
-  content and, where the feedback was corrected, the note for participants;
-  or NULL.
+Aggregate feedback, own prior response table, the comparability
+  decisions for revised items that were in force when the target round
+  opened, the released qualitative content and, where the feedback was
+  corrected, the note for participants; or NULL.
 }
 \description{
 Read released aggregate feedback plus only the actor's prior answers

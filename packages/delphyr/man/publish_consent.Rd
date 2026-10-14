@@ -20,7 +20,8 @@ publish_consent(repo, actor, study_id, text, locale, command_id)
 \item{command_id}{Idempotency key.}
 }
 \value{
-Consent version id.
+Consent version id. A completed study refuses new versions with
+  DEL_CONFLICT (path study.state).
 }
 \description{
 Publish immutable synthetic study information

@@ -41,6 +41,12 @@ test_that("the audit trail names actor, time, object, action and rationale", {
   expect_gt(nrow(list_audit_events(r, f$manager, f$study_id, from = "2000-01-01T00:00:00+01:00")), 5L)
   for (bad in list(list(from = "yesterday"), list(limit = 0L), list(actions = "DROP TABLE"), list(actions = character())))
     expect_error(do.call(list_audit_events, c(list(r, f$manager, f$study_id), bad)), class = "DEL_VALIDATION")
+  # A time of the right shape that does not exist never reaches a statement.
+  for (bad in list(list(from = "2026-02-30T00:00:00Z"), list(from = "2026-10-01T00:00:00+16:00"), list(to = "2026-13-01T00:00:00Z"), list(to = "2026-10-01T25:00:00Z"), list(to = "0000-01-01T00:00:00Z"))) {
+    refused <- tryCatch(do.call(list_audit_events, c(list(r, f$manager, f$study_id), bad)), error = function(e) e)
+    expect_s3_class(refused, "DEL_VALIDATION")
+    expect_identical(refused$path, paste0("audit.", names(bad)))
+  }
   expect_error(execute(r, "UPDATE ops.audit SET reason='rewritten' WHERE study_id=$1", f$study_id), "immutable")
 })
 
@@ -133,4 +139,38 @@ test_that("comparability decisions are explicit, superseding and limited to used
   expect_identical(paired$status, "descriptive")
   expect_identical(paired$n_paired, 2L)
   expect_identical(list_audit_events(r, f$manager, f$study_id, actions = "item_comparability")$detail, c("I001 relevance v1->v2 comparable", "I001 relevance v1->v2 not comparable"))
+})
+
+test_that("feedback shows the comparability decided when its round opened", {
+  r <- governance_repo()
+  f <- demo_study(r, n = 2L, item_count = 1L)
+  for (state in c("review", "approved", "open")) transition_round(r, f$manager, f$round$id, state, f$round$hash, "Synthetic", state)
+  for (actor in f$panel) {
+    e <- list_enrollments(r, actor, f$study_id)$id
+    record_consent(r, actor, f$study_id, f$consent_id, TRUE, "consent")
+    item <- get_questionnaire(r, actor, e)$items$id
+    saved <- save_response(r, actor, e, item, list(value = 7L, status = "answered"), 0L, "save")
+    submit_round(r, actor, e, setNames(saved$revision, item), "submit")
+  }
+  transition_round(r, f$manager, f$round$id, "closed", f$round$hash, "Close", "close")
+  analysis <- run_analysis(r, f$manager, freeze_round(r, f$manager, f$round$id, "freeze")$id, "analyse")
+  feedback <- create_feedback(r, f$manager, analysis$id, command_id = "feedback")
+  release_feedback(r, f$manager, feedback$id, feedback$hash, "release")
+  changed <- f$items
+  changed$item_version <- 2L
+  changed$text <- paste(changed$text, "(clarified)")
+  second <- prepare_round(r, f$manager, f$study_id, changed, f$consent_id, format(Sys.time() + 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), "round-2")
+  assign_feedback(r, f$manager, second$id, feedback$id, "assign")
+  record_item_comparability(r, f$manager, f$study_id, "I001", "relevance", 1L, 2L, FALSE, "Meaning changed", "first")
+  for (state in c("review", "approved", "open")) transition_round(r, f$manager, second$id, state, second$hash, "Synthetic", paste0("2-", state))
+  current <- function(actor) tail(list_enrollments(r, actor, f$study_id)$id, 1)
+  shown <- get_feedback(r, f$panel[[1]], current(f$panel[[1]]))$comparability
+  expect_identical(shown$comparable, FALSE)
+  # A decision recorded while the round is open applies to the analyses and
+  # to later rounds; everyone rating in this round keeps reading the same.
+  record_item_comparability(r, f$manager, f$study_id, "I001", "relevance", 1L, 2L, TRUE, "Wording clarified only", "second")
+  expect_identical(get_feedback(r, f$panel[[1]], current(f$panel[[1]]))$comparability, shown)
+  expect_identical(get_feedback(r, f$panel[[2]], current(f$panel[[2]]))$comparability, shown)
+  history <- get_item_comparability(r, f$manager, f$study_id)
+  expect_identical(history$comparable[history$effective], TRUE)
 })

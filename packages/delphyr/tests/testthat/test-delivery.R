@@ -83,8 +83,12 @@ test_that("an approved send time holds a message until it is reached", {
   r <- delivery_repo()
   f <- delivery_fixture(r)
   draft <- delivery_campaign(r, f, "draft", release = FALSE)
-  for (bad in list("2026-12-01 09:00", delivery_stamp(-3600), delivery_stamp(100 * 86400))) {
-    expect_error(release_campaign(r, f$manager, draft$id, draft$hash, "Reviewed", paste("bad", bad), not_before = bad), class = "DEL_VALIDATION")
+  # Times that do not exist are refused like a malformed one, before the
+  # database sees them.
+  impossible <- c("2026-11-31T09:00:00+01:00", "2026-12-01T25:00:00Z", "2026-12-01T09:00:00+99:00", "2026-13-01T09:00:00Z", "2026-12-01T09:00:00+16:00", "2027-02-29T09:00:00Z", "0000-06-01T09:00:00Z", "0000-02-29T09:00:00+01:00")
+  for (bad in c("2026-12-01 09:00", delivery_stamp(-3600), delivery_stamp(100 * 86400), impossible)) {
+    e <- tryCatch(release_campaign(r, f$manager, draft$id, draft$hash, "Reviewed", paste("bad", bad), not_before = bad), error = function(e) e)
+    expect_identical(c(class(e)[1], e$path), c("DEL_VALIDATION", "campaign.not_before"), info = bad)
   }
   at <- delivery_stamp(3)
   released <- release_campaign(r, f$manager, draft$id, draft$hash, "Reviewed", "timed", not_before = at)
@@ -148,6 +152,109 @@ test_that("reminder limits refuse a campaign instead of shrinking its audience",
   early <- tryCatch(release_campaign(r, spaced$manager, soon$id, soon$hash, "Reviewed", "release soon", not_before = delivery_stamp(3600)), error = function(e) e)
   expect_identical(early$path, "campaign.reminder_interval")
   expect_identical(release_campaign(r, spaced$manager, soon$id, soon$hash, "Reviewed", "release later", not_before = delivery_stamp(25 * 3600))$n_recipients, 2L)
+})
+
+test_that("a reminder that was delivered keeps counting after its campaign is cancelled", {
+  r <- delivery_repo()
+  f <- delivery_fixture(r, list(max_reminders = 1), members = 1L)
+  sent <- delivery_campaign(r, f, "sent")
+  expect_identical(process_campaign_sink(r, f$study_id)$state, "sink_recorded")
+  cancel_campaign(r, f$manager, sent$id, "Stop what is left of the campaign", "cancel sent")
+  expect_identical(list_campaign_enrollments(r, f$manager, f$round$id)$reminders, 1L)
+  again <- delivery_campaign(r, f, "again", release = FALSE)
+  refused <- tryCatch(release_campaign(r, f$manager, again$id, again$hash, "Reviewed", "release again"), error = function(e) e)
+  expect_identical(c(class(refused)[1], refused$path), c("DEL_CONFLICT", "campaign.reminder_limit"))
+  # A cancelled reminder that never left does not count.
+  other <- delivery_fixture(r, list(max_reminders = 1), members = 1L)
+  stopped <- delivery_campaign(r, other, "stopped")
+  cancel_campaign(r, other$manager, stopped$id, "Cancelled before the worker ran", "cancel stopped")
+  expect_identical(list_campaign_enrollments(r, other$manager, other$round$id)$reminders, 0L)
+  expect_identical(delivery_campaign(r, other, "replacement")$release$n_recipients, 1L)
+  expect_identical(process_campaign_sink(r, other$study_id)$reason, "campaign_cancelled")
+  expect_identical(process_campaign_sink(r, other$study_id)$state, "sink_recorded")
+})
+
+test_that("reminders that become due together reach a person the minimum interval apart", {
+  r <- delivery_repo()
+  # 1.8 seconds; approvals three seconds apart keep it.
+  f <- delivery_fixture(r, list(min_reminder_interval_hours = 0.0005), members = 1L)
+  first <- delivery_campaign(r, f, "first")
+  second <- delivery_campaign(r, f, "second", not_before = delivery_stamp(3))
+  # Both are due before the worker runs, as after quiet hours or a stopped worker.
+  Sys.sleep(3.5)
+  expect_identical(process_campaign_sink(r, f$study_id)$state, "sink_recorded")
+  expect_identical(process_campaign_sink(r, f$study_id), FALSE)
+  waiting <- query(r, "SELECT d.state,d.reason,d.attempts,d.available_at>clock_timestamp() AS later FROM ops.message_delivery d JOIN ops.message_outbox o ON o.id=d.message_id WHERE o.campaign_id=$1", second$id)
+  expect_identical(c(waiting$state, waiting$reason), c("queued", "reminder_interval"))
+  expect_identical(waiting$attempts, 0L)
+  expect_true(waiting$later)
+  Sys.sleep(2)
+  expect_identical(process_campaign_sink(r, f$study_id)$state, "sink_recorded")
+  gap <- query(r, "SELECT extract(epoch FROM max(s.recorded_at)-min(s.recorded_at))::float8 AS seconds FROM ops.message_sink s JOIN ops.message_outbox o ON o.id=s.message_id WHERE o.study_id=$1", f$study_id)$seconds
+  expect_gte(gap, 1.8)
+  # Other kinds of message are not held by the reminder interval.
+  delivery_campaign(r, f, "deadline", kind = "deadline_change")
+  expect_identical(process_campaign_sink(r, f$study_id)$state, "sink_recorded")
+})
+
+# Each child is a new R process with its own connection.
+delivery_child <- function(f, campaign, key, name, env = parent.frame()) {
+  skip_if_not_installed("callr")
+  root <- Sys.getenv("DELPHYR_SOURCE_ROOT")
+  skip_if(!nzchar(root), "Concurrency tests need DELPHYR_SOURCE_ROOT")
+  child <- callr::r_bg(function(root, libs, manager, campaign, key, name) {
+    .libPaths(libs)
+    pkgload::load_all(file.path(root, "packages/delphyr"), quiet = TRUE)
+    r <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test", application_name = name)
+    on.exit(DBI::dbDisconnect(r$con))
+    DBI::dbExecute(r$con, "SET statement_timeout='20s'")
+    tryCatch(
+      list(ok = TRUE, value = release_campaign(r, manager, campaign$id, campaign$hash, "Exact text and recipients reviewed", key)),
+      delphyr_error = function(e) list(ok = FALSE, code = e$code, path = e$path)
+    )
+  }, args = list(root, .libPaths(), f$manager, campaign, key, name), supervise = TRUE)
+  withr::defer(if (child$is_alive()) child$kill(), envir = env)
+  child
+}
+delivery_wait_lock <- function(r, name, child) {
+  deadline <- Sys.time() + 15
+  repeat {
+    DBI::dbGetQuery(r$con, "SELECT pg_stat_clear_snapshot()")
+    state <- DBI::dbGetQuery(r$con, "SELECT wait_event_type FROM pg_stat_activity WHERE application_name=$1", params = list(name))
+    if (nrow(state) == 1L && identical(state$wait_event_type, "Lock")) {
+      return(invisible(TRUE))
+    }
+    if (!child$is_alive()) stop("Child exited before lock barrier: ", child$read_error())
+    if (Sys.time() > deadline) stop("Child did not reach the database lock barrier")
+    Sys.sleep(0.025)
+  }
+}
+
+test_that("two reminders approved at the same time cannot both pass the limit", {
+  r <- delivery_repo()
+  f <- delivery_fixture(r, list(max_reminders = 1), members = 1L)
+  a <- delivery_campaign(r, f, "a", release = FALSE)
+  b <- delivery_campaign(r, f, "b", release = FALSE)
+  # A lock on the approver's account row holds each approval at its first
+  # insert, after it has read the earlier reminders of the round.
+  DBI::dbBegin(r$con)
+  withr::defer(suppressWarnings(try(DBI::dbRollback(r$con), silent = TRUE)))
+  DBI::dbGetQuery(r$con, "SELECT id FROM identity.principals WHERE id=$1 FOR UPDATE", params = list(f$manager$principal_id))
+  names <- paste0("delphyr-release-", c("a-", "b-"), f$study_id)
+  first <- delivery_child(f, a, "release a", names[1])
+  delivery_wait_lock(r, names[1], first)
+  second <- delivery_child(f, b, "release b", names[2])
+  delivery_wait_lock(r, names[2], second)
+  DBI::dbRollback(r$con)
+  results <- lapply(list(first, second), function(child) {
+    child$wait(timeout = 25000)
+    if (child$is_alive()) stop("Concurrent release exceeded test deadline")
+    child$get_result()
+  })
+  expect_identical(sum(vapply(results, function(x) isTRUE(x$ok), logical(1))), 1L)
+  refused <- Filter(function(x) !isTRUE(x$ok), results)[[1]]
+  expect_identical(c(refused$code, refused$path), c("DEL_CONFLICT", "campaign.reminder_limit"))
+  expect_identical(list_campaign_enrollments(r, f$manager, f$round$id)$reminders, 1L)
 })
 
 test_that("a provider adapter receives one eligible message with a stable idempotency key", {
@@ -345,6 +452,10 @@ test_that("messages waiting at the time of a backup are held for a decision and 
   # Counting changes nothing.
   expect_identical(hold_pending_messages(r, study_id = f$study_id), list(queued = 2L, in_flight = 1L, held = 0L))
   expect_identical(sort(delivery_states(r, campaign$id)$state), c("queued", "queued", "running"))
+  # The status covers every study, so the held messages are counted against
+  # the uncertain deliveries before them.
+  uncertain_in_status <- function(s) sum(s$messages$n[s$messages$state == "delivery_unknown"])
+  uncertain_before <- uncertain_in_status(get_system_status(r))
   expect_identical(hold_pending_messages(r, dry_run = FALSE, study_id = f$study_id), list(queued = 2L, in_flight = 1L, held = 3L))
   held <- delivery_states(r, campaign$id)
   expect_identical(unique(held$state), "delivery_unknown")
@@ -358,8 +469,9 @@ test_that("messages waiting at the time of a backup are held for a decision and 
   uncertain <- list_uncertain_deliveries(r, f$manager, f$study_id)
   expect_identical(nrow(uncertain), 3L)
   expect_identical(unique(uncertain$reason), "restored_from_backup")
-  expect_identical(get_system_status(r)$messages$state[get_system_status(r)$messages$state == "delivery_unknown"], "delivery_unknown")
-  expect_true("uncertain_deliveries" %in% get_system_status(r)$attention)
+  status <- get_system_status(r)
+  expect_identical(uncertain_in_status(status), uncertain_before + 3L)
+  expect_true("uncertain_deliveries" %in% status$attention)
   resolve_delivery(r, f$manager, f$study_id, uncertain$message_id[1], "requeue", "The sink of the lost system shows no receipt", "again")
   resolve_delivery(r, f$manager, f$study_id, uncertain$message_id[2], "abandon", "The round closes today", "stop")
   resolve_delivery(r, f$manager, f$study_id, uncertain$message_id[3], "confirmed_delivered", "The receipt was seen before the loss", "seen")

@@ -82,7 +82,8 @@ test_that("failure messages outside a service call and failed background work qu
   # An identity past its lifetime: the person is told to sign in again.
   expired <- tryCatch(delphyr::log_operation("save_response", function() delphyr::del_abort("DEL_UNAUTHORIZED", "session")), error = function(e) e)
   expect_identical(safe_error(expired, "en"), paste("Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out. Reference:", expired$correlation_id))
-  expect_match(safe_error(expired, "fr"), paste0("^Votre connexion a expiré[.] .* Référence : ", expired$correlation_id, "$"))
+  # The sign-in is a session in French; "connexion" is the network connection.
+  expect_match(safe_error(expired, "fr"), paste0("^Votre session a expir\u00e9[.] .* R\u00e9f\u00e9rence : ", expired$correlation_id, "$"))
   expect_length(entries(), 4L)
   # A step cancelled because an input is not ready is no failure: no message, no entry.
   cancelled <- tryCatch(shiny::req(FALSE), error = function(e) e)

@@ -26,7 +26,7 @@ list_protocol_versions <- function(repo, actor, study_id) {
 amend_protocol <- function(repo, actor, study_id, protocol, expected_hash, reason, command_id) {
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
-    one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active') FOR UPDATE", study_id))
+    study_open(repo, study_id, "FOR UPDATE")
     protocol <- new_protocol(protocol)
     protocol_size(protocol)
     ensure(scalar_text(expected_hash) && scalar_text(reason) && nchar(reason, type = "bytes") <= 10000L, "protocol.amendment")

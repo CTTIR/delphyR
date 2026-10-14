@@ -13,7 +13,18 @@ for (schema in c("identity", "research", "ops")) {
   DBI::dbExecute(r$con, paste("GRANT USAGE ON SCHEMA", schema, "TO delphyr_runtime"))
   DBI::dbExecute(r$con, paste("GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA", schema, "TO delphyr_runtime"))
 }
-for (table in c("identity.principals", "identity.memberships", "identity.capabilities", "research.studies", "research.rounds", "research.enrollments", "research.panelists", "research.response_current", "research.feedback", "ops.jobs")) DBI::dbExecute(r$con, paste("GRANT UPDATE ON", table, "TO delphyr_runtime"))
+for (table in c("identity.principals", "identity.memberships", "identity.capabilities", "ops.jobs")) DBI::dbExecute(r$con, paste("GRANT UPDATE ON", table, "TO delphyr_runtime"))
+# Research rows are changed only in the columns the services write; triggers
+# check every change of state. Revoking the table right first also removes
+# the whole-table right of an earlier configuration.
+writable <- list(
+  "research.studies" = "state", "research.rounds" = c("state", "deadline", "closed_at"), "research.enrollments" = "state",
+  "research.panelists" = c("active", "group_code"), "research.response_current" = "revision", "research.feedback" = "state"
+)
+for (table in names(writable)) {
+  DBI::dbExecute(r$con, paste("REVOKE UPDATE ON", table, "FROM delphyr_runtime"))
+  DBI::dbExecute(r$con, paste0("GRANT UPDATE (", paste(writable[[table]], collapse = ", "), ") ON ", table, " TO delphyr_runtime"))
+}
 # Optional component delivery-state tables are granted only if migrated.
 for (table in c("ops.message_delivery", "ops.campaigns", "identity.panel_invitations", "ops.worker_heartbeats", "ops.artifacts")) if (!is.na(DBI::dbGetQuery(r$con, paste0("SELECT to_regclass('", table, "')::text AS x"))$x)) DBI::dbExecute(r$con, paste("GRANT UPDATE ON", table, "TO delphyr_runtime"))
 # The server log of the application role names the refused statement and the
@@ -21,4 +32,4 @@ for (table in c("ops.message_delivery", "ops.campaigns", "identity.panel_invitat
 # a bound parameter.
 DBI::dbExecute(r$con, "ALTER ROLE delphyr_runtime SET log_error_verbosity = 'terse'")
 DBI::dbDisconnect(r$con)
-cat("Synthetic runtime role configured; no owner, DDL, delete or superuser rights; terse server log.\n")
+cat("Synthetic runtime role configured; no owner, DDL, delete or superuser rights; research rows writable only in service columns; terse server log.\n")

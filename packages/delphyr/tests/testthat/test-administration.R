@@ -51,6 +51,50 @@ test_that("staff accounts are bound to a stable identity and receive no right by
   expect_true(all(c("Performs the analysis", "Export duty ended") %in% events$reason))
   expect_true("export revoked" %in% events$detail)
   expect_error(set_capability(r, f$manager, f$study_id, account$id, "audit", TRUE, "bad-reason", reason = ""), class = "DEL_VALIDATION")
+  # The rationale belongs to the request: the same key with another rationale
+  # is a conflict, the identical retry returns the receipt.
+  granted <- set_capability(r, f$manager, f$study_id, account$id, "edit", TRUE, "grant-edit", reason = "Edits the free text")
+  expect_identical(set_capability(r, f$manager, f$study_id, account$id, "edit", TRUE, "grant-edit", reason = "Edits the free text"), granted)
+  refused <- tryCatch(set_capability(r, f$manager, f$study_id, account$id, "edit", TRUE, "grant-edit", reason = "Another rationale"), error = function(e) e)
+  expect_s3_class(refused, "DEL_CONFLICT")
+  expect_identical(refused$path, "command.payload")
+  expect_identical(sum(list_audit_events(r, f$manager, f$study_id, actions = "capability")$detail == "edit granted"), 1L)
+  # Without a rationale the payload is the one earlier releases stored, so
+  # their receipts still answer a retry under a fixed key.
+  plain <- set_capability(r, f$manager, f$study_id, account$id, "coordinate", TRUE, "auth-coordinate")
+  stored <- DBI::dbGetQuery(r$con, "SELECT payload_hash FROM ops.commands WHERE study_id=$1 AND actor_id=$2 AND command_type='capability' AND command_key='auth-coordinate'", params = list(f$study_id, f$manager$principal_id))
+  expect_identical(stored$payload_hash, content_hash(list(account$id, "coordinate", TRUE)))
+  expect_identical(set_capability(r, f$manager, f$study_id, account$id, "coordinate", TRUE, "auth-coordinate"), plain)
+})
+
+test_that("an analyst finds the rounds, analyses and feedback drafts and changes nothing else", {
+  r <- administration_repo()
+  f <- demo_study(r, n = 2L, item_count = 1L)
+  analyst <- demo_actor(r, provision_demo_principal(r, paste0("demo-analyst-", uid())))
+  set_capability(r, f$manager, f$study_id, analyst$principal_id, "analyse", TRUE, "analyst", reason = "Performs the analysis")
+  for (state in c("review", "approved", "open")) transition_round(r, f$manager, f$round$id, state, f$round$hash, "Synthetic", state)
+  for (actor in f$panel) {
+    e <- list_enrollments(r, actor, f$study_id)$id
+    record_consent(r, actor, f$study_id, f$consent_id, TRUE, "consent")
+    item <- get_questionnaire(r, actor, e)$items$id
+    saved <- save_response(r, actor, e, item, list(value = 7L, status = "answered"), 0L, "save")
+    submit_round(r, actor, e, setNames(saved$revision, item), "submit")
+  }
+  transition_round(r, f$manager, f$round$id, "closed", f$round$hash, "Close", "close")
+  snapshot <- freeze_round(r, f$manager, f$round$id, "freeze")
+  rounds <- list_rounds(r, analyst, f$study_id)
+  expect_identical(rounds$snapshot_id, snapshot$id)
+  analysis <- run_analysis(r, analyst, rounds$snapshot_id, "analyse")
+  expect_identical(list_rounds(r, analyst, f$study_id)$analysis_id, analysis$id)
+  expect_identical(get_study_setup(r, analyst, f$study_id)$protocol$study$timezone, "Europe/Berlin")
+  draft <- create_feedback(r, analyst, analysis$id, command_id = "feedback")
+  expect_identical(get_feedback_candidate(r, analyst, draft$id)$hash, draft$hash)
+  # Lifecycle, release and the instrument review stay with management.
+  expect_error(release_feedback(r, analyst, draft$id, draft$hash, "release"), class = "DEL_FORBIDDEN")
+  expect_error(transition_round(r, analyst, f$round$id, "finalized", f$round$hash, "Synthetic", "finalize"), class = "DEL_FORBIDDEN")
+  expect_error(get_round_instrument(r, analyst, f$round$id), class = "DEL_FORBIDDEN")
+  for (read in list(list_rounds, get_study_setup)) expect_error(read(r, f$panel[[1]], f$study_id), class = "DEL_FORBIDDEN")
+  expect_error(get_feedback_candidate(r, f$panel[[1]], draft$id), class = "DEL_FORBIDDEN")
 })
 
 test_that("a study always keeps one person who can manage it", {

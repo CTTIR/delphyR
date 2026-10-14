@@ -14,7 +14,9 @@ download_artifact(repo, actor, artifact_id)
 \item{artifact_id}{Artifact UUID.}
 }
 \value{
-Private directory path for trusted server download code.
+Private directory path for trusted server download code. An export
+  whose worker stopped after registering it but before giving it its final
+  name is delivered from its temporary name, `<id>.partial`.
 }
 \description{
 Resolve a private artifact only after a fresh rights check

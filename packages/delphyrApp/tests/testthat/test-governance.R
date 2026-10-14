@@ -3,11 +3,13 @@ governance_services <- function(names) stats::setNames(rep(list(function(...) NU
 test_that("history is offered to audit and management roles and labels every event", {
   capabilities <- shiny::reactiveVal("audit")
   requests <- list()
+  available <- FALSE
   call <- function(name, ...) {
     switch(name,
       get_capabilities = capabilities(),
       list_audit_events = {
         requests[[length(requests) + 1L]] <<- list(...)
+        if (!available) stop("history unavailable")
         data.frame(
           occurred_at = c("2026-10-02T10:00:00.000Z", "2026-10-02T09:00:00.000Z", "2026-10-02T08:00:00.000Z"),
           action = c("transition_round", "save", "request_export:study_summary"), detail = c("open", NA, "study_summary"),
@@ -22,20 +24,24 @@ test_that("history is offered to audit and management roles and labels every eve
   shiny::testServer(delphyrApp:::audit_server, args = list(study = function() selected_study(), lang = function() "en", call = call, services = governance_services(c("get_capabilities", "list_audit_events"))), {
     session$flushReact()
     expect_true(allowed())
-    session$setInputs(limit = 99999, load = 1)
+    session$setInputs(load = 1)
     expect_null(events())
     expect_match(output$status, "No success was confirmed", fixed = TRUE)
-    session$setInputs(limit = 50, actions = c("save", "submit"), load = 2)
-    expect_identical(requests[[1]]$actions, c("save", "submit"))
-    expect_identical(requests[[1]]$limit, 50)
-    html <- output$events
+    available <<- TRUE
+    session$setInputs(actions = c("save", "submit"), load = 2)
+    expect_identical(requests[[2]]$actions, c("save", "submit"))
+    # One event more than shown tells whether older events exist.
+    expect_identical(requests[[2]]$limit, 101L)
+    expect_identical(output$status, "")
+    html <- output$events$html
     expect_match(html, "Round state changed", fixed = TRUE)
-    expect_match(html, "Recruitment complete", fixed = TRUE)
-    expect_match(html, "Staff account staff-principal", fixed = TRUE)
-    expect_match(html, "Panel member", fixed = TRUE)
+    expect_match(html, "Rationale: Recruitment complete", fixed = TRUE)
+    expect_match(html, "the study team account", fixed = TRUE)
+    expect_match(html, "by a panel member", fixed = TRUE)
     expect_match(html, "Export requested", fixed = TRUE)
+    expect_match(html, "Aggregated study summary", fixed = TRUE)
     expect_false(grepl("NA", html, fixed = TRUE))
-    expect_match(output$status, "3 events shown", fixed = TRUE)
+    expect_match(html, "Showing all 3 events.", fixed = TRUE)
     # Another study never shows the previous study's events.
     capabilities("panel")
     selected_study("other")
@@ -64,36 +70,48 @@ test_that("documentation saves only confirmed, reasoned, non-empty versions", {
   }
   services <- governance_services(c("get_capabilities", "get_study_documentation", "record_study_documentation"))
   shiny::testServer(delphyrApp:::documentation_server, args = list(study = function() "study", lang = function() "en", call = call, services = services), {
+    # The inputs of the shown version carry its form key.
+    type <- function(...) {
+      values <- list(...)
+      names(values) <- paste0(names(values), "_", form())
+      do.call(session$setInputs, values)
+    }
     session$flushReact()
     expect_match(output$body$html, "Stored funding statement", fixed = TRUE)
     expect_match(output$body$html, "Current documentation version: 1", fixed = TRUE)
-    session$setInputs(funding = "Stored funding statement", authors_responsibilities = "Synthetic author", reason = "", confirm = TRUE, save = 1)
+    type(funding = "Stored funding statement", authors_responsibilities = "Synthetic author", reason = "", confirm = TRUE)
+    session$setInputs(save = 1)
     expect_length(saved, 0L)
-    session$setInputs(reason = "Authors added", confirm = FALSE, save = 2)
+    type(reason = "Authors added", confirm = FALSE)
+    session$setInputs(save = 2)
     expect_length(saved, 0L)
-    session$setInputs(funding = " ", authors_responsibilities = "", confirm = TRUE, save = 3)
+    type(funding = " ", authors_responsibilities = "", confirm = TRUE)
+    session$setInputs(save = 3)
     expect_length(saved, 0L)
     expect_match(output$status, "At least one topic", fixed = TRUE)
-    session$setInputs(funding = "Stored funding statement", authors_responsibilities = "Synthetic author", conflicts_of_interest = "", save = 4)
+    type(funding = "Stored funding statement", authors_responsibilities = "Synthetic author", conflicts_of_interest = "")
+    session$setInputs(save = 4)
     expect_length(saved, 1L)
     expect_identical(saved[[1]][[2]], list(authors_responsibilities = "Synthetic author", funding = "Stored funding statement"))
     expect_identical(saved[[1]][[3]], 1L)
     expect_identical(saved[[1]][[4]], "Authors added")
     expect_match(output$status, "Documentation version saved: 2", fixed = TRUE)
     expect_match(output$history, "Reason 2", fixed = TRUE)
+    expect_match(output$history, "Rationale", fixed = TRUE)
+    expect_false(grepl(">Reason<", output$history, fixed = TRUE))
   })
   expect_identical(unname(documentation_topic_labels("de")[["funding"]]), "Finanzierung")
 })
 
 test_that("study exports offer only permitted profiles and require an entitlement confirmation", {
   capabilities <- shiny::reactiveVal(c("analyse", "audit"))
-  requested <- character()
+  requested_profiles <- character()
   state <- "queued"
   call <- function(name, ...) {
     switch(name,
       get_capabilities = capabilities(),
       request_study_export = {
-        requested <<- c(requested, list(...)[[2]])
+        requested_profiles <<- c(requested_profiles, list(...)[[2]])
         list(id = "job", state = "queued")
       },
       get_operation = data.frame(id = "job", state = state, result_ref = if (state == "succeeded") "artifact" else NA_character_),
@@ -107,26 +125,28 @@ test_that("study exports offer only permitted profiles and require an entitlemen
     expect_identical(profiles(), c("study_summary", "audit_restricted"))
     expect_false(grepl("Contact data", output$body$html, fixed = TRUE))
     expect_false(grepl("Pseudonymized research data", output$body$html, fixed = TRUE))
-    session$setInputs(profile = "study_summary", confirm = FALSE, request = 1)
-    expect_length(requested, 0L)
+    session$setInputs(profile = "study_summary", purpose = "Annual summary for the steering group", confirm = FALSE, request = 1)
+    expect_length(requested_profiles, 0L)
     expect_match(output$status, "confirm your entitlement", fixed = TRUE)
     expect_match(output$description, "without individual responses", fixed = TRUE)
     # A profile outside the offered ones is never requested.
     session$setInputs(profile = "contacts_restricted", confirm = TRUE, request = 2)
-    expect_length(requested, 0L)
+    expect_length(requested_profiles, 0L)
     session$setInputs(profile = "study_summary", confirm = TRUE, request = 3)
-    expect_identical(requested, "study_summary")
+    expect_identical(requested_profiles, "study_summary")
     session$setInputs(poll = 1)
-    expect_null(artifact())
+    expect_true(is.na(requested()$artifact))
     state <<- "succeeded"
     session$setInputs(poll = 2)
-    expect_identical(artifact(), "artifact")
+    expect_identical(requested()$artifact, "artifact")
+    # Another profile does not hide an export already prepared.
     session$setInputs(profile = "audit_restricted")
-    expect_null(artifact())
+    expect_identical(requested()$artifact, "artifact")
     capabilities("panel")
     selected_study("other")
     session$flushReact()
     expect_length(profiles(), 0L)
+    expect_identical(nrow(requested()), 0L)
     expect_error(output$body)
   })
 })

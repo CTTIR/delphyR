@@ -73,27 +73,29 @@ test_that("a long round is answered block by block and saved before a block is l
     expect_identical(view()$index, 1L)
     expect_identical(view()$ids, paste0("item_1_", 1:4))
     expect_length(editors(), 4L)
-    expect_match(output$block_title, "Block 1 of 3 \u00b7 Questions 1\u20132 of 5", fixed = TRUE)
+    expect_match(output$block_head$html, "Block 1 of 3 \u00b7 Questions 1\u20132 of 5", fixed = TRUE)
     expect_match(output[["slot_1-title"]]$html, "Statement I001", fixed = TRUE)
-    expect_match(output$progress$html, "0 / 10 response fields confirmed saved", fixed = TRUE)
-    expect_match(output$overview$html, "Open: 10 \u00b7 of which required: 10", fixed = TRUE)
-    expect_match(output$overview$html, "Open fields in block: 1, 2, 3", fixed = TRUE)
-    expect_match(output$overview$html, "Required fields are open in block: 1, 2, 3", fixed = TRUE)
-    # An entry is pending when the next block is requested: it is saved first.
-    session$setInputs(`item_1_1-kind` = "answered", `item_1_1-value` = "7")
+    # Progress is counted in statements, not in response fields.
+    expect_match(output$progress$html, "Statements answered and saved: 0 of 5.", fixed = TRUE)
+    expect_match(output$overview$html, "With a special response: 0 \u00b7 Open: 5 \u00b7 of which required: 5", fixed = TRUE)
+    expect_match(output$overview$html, "Required statements are open in block: 1, 2, 3", fixed = TRUE)
+    # Blocks are named once when every open statement is required.
+    expect_false(grepl("Open statements in block", output$overview$html, fixed = TRUE))
+    # Entries are pending when the next block is requested: they are saved first.
+    session$setInputs(`item_1_1-kind` = "answered", `item_1_1-value` = "7", `item_1_2-kind` = "answered", `item_1_2-value` = "6")
     expect_true(dirty())
     session$setInputs(block_next = 1)
     expect_identical(tail(s$calls, 2), c("save_response", "get_questionnaire"))
     expect_identical(view()$index, 2L)
     expect_identical(view()$ids, paste0("item_2_", 5:8))
     expect_false(dirty())
-    expect_match(output$block_title, "Block 2 of 3 \u00b7 Questions 3\u20134 of 5", fixed = TRUE)
+    expect_match(output$block_head$html, "Block 2 of 3 \u00b7 Questions 3\u20134 of 5", fixed = TRUE)
     # The same place now shows the next field; nothing of the previous remains.
     expect_match(output[["slot_1-title"]]$html, "Statement I003", fixed = TRUE)
     expect_false(grepl("I001", output[["slot_1-title"]]$html, fixed = TRUE))
     expect_identical(known()$status[1], "answered")
     expect_identical(known()$revision[1], 1L)
-    expect_match(output$progress$html, "1 / 10 response fields confirmed saved", fixed = TRUE)
+    expect_match(output$progress$html, "Statements answered and saved: 1 of 5.", fixed = TRUE)
     # A late entry for the previous block reaches no field and saves nothing.
     saves <- sum(s$calls == "save_response")
     session$setInputs(`item_1_1-value` = "2", `item_1_2-kind` = "answered", `item_1_2-value` = "9")
@@ -112,9 +114,12 @@ test_that("a long round is answered block by block and saved before a block is l
     expect_identical(view()$ids, paste0("item_3_", 9:10))
     expect_length(editors(), 2L)
     expect_identical(output$status, "")
-    # The last block is shorter: its unused places show nothing.
-    expect_match(output[["slot_2-title"]]$html, "Statement I005", fixed = TRUE)
+    # The last block is shorter: its unused places show nothing. Both fields
+    # of I005 form one card; the statement is shown once.
+    expect_match(output[["slot_1-title"]]$html, "Statement I005", fixed = TRUE)
+    expect_false(grepl("Statement I005", output[["slot_2-title"]]$html, fixed = TRUE))
     expect_error(output[["slot_3-title"]])
+    expect_error(output[["card_2-line"]])
     # Going back shows the committed answer of the first block.
     session$setInputs(block_choice = "1", block_go = 2)
     expect_identical(view()$ids, paste0("item_4_", 1:4))
@@ -140,17 +145,27 @@ test_that("a failed save keeps the block and a submission names required fields 
     session$setInputs(`item_1_2-kind` = "abstained")
     session$setInputs(block_next = 2)
     expect_identical(view()$index, 2L)
-    expect_match(output$overview$html, "Answered: 1 \u00b7 Special response: 1 \u00b7 Open: 4 \u00b7 of which required: 4", fixed = TRUE)
-    # Submitting with open required fields shows the first block that has one.
+    expect_match(output$progress$html, "Statements answered and saved: 1 of 3.", fixed = TRUE)
+    expect_match(output$overview$html, "With a special response: 1 \u00b7 Open: 2 \u00b7 of which required: 2", fixed = TRUE)
+    # Submitting with open required fields names their statements beside the
+    # button, each with a link that opens its block; the block on screen stays.
     session$setInputs(`item_2_3-kind` = "answered", `item_2_3-value` = "8", `item_2_4-kind` = "unable_to_judge")
     session$setInputs(block_next = 3)
     expect_identical(view()$index, 3L)
     session$setInputs(block_choice = "1", block_go = 1)
     session$setInputs(confirm = TRUE, submit = 1)
     expect_null(s$submitted)
+    expect_identical(view()$index, 1L)
+    notice <- output$submission$html
+    expect_match(notice, "Not submitted. These required statements are still open:", fixed = TRUE)
+    expect_match(notice, "Question 3:\\s*<span lang=\"en\">Statement I003</span>")
+    expect_false(grepl("Question 1:", notice, fixed = TRUE))
+    expect_match(notice, "proxy1-jump", fixed = TRUE)
+    expect_match(notice, "role=\"alert\"", fixed = TRUE)
+    expect_identical(output$status, "")
+    expect_match(output$overview$html, "Required statements are open in block: 3", fixed = TRUE)
+    session$setInputs(jump = 5)
     expect_identical(view()$index, 3L)
-    expect_match(output$status, "Required response fields are still open", fixed = TRUE)
-    expect_match(output$overview$html, "Required fields are open in block: 3", fixed = TRUE)
     expect_identical(view()$ids, c("item_5_5", "item_5_6"))
     session$setInputs(`item_5_5-kind` = "answered", `item_5_5-value` = "5", `item_5_6-kind` = "answered", `item_5_6-value` = "5")
     session$setInputs(submit = 2)
@@ -168,9 +183,17 @@ test_that("work resumes at the first block with an open field and a short round 
     session$setInputs(enrollment = "own-enrollment", load = 1)
     expect_identical(view()$index, 2L)
     expect_match(output$questionnaire$html, "block_choice", fixed = TRUE)
-    expect_match(output$questionnaire$html, "Previous block", fixed = TRUE)
-    expect_match(output$block$html, "block_heading", fixed = TRUE)
-    expect_match(output$progress$html, "3 / 6 response fields confirmed saved", fixed = TRUE)
+    expect_match(output$pager$html, "Previous block", fixed = TRUE)
+    expect_match(output$pager$html, "Next block", fixed = TRUE)
+    expect_match(output$block_head$html, "id=\"proxy1-block_heading\" tabindex=\"-1\"", fixed = TRUE)
+    expect_match(output$progress$html, "Statements answered and saved: 1 of 3.", fixed = TRUE)
+    # The first block has no way back, the last no way on.
+    session$setInputs(block_choice = "1", block_go = 1)
+    expect_false(grepl("Previous block", output$pager$html, fixed = TRUE))
+    expect_match(output$pager$html, "Next block", fixed = TRUE)
+    session$setInputs(block_choice = "3", block_go = 2)
+    expect_match(output$pager$html, "Previous block", fixed = TRUE)
+    expect_false(grepl("Next block", output$pager$html, fixed = TRUE))
   })
   submitted <- block_services(utils::modifyList(q, list(enrollment = list(id = "own-enrollment", state = "submitted"))))
   shiny::testServer(delphyrApp:::panel_server, args = list(study = function() "study", lang = function() "en", call = submitted$call, autosave_ms = 0, block_fields = 2L), {
@@ -195,7 +218,7 @@ test_that("a field outside a block still renders into outputs of its own", {
   shiny::testServer(delphyrApp:::rating_server, args = list(q = q, item = q$items[1, ], lang = function() "en", call = function(...) list(revision = 1L, saved_at = "now"), autosave_ms = 0), {
     session$setInputs(kind = "answered", value = "7", save = 1)
     expect_match(output$title$html, "Statement I001", fixed = TRUE)
-    expect_match(output$status, "Saved:")
+    expect_identical(output$status, "Saved")
     destroy()
     session$setInputs(value = "3", save = 2)
     expect_equal(revision(), 1L)
@@ -223,4 +246,20 @@ test_that("the round list starts with the round that is due", {
   # A listing without state columns falls back to the latest round.
   expect_identical(current_enrollment(data.frame(id = c("a", "b"), number = 1:2)), "b")
   expect_identical(current_enrollment(data.frame(id = c("a", "b"))), "b")
+})
+
+test_that("open optional statements are named apart from required ones", {
+  # Relevance is required, clarity is an optional rating.
+  s <- block_services(block_questionnaire(3L, required = c(TRUE, FALSE)))
+  shiny::testServer(delphyrApp:::panel_server, args = list(study = function() "study", lang = function() "en", call = s$call, autosave_ms = 60000, block_fields = 2L), {
+    session$setInputs(enrollment = "own-enrollment", load = 1)
+    session$setInputs(`item_1_1-kind` = "answered", `item_1_1-value` = "7")
+    session$setInputs(block_next = 1)
+    expect_identical(view()$index, 2L)
+    # The statement still lacks its optional rating: open, but not required.
+    expect_match(output$progress$html, "Statements answered and saved: 0 of 3.", fixed = TRUE)
+    expect_match(output$overview$html, "With a special response: 0 \u00b7 Open: 3 \u00b7 of which required: 2", fixed = TRUE)
+    expect_match(output$overview$html, "Open statements in block: 1, 2, 3", fixed = TRUE)
+    expect_match(output$overview$html, "Required statements are open in block: 2, 3", fixed = TRUE)
+  })
 })

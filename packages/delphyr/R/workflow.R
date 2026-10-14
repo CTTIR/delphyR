@@ -2,18 +2,87 @@ protocol_for <- function(repo, study) {
   x <- one(query(repo, "SELECT id,config::text FROM research.protocol_versions WHERE study_id=$1 ORDER BY version DESC LIMIT 1", study))
   list(id = x$id, config = new_protocol(from_json(x$config)))
 }
+# A study takes changes to its panel, information, rounds and decisions only
+# until it is completed. The row lock orders the change with the completion
+# and, in the stronger modes, with the other changes that lock the study.
+study_open <- function(repo, study_id, lock = "FOR KEY SHARE") {
+  ensure(lock %in% c("FOR KEY SHARE", "FOR SHARE", "FOR NO KEY UPDATE", "FOR UPDATE"), "lock")
+  s <- one(query(repo, paste("SELECT state FROM research.studies WHERE id=$1", lock), study_id))
+  ensure(s$state %in% c("draft", "active"), "study.state", "DEL_CONFLICT")
+}
 round_get <- function(repo, actor, id, capability = NULL, lock = "") {
-  valid_id(id)
-  x <- one(query(repo, "SELECT study_id FROM research.rounds WHERE id=$1", id))
-  authorize(repo, actor, x$study_id, capability)
+  study <- object_study(repo, actor, "research.rounds", id)
+  authorize(repo, actor, study, capability)
   ensure(lock %in% c("", " FOR SHARE", " FOR UPDATE"), "lock")
   result <- one(query(repo, paste0("SELECT *, deadline>clock_timestamp() AS in_time FROM research.rounds WHERE id=$1", lock), id))
   # A request may have waited behind a concurrent mutation or revocation.
-  authorize(repo, actor, x$study_id, capability)
+  authorize(repo, actor, study, capability)
   result
 }
+# Rounds whose instrument panel members may see: opened ones. A candidate that
+# is still being prepared, reviewed or approved, or that was withdrawn, does
+# not exist for them.
+opened_states <- "('open','closed','frozen','analysed','feedback_ready','released','finalized')"
+#' Read an instrument import file without guessing types
+#'
+#' Reads a UTF-8 CSV item file. Every value is read as text, so codes keep
+#' their leading zeros and a text such as "NA" stays text. Required columns
+#' are `item_code`, `item_version`, `locale`, `text`, `dimension_code`,
+#' `scale_code`, `source_ref`, `required` and `display_order`. This differs
+#' from the v1 item import contract of the specification in two ways:
+#' `item_version` is an additional column, because a version names the rated
+#' wording across rounds, and `source_ref` is required, not optional. A file
+#' that lacks either column is refused, as is the specification's v1 example,
+#' which has no `item_version`.
+#' `item_version` and `display_order` must be written as whole numbers and
+#' `required` as true or false. The optional columns `definition` and
+#' `domain_code` are accepted and not stored. Check the result with
+#' validate_items() before preparing a round.
+#' @param file Path of the CSV file, at most 5 MB.
+#' @param delimiter "," (the canonical format) or ";".
+#' @return Data frame for validate_items() and prepare_round(). A file that
+#'   does not follow the contract is refused with DEL_VALIDATION, path
+#'   items.file, items.encoding, items.columns, items.rows or the column of
+#'   the first value that is not of its type, such as items.display_order.
+#' @export
+read_item_import <- function(file, delimiter = ",") {
+  ensure(scalar_text(file) && file.exists(file) && !dir.exists(file), "items.file")
+  ensure(length(delimiter) == 1L && delimiter %in% c(",", ";"), "items.delimiter")
+  size <- file.size(file)
+  ensure(isTRUE(size > 0 && size <= 5 * 1024^2), "items.file")
+  bytes <- readBin(file, "raw", size)
+  ensure(!any(bytes == as.raw(0)), "items.encoding")
+  text <- rawToChar(bytes)
+  Encoding(text) <- "UTF-8"
+  ensure(validUTF8(text), "items.encoding")
+  # read.table(text=) adds a final newline; one existing terminator is removed.
+  text <- sub("\r?\n$", "", sub("^\ufeff", "", text))
+  rows <- tryCatch(withCallingHandlers(
+    utils::read.table(
+      text = text, header = TRUE, sep = delimiter, quote = "\"", comment.char = "", colClasses = "character", check.names = FALSE,
+      fill = FALSE, blank.lines.skip = FALSE, na.strings = character(), row.names = NULL, stringsAsFactors = FALSE, encoding = "UTF-8"
+    ),
+    warning = function(w) stop("csv parse failed")
+  ), error = function(e) NULL)
+  ensure(is.data.frame(rows), "items.file")
+  fields <- c("item_code", "item_version", "locale", "text", "dimension_code", "scale_code", "source_ref", "required", "display_order")
+  ensure(!anyDuplicated(names(rows)) && all(fields %in% names(rows)) && all(names(rows) %in% c(fields, "definition", "domain_code")), "items.columns")
+  ensure(nrow(rows) > 0L && nrow(rows) <= 10000L, "items.rows")
+  for (k in c("item_version", "display_order")) {
+    ensure(all(grepl("^[0-9]{1,9}$", rows[[k]])), paste0("items.", k))
+    rows[[k]] <- as.integer(rows[[k]])
+  }
+  flag <- tolower(trimws(rows$required))
+  ensure(all(flag %in% c("true", "false")), "items.required")
+  rows$required <- flag == "true"
+  rownames(rows) <- NULL
+  rows[, fields, drop = FALSE]
+}
 #' Validate an instrument import before any database writes
-#' @param items Data frame following the v1 item import contract, with item_version.
+#' @param items Data frame with the columns that read_item_import() returns,
+#'   including item_version and source_ref. Codes, locales, texts and
+#'   references must be text, as read_item_import() returns them; a code
+#'   read as a number is refused.
 #' @param protocol Study protocol.
 #' @return TRUE or a structured validation condition.
 #' @export
@@ -21,6 +90,8 @@ validate_items <- function(items, protocol) {
   protocol <- new_protocol(protocol)
   fields <- c("item_code", "item_version", "locale", "text", "dimension_code", "scale_code", "source_ref", "required", "display_order")
   ensure(is.data.frame(items) && nrow(items) > 0 && nrow(items) <= 10000 && all(fields %in% names(items)), "items.columns")
+  # A reader that guessed types turns the code 0012 into the number 12.
+  for (k in c("item_code", "locale", "text", "dimension_code", "scale_code", "source_ref")) ensure(is.character(items[[k]]), paste0("items.", k))
   ensure(!anyNA(items[, fields]) && is.logical(items$required) && whole(items$item_version) && all(items$item_version > 0) && whole(items$display_order) && all(items$display_order > 0), "items.types")
   ensure(all(nchar(items$text, type = "bytes") <= 20000) & all(nzchar(trimws(items$text))) && all(grepl("^[A-Za-z0-9_-]{1,80}$", items$item_code)), "items.text")
   dims <- setNames(vapply(protocol$instrument$dimensions, `[[`, character(1), "scale"), vapply(protocol$instrument$dimensions, `[[`, character(1), "code"))
@@ -41,13 +112,15 @@ validate_items <- function(items, protocol) {
 #' @param text Displayed information, explicitly synthetic in development.
 #' @param locale en, fr or de.
 #' @param command_id Idempotency key.
-#' @return Consent version id.
+#' @return Consent version id. A completed study refuses new versions with
+#'   DEL_CONFLICT (path study.state).
 #' @export
 publish_consent <- function(repo, actor, study_id, text, locale, command_id) {
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
     ensure(scalar_text(text) && nchar(text, type = "bytes") <= 50000L && scalar_text(locale) && locale %in% c("en", "fr", "de"), "consent")
     command(repo, actor, study_id, "publish_consent", command_id, list(text, locale), function() {
+      study_open(repo, study_id)
       id <- uid()
       execute(repo, "INSERT INTO identity.consent_versions(id,study_id,locale,content,hash) VALUES($1,$2,$3,$4,$5)", id, study_id, locale, text, content_hash(list(text, locale)))
       list(id = id)
@@ -83,7 +156,8 @@ record_consent <- function(repo, actor, study_id, consent_version_id, decision, 
 #' @param principal_id Existing synthetic account UUID.
 #' @param group_code Declared stakeholder group.
 #' @param command_id Idempotency key.
-#' @return Study-specific pseudonym.
+#' @return Study-specific pseudonym. A completed study refuses new members
+#'   with DEL_CONFLICT (path study.state).
 #' @export
 add_panelist <- function(repo, actor, study_id, principal_id, group_code, command_id) {
   transaction(repo, function() {
@@ -92,6 +166,7 @@ add_panelist <- function(repo, actor, study_id, principal_id, group_code, comman
     p <- protocol_for(repo, study_id)$config
     ensure(group_code %in% unlist(p$panel$groups), "panel.group")
     command(repo, actor, study_id, "add_panelist", command_id, list(principal_id, group_code), function() {
+      study_open(repo, study_id)
       m <- query(repo, "INSERT INTO identity.memberships(id,study_id,principal_id) VALUES($1,$2,$3) ON CONFLICT(study_id,principal_id) DO UPDATE SET principal_id=EXCLUDED.principal_id RETURNING id", uid(), study_id, principal_id)$id
       ensure(!nrow(query(repo, "SELECT panelist_id FROM identity.panelist_links WHERE study_id=$1 AND membership_id=$2", study_id, m)), "panel.duplicate", "DEL_CONFLICT")
       id <- uid()
@@ -134,7 +209,7 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
     valid_id(consent_version_id)
-    one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active') FOR UPDATE", study_id))
+    study_open(repo, study_id, "FOR UPDATE")
     authorize(repo, actor, study_id, "manage")
     p <- protocol_for(repo, study_id)
     validate_items(items, p$config)
@@ -182,12 +257,16 @@ prepare_round <- function(repo, actor, study_id, items, consent_version_id, dead
     })
   })
 }
-# A deadline is a complete time with an explicit offset; the database never
-# has to guess a timezone or reject a text.
+# A complete time with an explicit offset, within what PostgreSQL converts: a
+# real calendar date from year 1, hours 00 to 23 and an offset of at most
+# 15:59. The database never has to guess a timezone or reject a text.
+valid_time <- function(x) {
+  scalar_text(x) && grepl("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9]([.][0-9]{1,6})?)?(Z|[+-](0[0-9]|1[0-5]):[0-5][0-9])$", x) &&
+    !startsWith(x, "0000") && !is.na(as.Date(substr(x, 1L, 10L), format = "%Y-%m-%d", optional = TRUE))
+}
 valid_deadline <- function(deadline) {
   ensure(scalar_text(deadline) && grepl("(Z|[+-][0-9]{2}:[0-9]{2})$", deadline), "deadline.offset")
-  ensure(grepl("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9]([.][0-9]{1,6})?)?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$", deadline) &&
-    !is.na(as.Date(substr(deadline, 1L, 10L), format = "%Y-%m-%d", optional = TRUE)), "deadline.format")
+  ensure(valid_time(deadline), "deadline.format")
 }
 #' Change the deadline of a round that is not closed
 #'
@@ -245,8 +324,10 @@ transition_round <- function(repo, actor, round_id, target, expected_hash, reaso
       ensure(identical(r$instrument_hash, expected_hash), "round.hash", "DEL_CONFLICT")
       allowed <- list(review = "draft", approved = "review", open = "approved", closed = "open", finalized = c("analysed", "released"), cancelled = c("draft", "review", "approved"))
       ensure(target %in% names(allowed) && r$state %in% allowed[[target]], "round.transition", "DEL_CONFLICT")
-      if (target == "open") ensure(isTRUE(one(query(repo, "SELECT deadline>clock_timestamp() AS ok FROM research.rounds WHERE id=$1", r$id))$ok), "round.deadline", "DEL_ROUND_CLOSED")
       if (target %in% c("approved", "open")) {
+        # The study lock orders approval and opening with protocol amendments:
+        # readiness judges the protocol that is current when this commits.
+        one(query(repo, "SELECT id FROM research.studies WHERE id=$1 FOR SHARE", r$study_id))
         blocking <- readiness_blocking(round_readiness(repo, r), target)
         if (length(blocking)) del_abort("DEL_VALIDATION", paste0("round.readiness:", paste(blocking, collapse = ",")))
       }
@@ -258,11 +339,12 @@ transition_round <- function(repo, actor, round_id, target, expected_hash, reaso
   })
 }
 enrollment_get <- function(repo, actor, id, locking = TRUE) {
+  identity_check(repo, actor)
   valid_id(id)
-  e <- one(query(repo, "SELECT * FROM research.enrollments WHERE id=$1", id))
-  m <- authorize(repo, actor, e$study_id, "panel")
-  link <- query(repo, "SELECT panelist_id FROM identity.panelist_links WHERE study_id=$1 AND membership_id=$2 AND panelist_id=$3", e$study_id, m, e$panelist_id)
-  ensure(nrow(link) == 1, "enrollment", "DEL_NOT_FOUND")
+  # Only the actor's own enrollment in an opened round exists for the actor;
+  # any other reads like one that does not exist.
+  e <- one(query(repo, paste0("SELECT e.study_id,e.round_id FROM research.enrollments e JOIN research.rounds r ON r.study_id=e.study_id AND r.id=e.round_id JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN identity.memberships m ON m.study_id=l.study_id AND m.id=l.membership_id WHERE e.id=$1 AND m.principal_id=$2 AND m.active AND r.state IN ", opened_states), id, actor$principal_id))
+  authorize(repo, actor, e$study_id, "panel")
   r <- round_get(repo, actor, e$round_id, lock = if (locking) " FOR SHARE" else "")
   e <- one(query(repo, paste0("SELECT * FROM research.enrollments WHERE id=$1", if (locking) " FOR UPDATE" else ""), id))
   m <- authorize(repo, actor, e$study_id, "panel")
@@ -351,7 +433,8 @@ submit_round <- function(repo, actor, enrollment_id, expected_revision_set, comm
 #' Retrieve only the actor's current questionnaire and consent information
 #' @param repo Repository.
 #' @param actor Panel actor.
-#' @param enrollment_id Own enrollment UUID.
+#' @param enrollment_id Own enrollment UUID in a round that was opened; any
+#'   other enrollment is refused with DEL_NOT_FOUND, as an unknown one is.
 #' @return Instrument, own responses, receipt and required consent information.
 #' @export
 get_questionnaire <- function(repo, actor, enrollment_id) {
@@ -365,6 +448,10 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
   })
 }
 #' List own round enrollments
+#'
+#' Lists only rounds that were opened. A round that is still being prepared,
+#' reviewed or approved, or that was withdrawn, is not shown to panel members,
+#' and its instrument cannot be read through any panel service.
 #' @param repo Repository.
 #' @param actor Panel actor.
 #' @param study_id Selected study.
@@ -372,7 +459,7 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
 #' @export
 list_enrollments <- function(repo, actor, study_id) {
   m <- authorize(repo, actor, study_id, "panel")
-  query(repo, "SELECT e.id,e.state,r.number,r.state AS round_state FROM research.enrollments e JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN research.rounds r ON r.id=e.round_id WHERE e.study_id=$1 AND l.membership_id=$2 AND r.state<>'cancelled' ORDER BY r.number", study_id, m)
+  query(repo, paste0("SELECT e.id,e.state,r.number,r.state AS round_state FROM research.enrollments e JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN research.rounds r ON r.id=e.round_id WHERE e.study_id=$1 AND l.membership_id=$2 AND r.state IN ", opened_states, " ORDER BY r.number"), study_id, m)
 }
 # Findings that decide whether a round may be approved or opened. Content
 # findings block approval; opening additionally needs time and participants.
@@ -481,10 +568,13 @@ get_round_instrument <- function(repo, actor, round_id) {
 #' Enroll eligible panel members who joined after a round was prepared
 #'
 #' Applies the round's protocol entry policy and each member's current
-#' stakeholder group. Enrollment is possible until the round closes. Feedback
-#' already assigned to an unopened round is assigned to the new enrollments as
-#' well; an open round with assigned feedback accepts no further enrollment, so
-#' that everyone rating in a round has the same information.
+#' stakeholder group. Enrollment, withdrawal and group changes of one study
+#' take effect one after the other: a member who withdraws meanwhile is either
+#' not enrolled or enrolled and withdrawn. Enrollment is possible until the
+#' round closes. Feedback already assigned to an unopened round is assigned to
+#' the new enrollments as well; an open round with assigned feedback accepts no
+#' further enrollment, so that everyone rating in a round has the same
+#' information.
 #' @inheritParams get_round_readiness
 #' @param command_id Idempotency key.
 #' @return Round UUID and the number of enrollments added.
@@ -494,7 +584,9 @@ enroll_panel <- function(repo, actor, round_id, command_id) {
     r <- round_get(repo, actor, round_id, "manage", " FOR UPDATE")
     command(repo, actor, r$study_id, "enroll_panel", command_id, list(round_id), function() {
       ensure(r$state %in% c("draft", "review", "approved", "open"), "round.state", "DEL_CONFLICT")
-      one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active')", r$study_id))
+      # The study lock orders enrollment with withdrawals and group changes:
+      # the panel read below already reflects whichever of them came first.
+      study_open(repo, r$study_id, "FOR SHARE")
       config <- new_protocol(from_json(one(query(repo, "SELECT config::text FROM research.protocol_versions WHERE id=$1", r$protocol_id))$config))
       panel <- eligible_panel(repo, r$study_id, r$number, config)
       enrolled <- query(repo, "SELECT panelist_id FROM research.enrollments WHERE study_id=$1 AND round_id=$2", r$study_id, r$id)$panelist_id

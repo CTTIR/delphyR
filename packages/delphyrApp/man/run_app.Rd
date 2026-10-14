@@ -19,7 +19,9 @@ run_app(
 \arguments{
 \item{repo}{A connected delphyr repository; lifetime is managed by the caller.}
 
-\item{actor}{Trusted actor supplied by server-side session setup.}
+\item{actor}{Trusted actor supplied by server-side session setup. An actor
+made by delphyr::demo_actor() is made anew for every session, for the same
+synthetic account, so that a demonstration outlives the actor's hour.}
 
 \item{language}{Initial interface language: en (default), fr or de.}
 

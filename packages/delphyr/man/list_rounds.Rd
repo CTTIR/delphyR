@@ -9,7 +9,8 @@ list_rounds(repo, actor, study_id)
 \arguments{
 \item{repo}{Repository.}
 
-\item{actor}{Study manager or analyst.}
+\item{actor}{Study manager or analyst. Analysts read the list to find the
+frozen snapshots and analyses of their work; it holds no panel data.}
 
 \item{study_id}{Study UUID.}
 }

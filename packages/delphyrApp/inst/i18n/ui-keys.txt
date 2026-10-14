@@ -1,8 +1,23 @@
+%s %s agreement (%s)
+%s %s disagreement (%s)
+%s enrolled, minimum valid n %s
+%s not yet enrolled
+(current)
+%s (earlier wording)
+%s rated %s to %s
+%s: %s
+%s: %s (%s)
+%s: %s valid ratings
+%s: %s valid ratings from %s members
 A changed item version interrupts the paired comparison between rounds. Only an explicit, reasoned decision permits it. A later decision for the same pair of versions supersedes the earlier one; the history is kept.
-A deadline, a reason and confirmation are required.
+A deadline, a rationale and confirmation are required.
+A new round can be prepared once the feedback of round %s has been released.
+A rationale and confirmation are required.
 A reason and confirmation are required.
 A required group has fewer enrolled members than the minimum valid n; its results would be insufficient data.
+A right applies to exactly one account, identified by its identity provider (issuer) and its account identifier at that provider (subject), never by an email address. Each change applies from the person’s next action in the application and is recorded with its rationale. The last management right of a study cannot be revoked.
 A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.
+A study is created from a complete study protocol in JSON format. It is checked and shown to you; only your confirmation creates the study with protocol version 1.
 A text and confirmation are required.
 A valid synthetic .invalid email is required
 ACCORD/CREDES review
@@ -14,21 +29,31 @@ Accept invitation
 Accepted
 Accepted by the provider
 Account
+Account identifier
+Account identifier at that provider (subject)
+Account status
 Account-binding rationale
-Action
 Action failed. Check your entries, permissions and round state. No success was confirmed.
+Active
+After a protocol file is validated, its changes and the approval appear here.
 Aggregated study summary
+Agreement range: ratings from %s to %s.
+All actions
+Amend the protocol
+All required statements are answered. You can submit now.
 Amendments apply only to future rounds. Existing rounds and frozen data retain their original protocol. This technical approval does not replace institutional or ethics approval.
+An analysis is possible once the round is closed and frozen.
 An item lacks an approved language version.
 An item uses a dimension or scale that the protocol does not define.
 An uncertain delivery is never repeated automatically, because the message may already have arrived. Check with the provider whether it was accepted. Queuing it again can lead to a duplicate message.
 Analysed
+Analyses, item decisions and feedback drafts need the right to analyse.
 Analysis
 Analysis and subsequent round
 Analysis completed
+Analysis of round
 Analysis queued. Check the operation.
 Analysis requested
-Answered:
 Apply change of rights
 Approval history and technical details
 Approval or cancellation rationale
@@ -39,6 +64,7 @@ Approved for local test receipts
 Approved from (UTC):
 Approved. No email will be sent.
 Assess evidence together
+Assign feedback
 Assign to selected subsequent round
 At least one topic needs a statement.
 Authors and responsibilities
@@ -48,6 +74,7 @@ Blocking
 Blocks of this round
 Browse…
 By
+By stakeholder group:
 CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.
 CSV could not be parsed
 Campaign approved
@@ -58,50 +85,78 @@ Cancelled
 Cause
 Change
 Change a stakeholder group
-Change of rights confirmed.
+Change of rights confirmed. Account:
 Change stakeholder group
 Change state
 Change the deadline
+Changes from version
 Check invitation
 Check operation
+Check status
 Checksum
+Checksum:
+Choose a group
+Choose a protocol file first.
+Choose a pseudonym
+Choose a pseudonym and a new group first.
 Choose a rating
 Choose a rating or select another response type.
 Choose a study to see your available work areas.
+Choose an account
+Choose an account first.
+Choose released feedback first.
+Choose released summaries or redacted contributions
+Choose the file and validate it.
+Classification: %s.
 Closed
+Code of the statement, the same in every round, for example I001
 Coding decision
 Coding decision recorded
 Column
 Columns do not match the selected schema
+Columns of the instrument file
 Comma
+Comment
+Comment (optional)
+Comment (required)
+Comments:
 Communications
 Comparability decided
 Comparability decision saved.
 Comparable
 Complete message text
-Complete new protocol (JSON, maximum 1 MB)
 Complete preview
 Complete protocol
+Complete protocol of this version (JSON)
 Complete study
+Complete the study
+Completing ends the whole study and cannot be undone. Mention any persistent dissent in the rationale.
 Confirm end of participation
+Confirm first that you reviewed your answers.
 Conflict: reload and review the saved version. Your input remains visible.
 Conflicts of interest
 Connection lost. Changes are not being saved. Keep a copy of pending text before reloading; a reload restores only confirmed responses.
 Connection restored. Review the last saved responses before continuing. Pending edits have not been confirmed saved.
+Consensus for exclusion
 Consensus for inclusion
 Consent decision recorded
+Consent declined
+Consent given
+Consent for this round is missing. Give consent above so that your answers can be saved.
 Consent is recorded.
+Consent recorded on %s.
 Consent saved. Receipt:
 Contact data
 Contact export
 Contact fields of imported panel contacts and their invitation state, without study pseudonyms.
+Content
 Content checksum:
 Contributions taken over:
 Coordination
 Correct released feedback
 Corrected version created for review.
+Correction %s
 Correction released. Later views show the corrected version.
-Correction, current
 Count
 Course, instruments and aggregated results without individual responses. Statistics below the protocol’s display minimum are suppressed.
 Create a new study
@@ -110,6 +165,8 @@ Create corrected version
 Create exact preview
 Create feedback
 Create study
+Created with the study
+Current
 Current documentation version:
 Data and software availability
 Date (YYYY-MM-DD)
@@ -117,7 +174,6 @@ Deadline
 Deadline change
 Deadline changed
 Deadline changed.
-Deadline with timezone
 Decide the comparability of two item versions
 Decision
 Decision rationale
@@ -127,17 +183,26 @@ Delivery confirmed
 Delivery confirmed, do not send again
 Delivery decision saved.
 Derivation rationale
+Describe the purpose of the export in 10 to 500 characters.
 Design
 Detail
 Dimension
+Dimension rated:
 Dimensions (scales)
+Disabled
 Display and review this round’s instrument before approving it.
 Display minimum cell size
 Display name
+Distribution of the %s valid ratings
+Do not consent
 Documentation
 Documentation version saved:
+Download
 Download export
 Download my feedback
+Download refused
+Download the example protocol (JSON)
+Download the instrument of round %s (CSV)
 Draft
 Duplicate in this file; resolve explicitly
 Each event names its time, action, object and actor, and the rationale where the action required one. Actions of panel members carry no account reference. Response content and contacts do not appear here.
@@ -145,8 +210,10 @@ Each invitation is bound to exactly one verified account (identity-provider issu
 Each profile contains only the data of its purpose. The export is prepared in the background and stored privately. A downloaded file is no longer covered by this application’s access control.
 Each published version is immutable. A round refers to exactly one version; changed text is a new version.
 Each submitted free-text answer is preserved as an immutable original source, without a pseudonym. Answers already taken over are skipped. Participants see only versions that another person has released.
+Earlier answers are kept
 Earlier item version
 Earlier version
+Earlier wording
 Earliest time with timezone (empty: now)
 Edited text
 Editorial records exported
@@ -154,19 +221,26 @@ Editorial records read
 Editorial review
 Editorial version created
 Editorial version released
+Editorial versions to include in the corrected feedback
+Editorial versions to include in this feedback
 Editorial work
 Effect on ratings already given (internal)
 Eligible
 Eligible panel members are not yet enrolled in this round.
 Email already exists
 Email case variants require explicit review
+End my participation
 End participation
+English
 Enroll eligible panel members
 Enrolled panel members
 Enter a date (YYYY-MM-DD) and a time (HH:MM).
 Enter text or select another response type.
 Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.
+Enter the identity provider and the account identifier of the other account.
+Enter the purpose of the export (10 to 500 characters).
 Error code
+Event
 Events, approvals and rationales without response content, contacts or editorial originals.
 Every frozen round with pseudonyms, decisions, lineage and reviewed editorial versions. Pseudonyms are not anonymous. Unredacted free text, contacts and account mappings are excluded.
 Exact recipient selection (pseudonyms)
@@ -177,12 +251,17 @@ Explicitly confirm acceptance first.
 Explicitly confirm the protocol first.
 Explicitly confirm withdrawal first.
 Explicitly confirm your entitlement first.
+Exploratory Delphi in rounds
 Export
 Export downloaded
 Export profile
 Export queued. Check the operation.
+Export queued. Follow it with “Check status”.
 Export requested
+Export the data of round %s
+Export:
 Exports
+Exports you requested in this session. They are prepared in the background; a finished export can be downloaded for a limited time.
 Failed
 Failed, not sent
 Feedback assigned
@@ -192,6 +271,9 @@ Feedback created for review.
 Feedback displayed
 Feedback downloaded
 Feedback drafted
+Feedback for this round
+Feedback from round %s
+Feedback from the previous round
 Feedback of the selected round to replace
 Feedback released
 Feedback released.
@@ -202,13 +284,19 @@ File schema
 Finalize
 Finalized
 Finding
+First release
 Free-text answers
-Free-text contributions taken over
+Free-text contributions imported as sources
+Free-text dimension “%s”: %s contributions on %s items.
 Freeze round
+French
 Frozen
+Frozen data of round
 Frozen round
 Funding
+German
 Give a response
+Give consent
 Grant
 Grant or revoke a right
 Granted rights
@@ -219,14 +307,15 @@ History
 History and approvals
 I am entitled to receive these data and will handle the file according to its purpose.
 I checked this delivery and understand the consequence of my decision.
+I complete the whole study for good
 I confirm the displayed relationship.
-I consent to the displayed study information.
+I have read the study information above and consent to take part.
 I independently reviewed this exact version.
 I reviewed both versions and confirm this decision.
 I reviewed my answers. Submission ends editing.
 I reviewed the account, the right and the change.
-I reviewed the corrected version and all three texts.
-I reviewed the item, its analysis and the decision.
+I reviewed the corrected version and all three texts
+I reviewed the item, its analysis and the decision
 I reviewed the pseudonym and the new group.
 I reviewed the round and target state
 I reviewed the round and the new deadline
@@ -241,6 +330,11 @@ I verified that this stable account belongs to the invited person.
 I want to end participation and understand the stated data retention.
 I want to join this study's panel with my signed-in account.
 I want to revoke this invitation.
+Identity provider
+Identity provider of the other account (issuer)
+IQR %s–%s
+IQR: the middle half of the valid ratings lies in this range.
+If the problem persists, give the study team this reference:
 Import blocked. Correct every issue and preview a new file.
 Import confirmed. Invitation drafts remain unbound; no email was sent.
 Import rationale
@@ -248,15 +342,19 @@ Import receipt
 Import reviewed invitation drafts
 Import validated. No round created yet.
 Imported:
+In agreement range
 In progress
 In review
+Inactive
 Include
 Independent review
 Initial version
-Inspect saved version
+Inspect a saved version
 Institutional approval
 Instrument (CSV, protocol languages)
 Instrument of round
+Insufficient data
+Interquartile range (Q1–Q3)
 Invalid display name
 Invalid source reference
 Invitation
@@ -273,14 +371,14 @@ Invitations
 Invitations and account binding
 Invited account registered
 Issue
-Issuer
 Issuer (identity-provider issuer URL)
-Issuer of the other account
 Item
+Item and dimension
 Item code
 Item decision recorded
 Item decision saved:
 Item decisions
+Item decisions are recorded by the study lead.
 Item linked to source
 Item of the displayed analysis
 Item split or merge recorded
@@ -288,71 +386,108 @@ Item version
 Items in every approved language version
 Language
 Language is not supported by this study
+Language of the text:
 Language of this text
 Languages
 Later item version
 Later version
-Limit to actions (empty: all)
+Limit to actions
 Link an item to its source
 Load round
 Load the saved response and discard my entry
 Local message receipt recorded
 Local receipt recorded
+Local test receipt, no email
 Local test receipts only. This application sends no email. Recipients are represented only by study pseudonyms.
+Longest waiting time
 Manage the protocol, rounds and independent reviews. Choose a study section to prepare the next step.
-Maximum number of events (newest first)
 Maximum number of rounds
 Maximum reminders per person and round:
+Median
 Merge
 Message accepted by the provider
 Message failed
 Message language
 Message outcome unknown
 Message retry scheduled
+Message state
 Message suppressed
 Message type
-Messages
 Methodological interpretation
 Minimum hours between reminders:
 Minimum valid n
 Moderated summary (not a quotation):
+Modified Delphi in rounds
 My participation
 New
-New deadline with timezone
+New deadline
+New deadline:
 New items: one code,version per line
+New protocol (JSON, maximum 1 MB)
 New stakeholder group
 New state
 New version confirmed:
 Next block
 No accessible study. Contact the study team.
+No account chosen yet.
+No access to this application
+No accessible study yet. Contact the study team.
+No accessible study yet. Enter the hand-over code of your invitation above, or contact the study team.
+No accessible study yet. You can create a study below or enter the hand-over code of an invitation above.
+No accessible study yet. You can create a study below.
 No approved translation is available; displayed language:
 No assigned round.
 No clear answer from the provider
+No consensus
 No contact rows
+No editorial version has been released yet; versions are released under Editorial review.
 No eligible panel member is enrolled.
+No feedback was assigned: the round has no enrolled panel members yet. Enroll them first.
 No file selected
 No findings.
+No further state change is possible for this round.
 No panel view is available for this study.
 No partial import: the entire file remains blocked.
+No recorded event matches this selection.
 No released feedback is assigned to this round.
+No released feedback of an earlier round exists yet.
+No round created:
+No round created: an item keeps its version number although its wording, scale or source changed. Give it a new version.
+No round created: the deadline must lie in the future.
+No round created: the feedback of the current round must be released first.
+No round created: the protocol allows no further round.
+No partial import: the entire file remains blocked.
+No rating (%s)
+No released feedback is assigned to this round.
+No round has been opened yet.
 Normalized email
 Not applicable
 Not approved: at least one person has reached the maximum number of reminders for this round. Select the recipients again.
 Not approved: the minimum interval since the previous reminder has not passed for at least one person. Choose a later time or other recipients.
 Not approved: the time needs a timezone, must not be in the past and at most 90 days ahead.
+Not changed:
+Not changed: the date or time of the deadline is not valid.
 Not changed: the deadline must lie in the future.
-Not changed: the deadline needs a date, a time and a timezone, for example 2026-12-01T18:00:00+01:00.
 Not changed: the deadline of a closed round cannot be changed.
 Not changed: the deadline of an open round can only be moved to a later time.
 Not comparable
+Not completed: every item of the last round needs a decision of the study team.
+Not completed: the last round must be finalized first.
+Not completed: the study is not active; it may already be completed.
+Not rated
+Not released yet
+Not shown
+Not shown (fewer than %s valid ratings)
+Not saved yet.
+Not submitted. These required statements are still open:
 Not yet issued
-Not yet saved
 Note
 Note for participants
+Nothing was changed. Reload the page in a few minutes.
 Object
-Oldest waiting (s)
+One row per statement, dimension and language; UTF-8, separated by commas, with a header row.
 Open
-Open fields in block:
+Open statements in block:
 Open:
 Operation
 Operation:
@@ -366,12 +501,14 @@ Panel contacts imported
 Panel criteria and recruitment
 Panel file (CSV, maximum 1 MiB)
 Panel import
-Panel member
 Panel member added
 Panel members enrolled
 Panel members enrolled:
 Parent
 Parent items: one code,version per line
+Participants of this round see the released feedback of an earlier round that is assigned to it here. Assign it before the round opens.
+Participants see the results of the whole panel and of each stakeholder group.
+Participants see the results of the whole panel; group results are not shown.
 Participation
 Participation ended
 Participation ended. Saved data are retained. Receipt:
@@ -379,17 +516,19 @@ Pass this code on through an approved private channel. It is not stored and cann
 Pending
 Pending receipts cancelled. Existing receipts are preserved.
 Permanently failed
+Position in the questionnaire: 1, 2, 3 …
+Please read the study information. You can answer the statements once you have given consent.
 Prepare a new round
 Prepare round
 Preserve original
 Preserve original sources and document separate editorial versions, coding decisions and item provenance.
 Preserved as sources
-Preview based on version
 Preview created. Approval is still required.
 Preview exact version
 Preview passed validation. Nothing has been imported yet.
 Previous
 Previous block
+Previous round
 Processing
 Proposed
 Protocol
@@ -403,38 +542,49 @@ Protocol version
 Protocol versions
 Provider
 Pseudonym
+Pseudonymized data of one round
 Pseudonymized research data
 Publish a new version
 Publish study information
 Publish the study information under Setup first.
+Purpose of the export (10 to 500 characters)
+Purpose of this export (10 to 500 characters)
+Purpose:
 Qualitative content enters feedback only as a version that another person has released. Summaries are labelled as such, never as quotations.
 Qualitative editorial work
+Question %s:
 Questions
 Queue again, a duplicate is possible
 Queued
+Queued again
 Quiet hours:
 Rate again
 Rating
+Rating: %s
 Rationale
 Rationale and how it was checked
+Rationale for completing the study
 Rationale for the change of rights
 Rationale for the comparability decision
+Rationale for the correction
 Rationale for the correction (internal)
+Rationale for the deadline change
 Rationale for the group change
 Rationale for the item decision
 Rationale for this version
 Rationale or dissent
 Rationale, effect, note and confirmation are required.
+Rationale:
 Read the history (audit)
+Read the rounds and analyses of this study and request the exports your role permits. Every retrieval is checked and recorded.
 Readiness review
 Reason
 Reason for changes
-Reason for correction
-Reason for the deadline change
 Receipt state
 Receipt:
 Record an item split or merge
 Record an original source
+Recorded
 Redacted contribution
 Redacted contribution:
 Redacted version
@@ -444,40 +594,53 @@ Refresh editorial records
 Refresh invitation states
 Refresh receipt status
 Refresh released versions
+Refusal recorded. Receipt:
 Register account and issue invitation
 Relationship
 Release correction
 Release feedback
 Release version
+Released
 Released contributions of the previous round
+Released feedback
+Released feedback is assigned to this round. A later correction of that feedback reaches the round’s participants without a new assignment.
 Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.
 Released previous-round feedback:
 Released versions for this feedback
 Released versions of the corrected version
 Reminder
 Remove
+Replaced
+Replaces feedback
 Reports never invent statements on authorship, funding, conflicts of interest, approvals, interpretation or deviations. Enter the study team’s own statements here. Empty topics appear in reports as not documented. Recording a reference to an approval does not grant one.
 Request analysis
 Request export
 Request the exports your role permits. Every retrieval is checked and recorded.
+Requested exports
+Requested:
 Required fields are open in block:
 Required response fields are still open. They are named in the overview above the submit button.
+Required statements are open in block:
 Requirement
 Research data export
 Resolve uncertain deliveries
 Response saved
-Response text
 Response type
-Responses are saved automatically shortly after each change. Only the confirmation shown beside a field establishes a save.
+Responses are saved automatically shortly after each change. Only the status line at the end of each statement confirms a save.
 Restricted contact preview
+Results by stakeholder group
+Results for participants
+Results of the earlier wording are not directly comparable.
 Retain
 Review and release feedback
+Review and submit
 Review instrument and readiness
 Review rationale including dissent
 Review relationship
 Review synthetic contacts and exact recipient lists before approving imports or local test receipts.
 Review the recorded history of this study. Response content and contacts are not part of this view.
-Review the round state and record a reason for every transition. Permissions and state are checked again when the action runs.
+Review the round state and record a rationale for every transition. Permissions and state are checked again when the action runs.
+Review the summary and the complete protocol, then confirm.
 Revise
 Revocation rationale
 Revoke
@@ -487,8 +650,9 @@ Revoked
 Revoked rights
 Right
 Right granted or revoked
-Rights apply to exactly one account with issuer and subject, never to an email address. Each change takes effect at the person’s next protected action and is recorded with its rationale. The last management right of a study cannot be revoked.
 Round
+Round data (pseudonymized)
+Round %s
 Round deadline changed
 Round draft created. Review and approve before opening.
 Round frozen
@@ -496,15 +660,15 @@ Round opening
 Round prepared
 Round state changed
 Round submitted
+Round: version %s; current: version %s
 Rounds and analysis
 Rounds enrolled
 Rounds submitted
 Row
+Rule outcome
 Running
-Save all changes and confirm submission first.
 Save coding decision
 Save comparability decision
-Save consent
 Save decision
 Save each response and review the confirmed answers before explicitly submitting your round.
 Save each response field explicitly. Saving is not automatic.
@@ -517,29 +681,43 @@ Save source linkage
 Save theme version
 Save version
 Save your changes first. The current round stays open.
+Saved (UTC)
 Saved response
 Saved response loaded.
 Saved version
 Saved. Original history is preserved.
 Saved:
 Saving …
+Scale of the dimension:
+Saved
+Saved at %s
+Saved on %s
+Saved response loaded.
+Saved version
+Saved. Original history is preserved.
 Select consent explicitly first.
 Semicolon
 Setup
 Severity
 Show block
 Show history
+Show older events
 Show status
+Show the steps and the form
+Showing 1 event.
+Showing all %d events.
+Showing the latest %d events. Older events exist.
+Showing the latest event. Older events exist.
 Sign out
+Sign out to use another account
 Snapshot confirmed.
 Source for redaction, coding and item linkage
+Source of the statement, for example a reference
 Source reference
 Source reference already exists
-Special response:
 Specify another account
 Split
 Stable subject of the invited account
-Staff account
 Staff account registered
 Stakeholder group
 Stakeholder group changed
@@ -548,6 +726,9 @@ Stakeholder group is not in the protocol
 Stakeholder groups
 State
 State change confirmed.
+State of round
+State of the latest export:
+Statements answered and saved: %s of %s.
 Status
 Status of background work
 Study
@@ -561,11 +742,12 @@ Study documentation for reports
 Study documentation recorded
 Study exports
 Study information
+Study information and consent
 Study information and consent text
 Study information published
 Study information published.
+Study information, version
 Study leadership
-Study management
 Study protocol (JSON, maximum 1 MB)
 Study sections
 Study setup
@@ -573,13 +755,13 @@ Study team and rights
 Study team’s decision
 Study text, scale anchors and consent remain in their approved language.
 Subject
-Subject of the other account
 Submission confirmed:
 Submission receipt:
+Subject of the other account
+Submission confirmed: %s.
 Submit by:
 Submit final responses
 Submitted
-Submitted. Further editing is unavailable.
 Succeeded
 Summary
 Summary (not a quotation)
@@ -588,59 +770,103 @@ Synthetic communications
 Synthetic contacts with .invalid addresses only. Import creates unbound invitation drafts. It does not create accounts, associate responses, or send email.
 Synthetic development environment. Do not enter real participant data. No email is sent.
 Synthetic panel import
+TRUE if an answer is required, otherwise FALSE
 Take over contributions as sources
 Take over free-text contributions of a frozen round
 Template version
 Text
+Texts in this feedback
+The analysis has no results.
+The complete history is in the export “History and approvals”.
+The application is not available right now
 The deadline has passed.
 The deadline is not part of the reviewed instrument. Before a round opens any future time is possible; an open round can only be extended. A closed round is not reopened.
+The download failed. No file was delivered.
+The example is a complete, valid protocol with example values: replace them with those of your study and keep its structure. If a value is not allowed, the validation names the field in question. More in the delphyR user guide, section “Create and set up a study”.
+The export holds the frozen answers of this round under pseudonyms, their analysis and a report. The file leaves the access control of this application. Exports of the whole study are under Exports.
+The export is no longer available: downloads are possible for a limited time only. Request a new export.
+The file changed after it was validated. Validate it again.
+The file is not a readable protocol: JSON of at most 1 MB is expected.
+The identity provider and the account identifier of the other account are still missing.
 The panel appears by study pseudonym only. A changed stakeholder group applies to rounds prepared in future; earlier rounds keep their assignment.
+The protocol allows at most %s rounds.
+The purpose is stored with the export, in the history and in the manifest of the export file.
+The results are shown with each statement.
 The round has no items.
 The round is closed or its deadline has passed. Saving is unavailable.
+The round is closed. Freeze it under Analysis and subsequent round to analyse it.
+The round is finalized; its state no longer changes.
+The round is frozen. Request its analysis under Analysis and subsequent round.
 The round is not ready yet. The readiness review lists the findings.
 The round was prepared under an earlier protocol version. Withdraw it and prepare a new round under the current protocol.
+The round was withdrawn; its state no longer changes.
 The round’s protocol no longer validates.
 The rule outcome of the analysis is not a decision. Record the study team’s decision for each item with its rationale; no consensus is a legitimate result.
+The study can be completed once its last round is finalized and the study team has recorded a decision for every item of that round.
 The study information is not in one of the protocol languages.
+The study is completed.
 The study is not in a state that allows data collection.
+The study lead requests the analysis of this round.
+The uploaded protocol is identical to the current version; there is nothing to approve.
 The wording changed. Ratings are not directly comparable.
 The wording was revised. The study team assessed both versions as comparable.
+The study team assessed both versions as comparable.
+The wording changed since round %s.
+The wording changed since the previous round.
 Theme code
 Theme for the selected source
 Theme label
 Theme version
 Theme version defined
 Themes and coding
-These actions use the round selected above. Analysis and exports are prepared in the background; use Check operation to see their progress.
+These actions use the round selected above. Analyses and exports are prepared in the background; Check operation shows their progress.
+This change grants the right “%1$s” to %2$s.
+This change revokes the right “%1$s” from %2$s.
 This does not import or approve an instrument item.
+This feedback contains no texts.
 This feedback was corrected.
 This invitation is not available for your account. It may be expired, revoked, already used or issued for another account. Contact the study team.
+This panel member is already in that group.
+This round contains free-text questions, for which the round export is not approved. Export the study under Exports with the profile Pseudonymized research data.
+This round has closed or its deadline has passed. Answers can no longer be saved or submitted; entries that were not saved stay visible so that you can copy them. You can still move between blocks.
+This round is closed. Answers can no longer be saved or submitted.
+This round was already submitted or your participation has ended. Load the round again to see the saved answers.
 This stops further responses and invitations in this synthetic study. Previously saved data are retained. This is not a deletion request.
+This study
 This time does not exist on that day in the study's time zone because the clocks go forward. Choose another time.
 This time occurs twice on that day in the study's time zone because the clocks go back. Choose another time.
 This transition is not possible in the round’s current state, or the round has changed in the meantime.
+Thresholds such as the consensus rule and the minimum valid n are methodological decisions of the study team.
 Time
 Time (24-hour, HH:MM)
 Time (UTC)
 Time zone of the study:
 Timezone
 Title
+Total
 Transition
 Unable to judge
 Unanswered
 Uncertain delivery
 Uncertain delivery resolved
 Unsaved change.
+Upload the complete new protocol as JSON. The preview shows every change from the current version; only your approval saves a new version.
+Valid ratings
 Upload a complete study protocol as JSON. It is validated and displayed; only your confirmation creates the study with protocol version 1. Thresholds are methodological decisions of the study team. Only synthetic studies are permitted in this development environment.
+Valid ratings per value
 Valid until (UTC)
 Valid until (UTC):
+Validate an instrument file first.
 Validate and preview exact protocol
 Validate file and create preview
 Validate import
 Validate protocol
+Validated rows: %s; the first 20 are listed
 Validity in minutes (1 to 1440)
 Value
+Values based on fewer than %s valid ratings are not shown.
 Version
+Version history
 Version to review
 Version type
 View analysis
@@ -648,31 +874,76 @@ View restricted original text
 View the analysis of the selected round first.
 Waiting to retry
 Was waiting when a backup was restored
+Whether this round has free-text questions, which the round export does not cover, cannot be checked here. Export the study under Exports.
+Whole number; a changed wording needs a new version
+Whole panel
+With a special response:
 Withdrawn (never opened)
+Without consent you cannot answer this round; you can still give consent later. To stop taking part in the study, use “End participation” at the end of this page.
 Wording
+Wording of the statement in that language
 Worker interrupted during delivery
-Worker, approved by
+You can read the rounds and their analyses. Changes of state, item decisions and feedback releases are made by the study lead.
 You joined the panel. Select the study to continue.
 Your account is not registered for this application. Contact the study coordinators.
+Your current rights do not permit this download.
 Your previous response:
 Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.
+a group has fewer than %s valid ratings
+and
+and adapt it: study code and title, languages, stakeholder groups, rating dimensions and scales, consensus rule and number of rounds.
+assigned to round
+at least
+at most
+by
+by a panel member
+by the background worker, approved by
+Worker, approved by
+You can answer the statements once you have given consent above.
+You can submit once you have given consent.
+You chose: %s
+You declined consent. You can still give consent.
+You did not answer.
+You ended your participation. This round can no longer be answered.
+You joined the panel. Select the study to continue.
+Your account is not registered for this application. Contact the study coordinators.
+Your answers in this round can no longer be changed.
+Your rating: %s
+Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.
+Your studies
 active
 agreement
+consensus for exclusion
+consensus for inclusion
 contacts imported;
-current
-disabled
-disagreement
-events shown.
 exactly selected recipients
+fewer than %s valid ratings
+granted
+in every required group
+in the pooled panel
+less than
+more than
+fewer than %s valid ratings in the panel or in one of its groups
 in every required group
 in the pooled panel
 inactive
+median %s
+no consensus
 of
 of which required:
 optional
+released
+released editorial version
+released editorial versions
 reminders:
-replaced
 required
 response fields confirmed saved.
+revoked
 rows in the file.
+the account %s of %s
+the study team account
+rows in the file.
+too few valid ratings
+too few valid ratings to classify
 unbound invitation drafts.
+— means: no value, because there is no valid rating.

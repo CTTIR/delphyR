@@ -17,5 +17,7 @@ list_enrollments(repo, actor, study_id)
 Enrollment table.
 }
 \description{
-List own round enrollments
+Lists only rounds that were opened. A round that is still being prepared,
+reviewed or approved, or that was withdrawn, is not shown to panel members,
+and its instrument cannot be read through any panel service.
 }

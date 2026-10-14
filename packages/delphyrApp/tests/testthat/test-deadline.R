@@ -24,27 +24,41 @@ test_that("a deadline change needs a time, a rationale and confirmation and bind
   changes <- function() Filter(function(x) identical(x[[1]], "change_round_deadline"), state$calls)
   shiny::testServer(delphyrApp:::management_server, args = list(study = function() "study", lang = function() "en", call = deadline_call(state), services = deadline_services(), touch = function() touched <<- touched + 1L), {
     session$flushReact()
-    expect_match(output$body$html, "Change the deadline", fixed = TRUE)
-    expect_match(output$body$html, "an open round can only be extended", fixed = TRUE)
-    session$setInputs(round = "round", deadline = "2026-12-10T18:00:00+01:00", deadline_reason = " ", deadline_confirm = TRUE, deadline_change = 1)
-    expect_match(output$status, "A deadline, a reason and confirmation are required", fixed = TRUE)
+    session$setInputs(round = "round")
+    html <- output$round_actions$html
+    expect_match(html, "Change the deadline", fixed = TRUE)
+    expect_match(html, "an open round can only be extended", fixed = TRUE)
+    # A date and a time in the study's zone, prefilled with the current deadline.
+    expect_match(html, "id=\"proxy1-deadline_date\"", fixed = TRUE)
+    expect_match(html, "data-initial-date=\"2026-12-01\"", fixed = TRUE)
+    expect_match(html, "value=\"18:00\"", fixed = TRUE)
+    expect_match(html, "Time zone of the study: Europe/Berlin", fixed = TRUE)
+    expect_false(grepl("2026-12-01T18:00:00+01:00", html, fixed = TRUE))
+    session$setInputs(deadline_date = "2026-12-10", deadline_time = "18:00", deadline_reason = " ", deadline_confirm = TRUE, deadline_change = 1)
+    expect_match(output$status, "A deadline, a rationale and confirmation are required", fixed = TRUE)
     session$setInputs(deadline_reason = "Service was interrupted", deadline_confirm = FALSE, deadline_change = 2)
     expect_length(changes(), 0L)
-    session$setInputs(deadline_confirm = TRUE, deadline_change = 3)
+    # The time is read in the study's zone; a time that does not exist there is refused.
+    session$setInputs(deadline_confirm = TRUE, deadline_time = "25:00", deadline_change = 3)
+    expect_match(output$status, "^Not changed: Enter a date \\(YYYY-MM-DD\\) and a time \\(HH:MM\\)\\.$")
+    session$setInputs(deadline_date = "2027-03-28", deadline_time = "02:30", deadline_change = 4)
+    expect_match(output$status, "^Not changed: This time does not exist", fixed = FALSE)
+    expect_length(changes(), 0L)
+    session$setInputs(deadline_date = "2026-12-10", deadline_time = "18:00", deadline_change = 5)
     sent <- changes()
     expect_length(sent, 1L)
     expect_identical(unlist(sent[[1]][2:5]), c("round", "2026-12-10T18:00:00+01:00", "listed-hash", "Service was interrupted"))
     expect_identical(output$status, "Deadline changed.")
     expect_identical(touched, 1L)
     expect_match(output$rounds, "10 Dec 2026, 18:00 (Europe/Berlin, UTC+1)", fixed = TRUE)
-    # Each refusal says what to change; nothing is reported as changed.
+    # Each refusal says what to change, quotes a reference and reports nothing as changed.
     for (case in list(
-      list("deadline.format", "needs a date, a time and a timezone"), list("deadline.offset", "needs a date, a time and a timezone"), list("deadline.past", "must lie in the future"),
+      list("deadline.format", "date or time of the deadline is not valid"), list("deadline.offset", "date or time of the deadline is not valid"), list("deadline.past", "must lie in the future"),
       list("deadline.earlier", "can only be moved to a later time"), list("round.state", "closed round cannot be changed")
     )) {
       state$refuse <- case[[1]]
       session$setInputs(deadline_reason = "Another change", deadline_confirm = TRUE, deadline_change = stats::runif(1))
-      expect_match(output$status, paste0("^Not changed: .*", case[[2]]))
+      expect_match(output$status, paste0("^Not changed: .*", case[[2]], ".* Reference: [0-9a-f]{12}$"))
     }
     state$refuse <- "round.hash"
     session$setInputs(deadline_change = stats::runif(1))
@@ -61,7 +75,9 @@ test_that("the deadline change is offered only where the service exists and is n
   services$change_round_deadline <- NULL
   shiny::testServer(delphyrApp:::management_server, args = list(study = function() "study", lang = function() "en", call = deadline_call(state), services = services), {
     session$flushReact()
-    expect_false(grepl("Change the deadline", output$body$html, fixed = TRUE))
+    session$setInputs(round = "round")
+    expect_match(output$round_actions$html, "State of round 1", fixed = TRUE)
+    expect_false(grepl("Change the deadline", output$round_actions$html, fixed = TRUE))
   })
   expect_identical(audit_action_label("round_deadline", "en"), "Round deadline changed")
   expect_identical(audit_action_label("round_deadline", "fr"), "Date limite du tour modifi\u00e9e")
@@ -82,8 +98,8 @@ test_that("a deadline in the hour that occurs twice at the end of summer time is
   # The start of summer time: 02:30 does not exist on 29 March 2026.
   spring <- round_display(data.frame(id = "c", number = 1L, state = "open", deadline = as.POSIXct("2026-03-29 01:30:00", tz = "UTC")), "en", "Europe/Berlin")$Deadline
   expect_identical(spring, "29 Mar 2026, 03:30 (Europe/Berlin, UTC+2)")
-  # A participant sees the same instants with their offsets.
-  for (case in list(list(before, "25.10.2026 02:30 +0200 Europe/Berlin"), list(after, "25.10.2026 02:30 +0100 Europe/Berlin"))) {
+  # A participant sees the same instants in the same form, with their offsets.
+  for (case in list(list(before, "25 Oct 2026, 02:30 (Europe/Berlin, UTC+2)"), list(after, "25 Oct 2026, 02:30 (Europe/Berlin, UTC+1)"))) {
     q <- list(
       round = list(number = 1, deadline = case[[1]], study_id = "study"), enrollment = list(id = "own", state = "eligible"),
       consent = list(id = "consent", content = "Synthetic study information", accepted = TRUE), receipt = data.frame(),

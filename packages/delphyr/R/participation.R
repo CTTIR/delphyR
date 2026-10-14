@@ -22,9 +22,10 @@ withdraw_participation <- function(repo, actor, study_id, retention_policy, comm
       if (nrow(existing)) {
         return(as.list(existing[1, ]))
       }
-      # The study lock serializes round preparation; enrollment locks serialize
-      # with save/submit, so an acknowledged save either precedes withdrawal
-      # or observes the withdrawn state. Historical submissions are retained.
+      # The study lock serializes round preparation and late enrollment;
+      # enrollment locks serialize with save/submit, so an acknowledged save
+      # either precedes withdrawal or observes the withdrawn state. Historical
+      # submissions are retained.
       query(repo, "SELECT id FROM research.enrollments WHERE study_id=$1 AND panelist_id=$2 ORDER BY id FOR UPDATE", study_id, panel)
       authorize(repo, actor, study_id, "panel")
       execute(repo, "UPDATE research.panelists SET active=false WHERE study_id=$1 AND id=$2", study_id, panel)
@@ -49,7 +50,7 @@ set_panel_group <- function(repo, actor, study_id, panelist_id, group_code, reas
   transaction(repo, function() {
     authorize(repo, actor, study_id, "manage")
     valid_id(panelist_id)
-    one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active') FOR NO KEY UPDATE", study_id))
+    study_open(repo, study_id, "FOR NO KEY UPDATE")
     p <- protocol_for(repo, study_id)$config
     ensure(scalar_text(group_code) && group_code %in% unlist(p$panel$groups) && scalar_text(reason) && nchar(reason, type = "bytes") <= 10000L, "panel.group")
     command(repo, actor, study_id, "panel_group", command_id, list(panelist_id, group_code, reason), function() {

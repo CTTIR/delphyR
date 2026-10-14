@@ -23,8 +23,14 @@ service_fixture <- function(r, open = TRUE) {
     }
   }
   f$actor <- f$panel[[1L]]
-  f$enrollment <- list_enrollments(r, f$actor, f$study_id)$id[1L]
-  f$item <- get_questionnaire(r, f$actor, f$enrollment)$items$id[1L]
+  if (open) {
+    f$enrollment <- list_enrollments(r, f$actor, f$study_id)$id[1L]
+    f$item <- get_questionnaire(r, f$actor, f$enrollment)$items$id[1L]
+  } else {
+    # A round that is not open yet is not shown to its members.
+    f$enrollment <- DBI::dbGetQuery(r$con, "SELECT e.id FROM research.enrollments e JOIN identity.panelist_links l ON l.study_id=e.study_id AND l.panelist_id=e.panelist_id JOIN identity.memberships m ON m.study_id=l.study_id AND m.id=l.membership_id WHERE e.round_id=$1 AND m.principal_id=$2", params = list(f$round$id, f$actor$principal_id))$id
+    f$item <- DBI::dbGetQuery(r$con, "SELECT id FROM research.round_items WHERE round_id=$1", params = list(f$round$id))$id
+  }
   record_consent(r, f$actor, f$study_id, f$consent_id, TRUE, "consent")
   f
 }
@@ -113,7 +119,8 @@ test_that("revision conflicts and command replay preserve durable receipts", {
 test_that("invalid lifecycle and consent cannot create revisions", {
   r <- service_repo()
   f <- service_fixture(r, open = FALSE)
-  expect_error(service_save(r, f), class = "DEL_ROUND_CLOSED")
+  # The enrollment of a round that has not opened does not exist for the member.
+  expect_error(service_save(r, f), class = "DEL_NOT_FOUND")
   expect_error(transition_round(
     r, f$manager, f$round$id, "open", f$round$hash,
     "Synthetic invalid transition", "skip-approval"
@@ -164,6 +171,63 @@ test_that("database constraints and immutable records roll back the whole transa
   counts <- vapply(c("ops.commands", "ops.audit"), function(x) service_count(r, x, f$study_id), integer(1))
   expect_error(service_save(r, f, value = 20L, revision = 1L, key = "invalid-scale"), class = "DEL_VALIDATION")
   expect_identical(vapply(names(counts), function(x) service_count(r, x, f$study_id), integer(1)), counts)
+})
+
+test_that("a confirmed submission is never reopened, extended or attributed to anyone else", {
+  r <- service_repo()
+  runtime <- connect_repository(host = "127.0.0.1", port = 55439, dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "delphyr_runtime", environment = "test")
+  withr::defer(DBI::dbDisconnect(runtime$con))
+  f <- service_fixture(r)
+  first <- service_save(r, f)
+  second <- service_save(r, f, value = 8L, revision = 1L, key = "second")
+  # A submission holds one answer per field.
+  expect_error(DBI::dbWithTransaction(r$con, {
+    submission <- uuid::UUIDgenerate()
+    service_statement(r$con, "INSERT INTO research.submissions(id,study_id,round_id,enrollment_id) VALUES($1,$2,$3,$4)", list(submission, f$study_id, f$round$id, f$enrollment))
+    for (v in c(first$id, second$id)) service_statement(r$con, "INSERT INTO research.submission_entries VALUES($1,$2,$3,$4,$5)", list(f$study_id, f$round$id, f$enrollment, submission, v))
+  }), "submission holds the field already")
+  # The service submits under the application role.
+  submitted <- submit_round(runtime, f$actor, f$enrollment, setNames(2L, f$item), "submit")
+  other <- DBI::dbGetQuery(r$con, "SELECT panelist_id FROM research.enrollments WHERE round_id=$1 AND id<>$2", params = list(f$round$id, f$enrollment))$panelist_id
+  for (repo in list(r, runtime)) {
+    expect_error(delphyr:::execute(repo, "UPDATE research.enrollments SET state='in_progress' WHERE id=$1", f$enrollment), "enrollment transition refused")
+    expect_error(delphyr:::execute(repo, "UPDATE research.enrollments SET state='eligible' WHERE id=$1", f$enrollment), "enrollment transition refused")
+  }
+  expect_error(delphyr:::execute(r, "UPDATE research.enrollments SET group_code='public_contributors' WHERE id=$1", f$enrollment), "enrollment assignment is immutable")
+  expect_error(delphyr:::execute(r, "UPDATE research.enrollments SET panelist_id=$2 WHERE id=$1", f$enrollment, other), "enrollment assignment is immutable")
+  expect_error(delphyr:::execute(runtime, "UPDATE research.enrollments SET group_code='public_contributors' WHERE id=$1", f$enrollment), "permission denied")
+  expect_error(delphyr:::execute(runtime, "UPDATE research.enrollments SET panelist_id=$2 WHERE id=$1", f$enrollment, other), "permission denied")
+  expect_error(delphyr:::execute(runtime, "INSERT INTO research.submission_entries VALUES($1,$2,$3,$4,$5)", f$study_id, f$round$id, f$enrollment, submitted$id, first$id), "submission locked")
+  entries <- DBI::dbGetQuery(r$con, "SELECT response_revision_id FROM research.submission_entries WHERE submission_id=$1", params = list(submitted$id))
+  expect_identical(entries$response_revision_id, second$id)
+  expect_identical(DBI::dbGetQuery(r$con, "SELECT state FROM research.enrollments WHERE id=$1", params = list(f$enrollment))$state, "submitted")
+  # Nobody submits in a member's place with fewer answers or none: a
+  # submission commits only with the change to submitted and holds every
+  # current answer, and the change to submitted needs the submission.
+  peer <- f$panel[[2L]]
+  peer_enrollment <- list_enrollments(r, peer, f$study_id)$id
+  record_consent(r, peer, f$study_id, f$consent_id, TRUE, "consent")
+  save_response(r, peer, peer_enrollment, f$item, list(value = 6L, status = "answered"), 0L, "save")
+  insert_submission <- function() service_statement(runtime$con, "INSERT INTO research.submissions(id,study_id,round_id,enrollment_id) VALUES($1,$2,$3,$4)", list(uuid::UUIDgenerate(), f$study_id, f$round$id, peer_enrollment))
+  mark_submitted <- function() service_statement(runtime$con, "UPDATE research.enrollments SET state='submitted' WHERE id=$1", list(peer_enrollment))
+  # These checks run at commit, when the whole submission is written; a
+  # refused commit ends the transaction.
+  committed <- function(...) {
+    DBI::dbExecute(runtime$con, "BEGIN")
+    tryCatch(for (step in list(...)) step(), error = function(e) {
+      DBI::dbExecute(runtime$con, "ROLLBACK")
+      stop(e)
+    })
+    DBI::dbExecute(runtime$con, "COMMIT")
+  }
+  expect_error(committed(insert_submission), "submission incomplete")
+  expect_error(committed(insert_submission, mark_submitted), "submission incomplete")
+  expect_error(committed(mark_submitted), "submission missing")
+  expect_identical(DBI::dbGetQuery(r$con, "SELECT state FROM research.enrollments WHERE id=$1", params = list(peer_enrollment))$state, "in_progress")
+  # A closed round takes no submission at all.
+  transition_round(r, f$manager, f$round$id, "closed", f$round$hash, "Synthetic close", "close")
+  expect_error(insert_submission(), "submission locked")
+  expect_identical(DBI::dbGetQuery(r$con, "SELECT enrollment_id FROM research.submissions WHERE round_id=$1", params = list(f$round$id))$enrollment_id, f$enrollment)
 })
 
 # Each child starts a new R process and creates its own libpq connection.
@@ -396,6 +460,57 @@ test_that("a save and a submit of the same answers never both take effect", {
     expect_equal(nrow(entries), 0L)
     expect_equal(revisions, 2L)
   }
+})
+
+test_that("a submit queued behind an in-flight save names a replaced revision and submits nothing", {
+  r <- service_repo()
+  f <- service_fixture(r)
+  service_save(r, f)
+  DBI::dbBegin(r$con)
+  withr::defer(suppressWarnings(try(DBI::dbRollback(r$con), silent = TRUE)))
+  DBI::dbGetQuery(r$con, "SELECT id FROM research.enrollments WHERE id=$1 FOR UPDATE", params = list(f$enrollment))
+  save_name <- paste0("delphyr-save-before-submit-", f$study_id)
+  save <- service_child(f, "save", save_name, "save-before-submit", revision = 1L)
+  service_wait_lock(r, save_name, save)
+  submit_name <- paste0("delphyr-submit-after-save-", f$study_id)
+  submit <- service_child(f, "submit", submit_name, "submit-after-save")
+  service_wait_lock(r, submit_name, submit)
+  DBI::dbCommit(r$con)
+  changed <- service_result(save)
+  submitted <- service_result(submit)
+  # The save is admitted first; the submit still names revision 1.
+  expect_true(changed$ok)
+  expect_identical(changed$value$revision, 2L)
+  expect_false(submitted$ok)
+  expect_identical(submitted$code, "DEL_CONFLICT")
+  expect_equal(nrow(DBI::dbGetQuery(r$con, "SELECT id FROM research.submissions WHERE study_id=$1", params = list(f$study_id))), 0L)
+  expect_equal(service_count(r, "research.response_revisions", f$study_id), 2L)
+})
+
+test_that("a round accepts answers only with consent to exactly the information version it requires", {
+  r <- service_repo()
+  f <- demo_study(r, n = 2L, item_count = 1L, code = paste0("TEST-", uuid::UUIDgenerate()))
+  # The study information is revised before the round opens, and the round
+  # is prepared again with the new version.
+  revised <- publish_consent(r, f$manager, f$study_id, "Synthetic demonstration only, revised.", "en", "consent-2")$id
+  transition_round(r, f$manager, f$round$id, "cancelled", f$round$hash, "Information revised", "cancel")
+  round <- prepare_round(r, f$manager, f$study_id, f$items, revised, format(Sys.time() + 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), "round-2")
+  for (state in c("review", "approved", "open")) transition_round(r, f$manager, round$id, state, round$hash, "Synthetic test", state)
+  actor <- f$panel[[1L]]
+  enrollment <- list_enrollments(r, actor, f$study_id)$id
+  q <- get_questionnaire(r, actor, enrollment)
+  expect_identical(q$consent$id, revised)
+  expect_false(q$consent$accepted)
+  # Consent to the earlier version does not admit answers to this round.
+  record_consent(r, actor, f$study_id, f$consent_id, TRUE, "consent-1")
+  expect_false(get_questionnaire(r, actor, enrollment)$consent$accepted)
+  refused <- tryCatch(save_response(r, actor, enrollment, q$items$id, list(value = 7L, status = "answered"), 0L, "save"), error = function(e) e)
+  expect_s3_class(refused, "DEL_FORBIDDEN")
+  expect_identical(refused$path, "consent")
+  record_consent(r, actor, f$study_id, revised, TRUE, "consent-2")
+  expect_true(get_questionnaire(r, actor, enrollment)$consent$accepted)
+  expect_identical(save_response(r, actor, enrollment, q$items$id, list(value = 7L, status = "answered"), 0L, "save-2")$revision, 1L)
+  expect_equal(service_count(r, "research.response_revisions", f$study_id), 1L)
 })
 
 test_that("two concurrent close commands close the round once", {

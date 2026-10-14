@@ -28,7 +28,9 @@ release_campaign(
 \item{command_id}{Idempotency key.}
 
 \item{not_before}{Earliest send time with an explicit offset, for example
-"2026-10-05T09:00:00+02:00"; NULL means now. At most 90 days ahead.}
+"2026-10-05T09:00:00+02:00"; NULL means now. At most 90 days ahead. A
+time that does not exist in the calendar is refused as
+`campaign.not_before` before any statement.}
 }
 \value{
 Campaign id, approved recipient count and the approved earliest
@@ -40,4 +42,8 @@ send time. Quiet hours of the protocol are fixed with the approval. A
 reminder is refused when any recipient would exceed the protocol's maximum
 number of reminders or receive it sooner than the minimum interval after
 the previous one; the limits never shrink an approved audience silently.
+Approvals of reminders for one round are decided one at a time. The worker
+keeps the interval as well: a reminder that would reach a person sooner
+after the previous one, because quiet hours or a stopped worker held both,
+waits until the interval has passed.
 }

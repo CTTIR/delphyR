@@ -4,7 +4,12 @@
 \alias{remove_expired_artifacts}
 \title{Remove the files of exports whose download period has ended}
 \usage{
-remove_expired_artifacts(repo, dry_run = TRUE, study_id = NULL)
+remove_expired_artifacts(
+  repo,
+  dry_run = TRUE,
+  study_id = NULL,
+  record_missing = FALSE
+)
 }
 \arguments{
 \item{repo}{Trusted worker repository with the artifact root of the worker.}
@@ -12,6 +17,9 @@ remove_expired_artifacts(repo, dry_run = TRUE, study_id = NULL)
 \item{dry_run}{TRUE lists what would be removed.}
 
 \item{study_id}{Optional study UUID; otherwise every study.}
+
+\item{record_missing}{TRUE also records exports without a directory as
+removed.}
 }
 \value{
 A table of the expired exports: identifier, profile, expiry, whether
@@ -21,6 +29,9 @@ A table of the expired exports: identifier, profile, expiry, whether
 An export is a temporary private copy of data that stays in the database.
 After `expires_at` it can no longer be downloaded; this function removes its
 directory and records the time. It never touches research data, and without
-`dry_run = FALSE` it removes nothing. An export whose files are already
-absent from the private directory is recorded as removed as well.
+`dry_run = FALSE` it removes nothing. An export whose directory is absent
+from this private directory is reported as not present and stays recorded
+as not removed: its files may lie in another installation's export
+directory that uses the same database. With `record_missing = TRUE` the
+operator confirms that they are gone, and the removal is recorded.
 }

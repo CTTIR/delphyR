@@ -132,6 +132,7 @@ test_that("proposals lead to derived items and feedback shows only released vers
   expect_error(list_released_edits(r, f$panel[[1]], f$study_id), class = "DEL_FORBIDDEN")
   feedback <- create_feedback(r, f$manager, f$analysis, command_id = "feedback", released_edits = c(summary, minority, redaction))
   expect_identical(create_feedback(r, f$manager, f$analysis, command_id = "feedback", released_edits = c(redaction, summary, minority)), feedback)
+  expect_identical(list_audit_events(r, f$manager, f$study_id, actions = "feedback_draft")$detail, "3 released editorial versions")
   candidate <- get_feedback_candidate(r, f$manager, feedback$id)
   expect_setequal(candidate$content$qualitative$kind, c("summary", "summary", "redaction"))
   release_feedback(r, f$manager, feedback$id, feedback$hash, "release")
@@ -187,6 +188,7 @@ test_that("released feedback is corrected by a new version, never in place", {
   sources <- get_qualitative_provenance(r, f$manager, f$study_id)$sources
   wrong <- exploratory_release(r, f, sources$id[1], "Most members reject topic A.", "summary", "wrong")
   feedback <- create_feedback(r, f$manager, f$analysis, command_id = "feedback", released_edits = wrong)
+  expect_identical(list_audit_events(r, f$manager, f$study_id, actions = "feedback_draft")$detail, "1 released editorial version")
   release_feedback(r, f$manager, feedback$id, feedback$hash, "release")
   rating <- prepare_round(r, f$manager, f$study_id, exploratory_items("N001", "relevance", "relevance_9", "Derived synthetic item"), f$consent, exploratory_deadline(), "round-2")
   assign_feedback(r, f$manager, rating$id, feedback$id, "assign")

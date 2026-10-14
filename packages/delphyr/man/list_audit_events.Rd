@@ -22,7 +22,9 @@ list_audit_events(
 \item{study_id}{Study UUID.}
 
 \item{from, to}{Optional inclusive time limits with an explicit offset,
-for example "2026-10-02T00:00:00Z".}
+for example "2026-10-02T00:00:00Z". A time that does not exist, such as
+30 February or an offset beyond 15:59, is refused with DEL_VALIDATION
+(path audit.from or audit.to) before any statement.}
 
 \item{actions}{Optional action codes to include.}
 

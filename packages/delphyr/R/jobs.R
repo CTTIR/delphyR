@@ -12,12 +12,20 @@ job_capability <- function(type, profile) if (identical(type, "analysis")) "anal
 admit <- function(repo, actor, study_id, capability) {
   if (length(capability) > 1L) authorize_any(repo, actor, study_id, capability) else authorize(repo, actor, study_id, capability)
 }
-request_job <- function(repo, actor, snapshot_id, type, key) {
+# An export is bound to what it is for: one text of 10 to 500 characters,
+# recorded as the rationale of the request and written into the manifest.
+valid_purpose <- function(purpose) {
+  ensure(is.null(purpose) || isTRUE(tryCatch(scalar_text(purpose) && nchar(trimws(purpose)) >= 10L && nchar(purpose) <= 500L, error = function(e) FALSE)), "export.purpose")
+}
+# A purpose is part of the request: the same key with another purpose is a
+# conflict. Requests without one keep their earlier payload.
+export_payload <- function(payload, purpose) if (is.null(purpose)) payload else c(payload, list(purpose))
+request_job <- function(repo, actor, snapshot_id, type, key, purpose = NULL) {
   transaction(repo, function() {
     valid_id(snapshot_id)
     s <- one(query(repo, "SELECT study_id FROM research.snapshots WHERE id=$1", snapshot_id))
     authorize(repo, actor, s$study_id, if (type == "export") "export" else "analyse")
-    command(repo, actor, s$study_id, paste0("request_", type), key, list(snapshot_id), function() {
+    command(repo, actor, s$study_id, paste0("request_", type), key, export_payload(list(snapshot_id), purpose), function() {
       # One analysis per requester and snapshot; a finished export does not
       # block a later request, while a duplicate pending request is merged.
       job <- if (type == "analysis") {
@@ -26,7 +34,7 @@ request_job <- function(repo, actor, snapshot_id, type, key) {
         query(repo, "INSERT INTO ops.jobs(id,study_id,actor_id,type,input_id,profile) VALUES($1,$2,$3,'export',$4,'research_round') ON CONFLICT(study_id,actor_id,input_id,profile) WHERE type='export' AND state IN ('queued','running','retry_wait') DO UPDATE SET input_id=EXCLUDED.input_id RETURNING id,state", uid(), s$study_id, actor$principal_id, snapshot_id)
       }
       list(id = job$id, state = job$state)
-    })
+    }, reason = purpose)
   })
 }
 #' Queue a durable analysis operation
@@ -42,9 +50,16 @@ request_analysis <- function(repo, actor, snapshot_id, command_id) request_job(r
 #' @param actor Actor with export capability.
 #' @param snapshot_id Immutable snapshot UUID.
 #' @param command_id Idempotency key.
+#' @param purpose What the export is for, 10 to 500 characters. It is
+#'   recorded as the rationale of the request in the audit trail and written
+#'   into the manifest of the export, under `purposes`. A request merged into
+#'   a pending export of the same snapshot adds its purpose there.
 #' @return Operation id. Free-text exports require a separate reviewed profile.
 #' @export
-request_export <- function(repo, actor, snapshot_id, command_id) request_job(repo, actor, snapshot_id, "export", command_id)
+request_export <- function(repo, actor, snapshot_id, command_id, purpose = NULL) {
+  valid_purpose(purpose)
+  request_job(repo, actor, snapshot_id, "export", command_id, purpose)
+}
 #' Queue a private study-level export for one profile
 #'
 #' Profiles separate what leaves the system and who may request it:
@@ -60,18 +75,21 @@ request_export <- function(repo, actor, snapshot_id, command_id) request_job(rep
 #' @param profile research_pseudonymized, study_summary, audit_restricted or
 #'   contacts_restricted.
 #' @param command_id Idempotency key.
+#' @param purpose What the export is for, 10 to 500 characters; see
+#'   request_export().
 #' @return Operation id and state.
 #' @export
-request_study_export <- function(repo, actor, study_id, profile, command_id) {
+request_study_export <- function(repo, actor, study_id, profile, command_id, purpose = NULL) {
   ensure(scalar_text(profile), "export.profile")
   ensure(!identical(profile, "public_release"), "export.public_release_requires_separate_approval", "DEL_FORBIDDEN")
   ensure(profile %in% c("research_pseudonymized", "study_summary", "audit_restricted", "contacts_restricted"), "export.profile")
+  valid_purpose(purpose)
   transaction(repo, function() {
     admit(repo, actor, study_id, export_capability(profile))
-    command(repo, actor, study_id, paste0("request_export:", profile), command_id, list(study_id, profile), function() {
+    command(repo, actor, study_id, paste0("request_export:", profile), command_id, export_payload(list(study_id, profile), purpose), function() {
       job <- query(repo, "INSERT INTO ops.jobs(id,study_id,actor_id,type,input_id,profile) VALUES($1,$2,$3,'export',$2,$4) ON CONFLICT(study_id,actor_id,input_id,profile) WHERE type='export' AND state IN ('queued','running','retry_wait') DO UPDATE SET input_id=EXCLUDED.input_id RETURNING id,state", uid(), study_id, actor$principal_id, profile)
       list(id = job$id, state = job$state)
-    }, detail = profile)
+    }, reason = purpose, detail = profile)
   })
 }
 #' Retrieve an authorized operation state
@@ -111,29 +129,42 @@ safe_csv <- function(x) {
   }
   x
 }
+# Writes a round export under a temporary name, `<id>.partial`. The worker
+# gives it its final name only after the export is registered.
 write_export <- function(repo, actor, snapshot_id) {
-  x <- one(query(repo, "SELECT study_id,content::text FROM research.snapshots WHERE id=$1", snapshot_id))
+  x <- one(query(repo, "SELECT s.study_id,s.content::text,st.code AS study_code,to_char(r.closed_at AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') AS closed_at,p.hash AS configuration_hash FROM research.snapshots s JOIN research.studies st ON st.id=s.study_id JOIN research.rounds r ON r.id=s.round_id JOIN research.protocol_versions p ON p.id=r.protocol_id WHERE s.id=$1", snapshot_id))
   authorize(repo, actor, x$study_id, "export")
   s <- read_snapshot(x$content)
   ensure(!any(vapply(config_scales(s$protocol), function(z) z$type == "free_text", logical(1))), "export.free_text_review_required", "DEL_FORBIDDEN")
+  # Every right is checked before the long work; the worker checks it again
+  # when it records the result.
+  report_data <- prepare_report_data(repo, actor, snapshot_id)
+  revisions <- query(repo, "SELECT e.panelist_id,se.submission_id,v.round_item_id,v.revision AS response_revision,i.item_code,i.item_version,i.dimension_code FROM research.snapshot_entries se JOIN research.response_revisions v ON v.id=se.response_revision_id JOIN research.enrollments e ON e.id=se.enrollment_id JOIN research.round_items i ON i.id=v.round_item_id WHERE se.study_id=$1 AND se.snapshot_id=$2", x$study_id, snapshot_id)
   a <- analyse_round(s)
   dir.create(repo$artifact_root, recursive = TRUE, showWarnings = FALSE, mode = "0700")
   root <- normalizePath(repo$artifact_root, mustWork = TRUE)
   key <- uid()
   staging <- file.path(root, paste0(key, ".partial"))
-  final <- file.path(root, key)
   dir.create(staging, mode = "0700")
-  on.exit(if (dir.exists(staging)) unlink(staging, recursive = TRUE), add = TRUE)
+  written <- FALSE
+  on.exit(if (!written && dir.exists(staging)) unlink(staging, recursive = TRUE), add = TRUE)
   writeLines(snapshot_json(s), file.path(staging, "snapshot.json"), useBytes = TRUE)
   writeLines(json(s$protocol), file.path(staging, "protocol.json"), useBytes = TRUE)
   utils::write.csv(safe_csv(s$data), file.path(staging, "responses-spreadsheet.csv"), row.names = FALSE, na = "")
-  revisions <- query(repo, "SELECT e.panelist_id,se.submission_id,v.round_item_id,v.revision AS response_revision,i.item_code,i.item_version,i.dimension_code FROM research.snapshot_entries se JOIN research.response_revisions v ON v.id=se.response_revision_id JOIN research.enrollments e ON e.id=se.enrollment_id JOIN research.round_items i ON i.id=v.round_item_id WHERE se.study_id=$1 AND se.snapshot_id=$2", x$study_id, snapshot_id)
   utils::write.csv(safe_csv(revisions), file.path(staging, "submission-provenance.csv"), row.names = FALSE, na = "")
   utils::write.csv(safe_csv(a$results), file.path(staging, "analysis-results.csv"), row.names = FALSE, na = "")
   writeLines(c("# Synthetischer Forschungsexport", "Keine Kontakte oder Kontozuordnungen. Pseudonyme sind nicht anonym.", "snapshot.json ist der ma\u00dfgebliche unver\u00e4nderte Datensatz; CSV-Texte sind formelsicher maskiert.", "Ausf\u00fchren: Rscript reproduce.R <Exportverzeichnis>. Freitextprofil nicht freigegeben.", "Schwellen sind synthetische Beispiele, keine methodische Empfehlung."), file.path(staging, "README.md"))
   writeLines(c("args <- commandArgs(trailingOnly=TRUE)", "path <- if(length(args)) args[1] else '.'", "result <- delphyr::reproduce_export(path)", "print(result$results)"), file.path(staging, "reproduce.R"))
-  writeLines(json(a$provenance), file.path(staging, "provenance.json"))
-  report_data <- prepare_report_data(repo, actor, snapshot_id)
+  # The time of the export is kept apart from the time of its data: the
+  # frozen round's close.
+  exported_at <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  provenance <- list(
+    export_schema_version = "1.0", profile = "research_round", study_id = x$study_id, study_code = x$study_code,
+    snapshot_id = snapshot_id, round_number = s$round_number, exported_at = exported_at, data_as_of = x$closed_at,
+    timezone = s$protocol$study$timezone, configuration_hash = x$configuration_hash, software = study_software(),
+    analysis = a$provenance
+  )
+  writeLines(json(provenance), file.path(staging, "provenance.json"), useBytes = TRUE)
   write_report_data(report_data, staging)
   # Only a missing optional runtime permits the basic report fallback.
   rendered <- tryCatch(
@@ -156,17 +187,46 @@ write_export <- function(repo, actor, snapshot_id) {
   }
   files <- list.files(staging, full.names = TRUE)
   manifest <- list(
-    schema_version = "1.0", snapshot_hash = s$content_hash,
+    schema_version = "1.0", profile = "research_round", study_id = x$study_id, snapshot_id = snapshot_id, round_number = s$round_number,
+    exported_at = exported_at, data_as_of = x$closed_at, snapshot_hash = s$content_hash,
     result_hash = a$provenance$result_hash,
     software_version = as.character(utils::packageVersion("delphyr")),
     r_version = R.version.string,
     report = list(renderer = renderer, data_hash = report_data$content_hash)
   )
-  manifest$files <- lapply(files, function(f) list(name = basename(f), sha256 = digest::digest(file = f, algo = "sha256"), bytes = file.info(f)$size))
+  # Each data file names the version of its own schema; documents for
+  # people have none.
+  schemas <- c(snapshot.json = s$schema_version, protocol.json = s$protocol$schema_version, "report-data.json" = report_data$schema_version)
+  manifest$files <- lapply(files, function(f) {
+    name <- basename(f)
+    schema <- if (name %in% names(schemas)) schemas[[name]] else if (grepl("[.](csv|json)$", name)) "1.0"
+    c(list(name = name, sha256 = digest::digest(file = f, algo = "sha256"), bytes = file.info(f)$size), if (!is.null(schema)) list(schema_version = schema))
+  })
   writeLines(json(manifest), file.path(staging, "manifest.json"))
   hash <- digest::digest(file = file.path(staging, "manifest.json"), algo = "sha256")
-  ensure(file.rename(staging, final), "artifact.rename", "DEL_STORAGE")
+  written <- TRUE
   list(id = key, study_id = x$study_id, checksum = hash)
+}
+# The directory of an export: its final name, or its temporary one until it
+# is registered and renamed. A worker stopped between the registration and the
+# renaming leaves a registered export under the temporary name.
+export_directory <- function(repo, key) {
+  final <- file.path(repo$artifact_root, key)
+  if (dir.exists(final)) final else paste0(final, ".partial")
+}
+# Binds an export to its request: the stated purposes of the requests it
+# answers join the manifest, whose checksum is registered.
+bind_export_manifest <- function(path, purposes) {
+  file <- file.path(path, "manifest.json")
+  manifest <- from_json(paste(readLines(file, warn = FALSE, encoding = "UTF-8"), collapse = "\n"))
+  manifest$purposes <- as.list(purposes)
+  writeLines(json(manifest), file, useBytes = TRUE)
+  digest::digest(file = file, algo = "sha256")
+}
+# The stated purposes of the requests merged into a job, in request order.
+export_purposes <- function(repo, j) {
+  x <- query(repo, "SELECT reason FROM ops.audit WHERE study_id=$1 AND object_ref=$2 AND action IN ('request_export',$3) AND reason IS NOT NULL ORDER BY occurred_at,id", j$study_id, j$id, paste0("request_export:", j$profile))
+  unique(x$reason)
 }
 # Checks every listed file of an export against its recorded SHA-256. On the
 # server the directory must hold exactly the listed files.
@@ -193,25 +253,86 @@ reproduce_export <- function(path) {
   ensure(identical(s$content_hash, manifest$snapshot_hash) && identical(a$provenance$result_hash, manifest$result_hash), "reproduction")
   a
 }
+#' Renew the reservation of a running job
+#'
+#' A worker process that is still working on a job keeps it reserved: the
+#' reservation is extended to `lease_seconds` from now, as long as it has not
+#' ended yet. The requester's rights are checked again when the result is
+#' recorded, with an identity that lasts as long as the reservation.
+#' @param repo Trusted worker repository.
+#' @param job_id Job UUID of a claim, see the `on_claim` hook of worker_step().
+#' @param lease_token Lease token of that claim.
+#' @param lease_seconds New reservation from now, between 1 and 3600 seconds.
+#' @return TRUE when the reservation was renewed; FALSE when it had ended or
+#'   the job is no longer held by that claim. Worker infrastructure API.
+#' @export
+renew_job_lease <- function(repo, job_id, lease_token, lease_seconds = 600L) {
+  ensure(whole(lease_seconds) && length(lease_seconds) == 1L && lease_seconds > 0 && lease_seconds <= 3600, "lease")
+  valid_id(job_id)
+  valid_id(lease_token)
+  identical(execute(repo, "UPDATE ops.jobs SET lease_until=clock_timestamp()+$3*interval '1 second' WHERE id=$1 AND lease_token=$2 AND state='running' AND lease_until>clock_timestamp()", job_id, lease_token, lease_seconds), 1L)
+}
+# The requester's identity, delegated to one claim of a job. Services read
+# `expires_at` when they check rights; it is taken from the reservation in
+# the database each time, so a renewal extends it, a lost reservation ends it,
+# and the worker's clock is never compared with the database's.
+delegated_actor <- function(repo, j) {
+  actor <- new.env(parent = emptyenv())
+  actor$principal_id <- j$actor_id
+  makeActiveBinding("expires_at", function() {
+    left <- query(repo, "SELECT extract(epoch FROM lease_until-clock_timestamp())::float8 AS s FROM ops.jobs WHERE id=$1 AND lease_token=$2 AND state='running'", j$id, j$lease_token)$s
+    Sys.time() + if (length(left) == 1L && !is.na(left)) left else -1
+  }, actor)
+  class(actor) <- "delphyr_actor"
+  actor
+}
 #' Process one leased job using its requester's current study rights
+#'
+#' The requester's identity is delegated for exactly as long as this worker
+#' holds the job's reservation, as the database measures it: renewing the
+#' reservation (renew_job_lease()) extends it, and it ends when the
+#' reservation ends or another worker takes the job up. A refusal that a retry
+#' cannot change (`DEL_FORBIDDEN`, `DEL_UNAUTHORIZED`, `DEL_NOT_FOUND`,
+#' `DEL_VALIDATION`) ends the job; any other failure, including a report that
+#' could not be rendered (`DEL_RENDER`) and a reservation that ended before
+#' the result was recorded (`DEL_CONFLICT` with path `job.lease`), is retried
+#' after ten seconds, up to three attempts. A rights check refused because
+#' the reservation had ended counts as such a lost reservation (`DEL_CONFLICT`),
+#' not as a refusal of the requester. An export is written under a temporary
+#' name and gets its final name only after it is registered; one that cannot
+#' be registered is removed, whatever failed.
 #' @param repo Trusted development/test worker repository.
 #' @param study_id Optional study UUID limiting a worker partition.
 #' @param lease_seconds Time the job is reserved for this worker. A job whose
 #'   worker stopped is taken up again after that time; a job that needs longer
-#'   cannot record its result. The default leaves a wide margin over the
-#'   analysis and export of a round of 300 members and 300 rating fields.
+#'   cannot record its result unless its reservation is renewed. The default
+#'   leaves a wide margin over the analysis and export of a round of 300
+#'   members and 300 rating fields.
+#' @param download_hours Hours an export can be downloaded after it was
+#'   registered, from 1 to 720; one day by default. The period is the
+#'   decision of the responsible organisation.
+#' @param on_claim Optional function called with the claimed job (a one-row
+#'   data frame with `id` and `lease_token`) before it runs, for example to
+#'   renew its reservation from another process.
 #' @return FALSE when idle, otherwise a safe operation state.
 #' @export
-worker_step <- function(repo, study_id = NULL, lease_seconds = 600L) {
+worker_step <- function(repo, study_id = NULL, lease_seconds = 600L, download_hours = 24, on_claim = NULL) {
+  ensure(is.numeric(download_hours) && length(download_hours) == 1L && is.finite(download_hours) && download_hours >= 1 && download_hours <= 720, "export.download_hours")
+  ensure(is.null(on_claim) || is.function(on_claim), "worker.on_claim")
   started <- Sys.time()
   j <- claim_job(repo, lease_seconds = lease_seconds, study_id = study_id)
   if (!nrow(j)) {
     return(FALSE)
   }
-  # A delegated actor is restricted to the requesting principal; services recheck rights.
-  actor <- structure(list(principal_id = j$actor_id, expires_at = Sys.time() + 120), class = "delphyr_actor")
+  if (!is.null(on_claim)) on_claim(j)
+  # A delegated actor is restricted to the requesting principal and to this
+  # claim of the job; services recheck rights.
+  actor <- delegated_actor(repo, j)
   out <- NULL
   registered <- FALSE
+  # An export leaves this function registered or not at all, also when the
+  # recording of a failure fails.
+  on.exit(if (j$type == "export" && !is.null(out) && !registered) unlink(file.path(repo$artifact_root, paste0(out$id, c(".partial", ""))), recursive = TRUE), add = TRUE)
   result <- tryCatch(
     {
       out <- if (j$type == "analysis") {
@@ -221,25 +342,38 @@ worker_step <- function(repo, study_id = NULL, lease_seconds = 600L) {
       } else {
         write_study_export(repo, actor, j$input_id, j$profile)
       }
-      transaction(repo, function() {
-        current <- one(query(repo, "SELECT id FROM ops.jobs WHERE id=$1 AND lease_token=$2 AND state='running' AND lease_until>clock_timestamp() FOR UPDATE", j$id, j$lease_token))
+      recorded <- transaction(repo, function() {
+        current <- query(repo, "SELECT id FROM ops.jobs WHERE id=$1 AND lease_token=$2 AND state='running' AND lease_until>clock_timestamp() FOR UPDATE", j$id, j$lease_token)
+        # A job that outlived its reservation records nothing; another worker
+        # may have taken it up.
+        ensure(nrow(current) == 1L, "job.lease", "DEL_CONFLICT")
         admit(repo, actor, j$study_id, job_capability(j$type, j$profile))
-        if (j$type == "export") execute(repo, "INSERT INTO ops.artifacts(id,study_id,actor_id,snapshot_id,storage_key,checksum,expires_at,profile) VALUES($1,$2,$3,$4::uuid,$5,$6,clock_timestamp()+interval '1 day',$7)", out$id, j$study_id, j$actor_id, if (j$profile == "research_round") j$input_id else NA_character_, out$id, out$checksum, j$profile)
+        if (j$type == "export") {
+          checksum <- bind_export_manifest(export_directory(repo, out$id), export_purposes(repo, j))
+          execute(repo, "INSERT INTO ops.artifacts(id,study_id,actor_id,snapshot_id,storage_key,checksum,expires_at,profile) VALUES($1,$2,$3,$4::uuid,$5,$6,clock_timestamp()+$8*interval '1 hour',$7)", out$id, j$study_id, j$actor_id, if (j$profile == "research_round") j$input_id else NA_character_, out$id, checksum, j$profile, download_hours)
+        }
         execute(repo, "UPDATE ops.jobs SET state='succeeded',result_ref=$3,lease_until=NULL WHERE id=$1 AND lease_token=$2", current$id, j$lease_token, out$id)
         list(id = j$id, state = "succeeded", result_ref = out$id)
       })
+      registered <- TRUE
+      recorded
     },
     error = function(e) {
       code <- if (inherits(e, "delphyr_error")) e$code else "DEL_STORAGE"
+      # An identity that ended with the reservation is a lost reservation,
+      # not a refusal of the requester.
+      if (identical(code, "DEL_UNAUTHORIZED") && !isTRUE(Sys.time() < actor$expires_at)) code <- "DEL_CONFLICT"
       permanent <- code %in% c("DEL_FORBIDDEN", "DEL_UNAUTHORIZED", "DEL_NOT_FOUND", "DEL_VALIDATION")
       execute(repo, "UPDATE ops.jobs SET state=CASE WHEN attempts>=3 OR $3 THEN 'dead_letter' ELSE 'retry_wait' END,error_code=$4,available_at=clock_timestamp()+interval '10 seconds',lease_until=NULL WHERE id=$1 AND lease_token=$2 AND state='running'", j$id, j$lease_token, permanent, code)
       list(id = j$id, state = "failed", error_code = code)
     }
   )
-  if (j$type == "export" && !is.null(out) && !identical(result$state, "succeeded")) {
-    path <- file.path(repo$artifact_root, out$id)
-    if (dir.exists(path)) unlink(path, recursive = TRUE)
-  }
+  # A registered export gets its final name now. A worker stopped before the
+  # registration leaves an unregistered temporary directory, which the cleanup
+  # removes; one stopped after it leaves a registered export that is
+  # delivered from its temporary name.
+  staging <- if (registered && j$type == "export") file.path(repo$artifact_root, paste0(out$id, ".partial")) else ""
+  if (dir.exists(staging) && !file.rename(staging, file.path(repo$artifact_root, out$id))) log_work("job.export.publish", started, "failed", out$id, error_class = "DEL_STORAGE")
   log_work(paste0("job.", j$type, if (j$type == "export") paste0(".", j$profile)), started, result$state, j$id, error_class = result$error_code)
   result
 }
@@ -247,7 +381,9 @@ worker_step <- function(repo, study_id = NULL, lease_seconds = 600L) {
 #' @param repo Repository.
 #' @param actor Original requesting actor with current export capability.
 #' @param artifact_id Artifact UUID.
-#' @return Private directory path for trusted server download code.
+#' @return Private directory path for trusted server download code. An export
+#'   whose worker stopped after registering it but before giving it its final
+#'   name is delivered from its temporary name, `<id>.partial`.
 #' @export
 download_artifact <- function(repo, actor, artifact_id) {
   valid_id(artifact_id)
@@ -255,8 +391,10 @@ download_artifact <- function(repo, actor, artifact_id) {
   admit(repo, actor, x$study_id, export_capability(x$profile))
   ensure(x$actor_id == actor$principal_id, "artifact", "DEL_NOT_FOUND")
   valid_id(x$storage_key)
+  directory <- export_directory(repo, x$storage_key)
+  ensure(dir.exists(directory), "artifact", "DEL_NOT_FOUND")
   root <- normalizePath(repo$artifact_root, mustWork = TRUE)
-  path <- normalizePath(file.path(root, x$storage_key), mustWork = TRUE)
+  path <- normalizePath(directory, mustWork = TRUE)
   ensure(startsWith(path, paste0(root, .Platform$file.sep)), "artifact.path", "DEL_STORAGE")
   ensure(identical(digest::digest(file = file.path(path, "manifest.json"), algo = "sha256"), x$checksum), "artifact.checksum", "DEL_STORAGE")
   # Every delivered file is checked; research profiles are also recomputed.

@@ -30,7 +30,8 @@ record_item_decision(
 \item{command_id}{Idempotency key.}
 }
 \value{
-Decision UUID.
+Decision UUID. A completed study refuses new decisions with
+  DEL_CONFLICT (path study.state).
 }
 \description{
 Record a human decision separately from analytic classification

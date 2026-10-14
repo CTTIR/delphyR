@@ -316,7 +316,7 @@ security_fixture <- function(r, text = function(kind) c(item = "Synthetic item",
       dimension_code = "relevance", previous_version = 1L, current_version = 2L, comparable = TRUE, disposition = "retain",
       parents = data.frame(item_code = "I001", item_version = 1L), children = data.frame(item_code = "I001", item_version = 2L), relation = "revision",
       source_ref = "SRC", fields = list(funding = "None"), expected_version = 0L, issuer = "https://fuzz-idp.example.invalid", subject = "fuzz-subject",
-      ttl_seconds = 900L, not_before = NULL, impact_note = "Synthetic", participant_note = "Synthetic", resolution = "abandon",
+      ttl_seconds = 900L, not_before = NULL, purpose = "Synthetic probe of export rights", impact_note = "Synthetic", participant_note = "Synthetic", resolution = "abandon",
       response = list(value = 5L, status = "answered"), expected_revision = 0L, capability = "edit", enabled = TRUE, retention_policy = "retain",
       expected_revision_set = setNames(integer(), character()), target = "closed", output_dir = directory, periods = NULL
     )
@@ -575,4 +575,63 @@ test_that("known identifiers of another study or person give no access", {
   expect_length(own, 2L)
   expect_false(f$ids$enrollment_id %in% own)
   expect_identical(get_capabilities(r, f$panel[[2]], f$study_id), "panel")
+})
+
+test_that("an object of another study reads exactly like one that does not exist", {
+  r <- security_repo()
+  withr::local_options(list(delphyr.log_level = "off"))
+  f <- security_fixture(r)
+  other <- demo_study(r, n = 2L, item_count = 1L)
+  expired_manager <- f$manager
+  expired_manager$expires_at <- Sys.time() - 1
+  expired_member <- f$panel[[1]]
+  expired_member$expires_at <- Sys.time() - 1
+  outcome <- function(call) tryCatch({
+    force(call)
+    "accepted"
+  }, error = function(e) if (inherits(e, "delphyr_error")) paste(e$code, e$path) else "unstructured")
+  hash <- strrep("0", 64)
+  # Staff services addressed by the identifier of a round, snapshot, analysis
+  # or feedback: a manager of another study learns nothing from the answer,
+  # and an expired sign-in is reported as expired whatever the identifier.
+  cases <- list(
+    list(function(a, id) get_round_instrument(r, a, id), f$ids$round_id),
+    list(function(a, id) get_round_readiness(r, a, id), f$ids$round_id),
+    list(function(a, id) change_round_deadline(r, a, id, security_stamp(86400), hash, "Synthetic", uid()), f$ids$round_id),
+    list(function(a, id) transition_round(r, a, id, "closed", hash, "Synthetic", uid()), f$ids$round_id),
+    list(function(a, id) enroll_panel(r, a, id, uid()), f$ids$round_id),
+    list(function(a, id) freeze_round(r, a, id, uid()), f$ids$round_id),
+    list(function(a, id) assign_feedback(r, a, id, f$ids$feedback_id, uid()), f$ids$round_id),
+    list(function(a, id) get_snapshot(r, a, id), f$ids$snapshot_id),
+    list(function(a, id) run_analysis(r, a, id, uid()), f$ids$snapshot_id),
+    list(function(a, id) import_round_contributions(r, a, id, uid()), f$ids$snapshot_id),
+    list(function(a, id) get_analysis(r, a, id), f$ids$analysis_id),
+    list(function(a, id) create_feedback(r, a, id, command_id = uid()), f$ids$analysis_id),
+    list(function(a, id) record_item_decision(r, a, id, "I001", "retain", "Synthetic", uid()), f$ids$analysis_id),
+    list(function(a, id) get_feedback_candidate(r, a, id), f$ids$feedback_id),
+    list(function(a, id) release_feedback(r, a, id, hash, uid()), f$ids$feedback_id),
+    list(function(a, id) release_feedback_correction(r, a, id, id, hash, "Synthetic", "Synthetic", "Synthetic", uid()), f$ids$feedback_id)
+  )
+  for (case in cases) {
+    expect_identical(outcome(case[[1]](other$manager, case[[2]])), "DEL_NOT_FOUND object")
+    expect_identical(outcome(case[[1]](other$manager, uid())), "DEL_NOT_FOUND object")
+    expect_identical(outcome(case[[1]](expired_manager, case[[2]])), "DEL_UNAUTHORIZED session")
+    expect_identical(outcome(case[[1]](expired_manager, uid())), "DEL_UNAUTHORIZED session")
+  }
+  # Panel services: the enrollment of another member of the same study or of
+  # another study reads like one that does not exist.
+  member_cases <- list(
+    function(a, id) get_questionnaire(r, a, id),
+    function(a, id) get_feedback(r, a, id),
+    function(a, id) save_response(r, a, id, f$ids$round_item_id, list(value = 5L, status = "answered"), 0L, uid()),
+    function(a, id) submit_round(r, a, id, setNames(integer(), character()), uid())
+  )
+  for (call in member_cases) {
+    for (stranger in list(f$panel[[2]], other$panel[[1]])) {
+      expect_identical(outcome(call(stranger, f$ids$enrollment_id)), "DEL_NOT_FOUND object")
+      expect_identical(outcome(call(stranger, uid())), "DEL_NOT_FOUND object")
+    }
+    expect_identical(outcome(call(expired_member, f$ids$enrollment_id)), "DEL_UNAUTHORIZED session")
+    expect_identical(outcome(call(expired_member, uid())), "DEL_UNAUTHORIZED session")
+  }
 })

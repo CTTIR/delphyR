@@ -101,3 +101,43 @@ test_that("correlation IDs are random and carry no content", {
   expect_true(all(grepl("^[0-9a-f]{12}$", ids)))
   expect_identical(anyDuplicated(ids), 0L)
 })
+
+test_that("printing a frozen snapshot shows what it is and none of its answers", {
+  p <- demo_protocol()
+  p$instrument$dimensions <- list(list(code = "relevance", scale = "relevance_9"), list(code = "comment", scale = "comment_text"))
+  p$instrument$scales$comment_text <- list(type = "free_text", values = list(), anchors = list(low = "not applicable", high = "not applicable"), missing_options = c("unable_to_judge"))
+  assignments <- data.frame(panelist_id = c("CANARY-P1", "CANARY-P2"), group_code = "professionals", submitted = TRUE)
+  items <- data.frame(item_code = "I001", item_version = 1L, dimension_code = c("relevance", "comment"), scale_code = c("relevance_9", "comment_text"))
+  responses <- data.frame(
+    panelist_id = c("CANARY-P1", "CANARY-P1", "CANARY-P2"), item_code = "I001", item_version = 1L, dimension_code = c("relevance", "comment", "relevance"),
+    answer_status = "answered", value_integer = c(7L, NA, 8L), value_text = c(NA, "CANARY free text of a member", NA)
+  )
+  s <- new_snapshot(responses, assignments, items, p)
+  printed <- paste(capture.output(print(s)), collapse = "\n")
+  expect_false(grepl("CANARY", printed, fixed = TRUE))
+  expect_match(printed, "2 assigned, 2 submitted", fixed = TRUE)
+  expect_match(printed, "4 response fields, 1 free-text answers", fixed = TRUE)
+  expect_match(printed, s$content_hash, fixed = TRUE)
+  capture.output(shown <- withVisible(print(s)))
+  expect_false(shown$visible)
+})
+
+test_that("printing a feedback draft or the data of a report shows no table and no reviewed text", {
+  secret <- "CANARY reviewed summary of the members' comments"
+  draft <- prepare_feedback(analyse_round(demo_snapshot()), qualitative = list(list(text = secret, reviewed = TRUE, source_ref = "CANARY-SOURCE")))
+  printed <- paste(capture.output(shown <- withVisible(print(draft))), collapse = "\n")
+  expect_false(grepl("CANARY", printed, fixed = TRUE))
+  expect_match(printed, draft$hash, fixed = TRUE)
+  expect_match(printed, "qualitative texts: 1", fixed = TRUE)
+  expect_false(shown$visible)
+  expect_identical(shown$value, draft)
+  report <- structure(list(
+    schema_version = "1.0", profile = "study_report", metadata = list(study_code = "SYN-PRINT", study_title = "CANARY title"),
+    results = data.frame(item_code = c("I001", "I002"), n_valid = 3L), qualitative = data.frame(text = secret), content_hash = "synthetic-hash"
+  ), class = c("delphyr_report_data", "list"))
+  printed <- paste(capture.output(print(report)), collapse = "\n")
+  expect_false(grepl("CANARY", printed, fixed = TRUE))
+  expect_match(printed, "study SYN-PRINT", fixed = TRUE)
+  expect_match(printed, "results (2), qualitative (1)", fixed = TRUE)
+  expect_match(printed, "synthetic-hash", fixed = TRUE)
+})

@@ -5,12 +5,11 @@ software is at commit `2838509`; later commits add checks, fixture scripts
 and documentation. The release report with every number and the commit each
 check ran against is [validation of 3 October 2026](validation/2026-10-03.md).
 
-The specification keeps three statements apart
-([acceptance](spec/26_ACCEPTANCE_AND_RELEASE.md)); so does this page.
+This page distinguishes documentation, technical evidence and study approval.
 
 | Statement | State |
 |---|---|
-| Documentation package complete | Yes: the archived specification under `docs/spec/`. |
+| Documentation package complete | Public package and operations guides are available. |
 | Software technically ready (P1) | Evidence is recorded for each of the twelve technical gates below, on synthetic data and for one hosting path. The limits are listed. The acceptance decision belongs to the responsible persons and has **not** been taken. |
 | Study released for productive use | **No.** The decisions under "External gates" are outstanding. No real participant data, no external message and no production deployment are authorized. |
 
@@ -139,4 +138,4 @@ characters in a source file); the following commit repaired it and both
 packages carry a source-level ASCII test.
 
 `admin/`, data, backups and local libraries remain ignored. Entry points:
-[README](../README.md), [operations](operations.md), [HANDOVER](../HANDOVER.md).
+[README](../README.md) and [operations](operations.md).

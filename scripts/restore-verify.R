@@ -18,7 +18,9 @@ migrate_repository(owner)
 checks$no_migration_pending <- identical(query(owner, "SELECT count(*)::int AS n FROM ops.schema_migrations")$n, before)
 
 # Roles are not part of a dump: the restricted application role is set up anew.
-configured <- system2("Rscript", "scripts/configure-dev-role.R", env = c(paste0("DELPHYR_DB_HOST=", socket), "DELPHYR_DB_PORT=5432"), stdout = FALSE, stderr = FALSE)
+# system2 passes environment entries to the shell as they are; the socket
+# path is quoted, so a space or a shell character in it stays part of it.
+configured <- system2("Rscript", "scripts/configure-dev-role.R", env = c(paste0("DELPHYR_DB_HOST=", shQuote(socket)), "DELPHYR_DB_PORT=5432"), stdout = FALSE, stderr = FALSE)
 runtime <- if (identical(configured, 0L)) tryCatch(connect("delphyr_runtime"), error = function(e) NULL)
 checks$application_role_configured <- !is.null(runtime)
 if (is.null(runtime)) runtime <- owner

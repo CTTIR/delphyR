@@ -100,7 +100,10 @@ test_that("a correction needs the corrected version, three texts and a confirmat
   corrections <- function() Filter(function(x) x[[1]] == "release_feedback_correction", state$calls)
   shiny::testServer(delphyrApp:::operations_server, args = list(study = function() "study", round = round, lang = function() "en", call = exploratory_operations(state), services = exploratory_services(exploratory_operation_names), refresh = function() NULL, allowed = function() TRUE), {
     session$flushReact()
-    expect_match(output$published, "current", fixed = TRUE)
+    expect_match(output$published, "First release", fixed = TRUE)
+    expect_match(output$published, "Current", fixed = TRUE)
+    expect_match(output$published, "oldhash00000", fixed = TRUE)
+    expect_false(grepl("oldhash000000", output$published, fixed = TRUE))
     session$setInputs(correction_target = "feedback-old", correction_reason = "Direction reversed", correction_impact = "None", correction_note = "Corrected", correction_confirm = TRUE, correction_release = 1)
     expect_length(corrections(), 0L)
     session$setInputs(correction_edits = "edit-a", correction_draft = 1)
@@ -114,8 +117,10 @@ test_that("a correction needs the corrected version, three texts and a confirmat
     done <- corrections()[[1]]
     expect_identical(unname(done[2:7]), list("feedback-old", "feedback-new", "newhash000000", "Direction reversed", "None", "Corrected"))
     expect_match(output$status, "Correction released", fixed = TRUE)
-    expect_match(output$published, "replaced", fixed = TRUE)
-    expect_match(output$published, "Correction, current", fixed = TRUE)
+    # Versions are named by their order; the correction carries its rationale.
+    expect_match(output$published, "Replaced", fixed = TRUE)
+    expect_match(output$published, "Correction 1", fixed = TRUE)
+    expect_match(output$published, "Direction reversed", fixed = TRUE)
     expect_null(correction())
   })
 })
