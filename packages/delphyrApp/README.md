@@ -113,3 +113,14 @@ Firefox; keyboard operation, names, headings, contrast and reflow are checked
 by script. They do not certify every browser, assistive technology or mobile
 device. A test with a screen reader, real mail and production operation remain
 distinct gates. Licensed under [MIT](LICENSE).
+
+## Use of LLM tools
+
+Where applicable, LLM tools were used for narrowly defined, non-authorial tasks:
+copyediting, prose refinement, Markdown/LaTeX formatting, boilerplate scaffolding
+(such as CI configurations and build scripts), and code refactoring. Tools included [Chat AI](https://kisski.gwdg.de/leistungen/2-02-llm-service/), the KISSKI
+(GWDG) service, and self-hosted **Mistral Small (24B, Apache-2.0)** served through
+a local **vLLM architecture** on an Ubuntu Linux workstation with Intel
+processors and NVIDIA GPUs. The self-hosted model ran locally, with no data sent
+to third parties. Maintainers remain responsible for review, validation and
+the final content.
