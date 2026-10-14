@@ -1,0 +1,14 @@
+template:
+  package: themakR
+development:
+  mode: auto
+destination: site
+reference:
+  - title: Anwendung
+    contents:
+      - run_app
+articles:
+  - title: Anleitungen
+    navbar: ~
+    contents:
+      - synthetic-workflow

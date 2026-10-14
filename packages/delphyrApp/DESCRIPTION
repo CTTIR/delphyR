@@ -3,9 +3,9 @@ Title: Trilingual Shiny Workflows for Delphi Studies
 Version: 0.0.1
 Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "58561665+r-heller@users.noreply.github.com")
 Description: An English, French and German Shiny interface for synthetic Delphi
-    studies, using transactional services from 'delphyr'. Provides panel,
-    study-management and editorial workflows with explicit save and submission
-    receipts. Production authentication and deployment remain acceptance gates.
+ studies, using transactional services from 'delphyr'. Provides panel,
+ study-management and editorial workflows with explicit save and submission
+ receipts. Production authentication and deployment remain acceptance gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: DBI, shiny, bslib, delphyr, htmltools, jsonlite, uuid, zip
@@ -15,3 +15,4 @@ Config/testthat/edition: 3
 RoxygenNote: 8.0.0
 URL: https://github.com/CTTIR/delphyR
 BugReports: https://github.com/CTTIR/delphyR/issues
+Config/Needs/website: CTTIR/themakR, pkgdown

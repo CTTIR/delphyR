@@ -3,10 +3,10 @@ Title: Reproducible Round-Based Delphi Studies
 Version: 0.0.1
 Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "58561665+r-heller@users.noreply.github.com")
 Description: Validated study protocols, deterministic consensus and longitudinal
-    analysis, and transactional PostgreSQL services for round-based Delphi
-    studies. Provides reproducible research exports and synthetic examples.
-    Production use requires the documented security and operational acceptance
-    gates.
+ analysis, and transactional PostgreSQL services for round-based Delphi
+ studies. Provides reproducible research exports and synthetic examples.
+ Production use requires the documented security and operational acceptance
+ gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: DBI, digest, jsonlite, openssl, uuid
@@ -16,3 +16,4 @@ VignetteBuilder: knitr
 RoxygenNote: 8.0.0
 URL: https://github.com/CTTIR/delphyR
 BugReports: https://github.com/CTTIR/delphyR/issues
+Config/Needs/website: CTTIR/themakR, pkgdown
