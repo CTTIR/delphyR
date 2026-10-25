@@ -1,4 +1,4 @@
-# delphyR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="packages/delphyrApp/man/figures/logo-with-name-dark.png" /><img src="packages/delphyrApp/man/figures/logo-with-name.png" align="right" alt="delphyR hex logo" width="150" height="193" /></picture>
+# delphyR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="packages/delphyrApp/man/figures/logo-with-name-dark.png" /><img src="packages/delphyrApp/man/figures/logo-with-name.png" align="right" alt="delphyR hex logo" width="150" height="174" /></picture>
 
 **A traceable workflow for round-based Delphi studies.**
 
@@ -191,6 +191,6 @@ Local software setup: vLLM with Python/PyTorch, plus R and RStudio.
 
 ## Package branding
 
-The distinct `delphyr` and `delphyrApp` identities use the CTTIR Coder Edition v4.1
+The distinct `delphyr` and `delphyrApp` identities use the CTTIR Coder Edition v5
 v3.1. Their editable R source and reproduction commands are in
 [tools/branding](https://github.com/CTTIR/delphyR/tree/main/tools/branding).
