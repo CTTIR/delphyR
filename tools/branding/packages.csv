@@ -1,0 +1,3 @@
+name,repo,family,symbol,kind,source
+delphyr,delphyR,evidence,delphyr,R package,https://github.com/CTTIR/delphyR/blob/main/packages/delphyr/DESCRIPTION
+delphyrApp,delphyR,evidence,delphyrApp,R package,https://github.com/CTTIR/delphyR/blob/main/packages/delphyrApp/DESCRIPTION

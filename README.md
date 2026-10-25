@@ -188,3 +188,9 @@ must be reviewed and revised before inclusion, and references must be verified
 against their DOI, arXiv ID or ISBN.
 
 Local software setup: vLLM with Python/PyTorch, plus R and RStudio.
+
+## Package branding
+
+The distinct `delphyr` and `delphyrApp` identities use the CTTIR Material Atlas
+v3.1. Their editable R source and reproduction commands are in
+[tools/branding](https://github.com/CTTIR/delphyR/tree/main/tools/branding).
