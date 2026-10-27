@@ -12,7 +12,7 @@ Imports: DBI, shiny, bslib, delphyr, htmltools, jsonlite, uuid, zip
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown, withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-RoxygenNote: 8.0.0
 URL: https://github.com/CTTIR/delphyR
 BugReports: https://github.com/CTTIR/delphyR/issues
 Config/Needs/website: CTTIR/themakR, pkgdown
+Config/roxygen2/version: 8.1.1

@@ -13,7 +13,7 @@ Imports: DBI, digest, jsonlite, openssl, uuid
 Suggests: RPostgres, callr, withr, pkgload, testthat (>= 3.0.0), knitr, rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-RoxygenNote: 8.0.0
 URL: https://github.com/CTTIR/delphyR
 BugReports: https://github.com/CTTIR/delphyR/issues
 Config/Needs/website: CTTIR/themakR, pkgdown
+Config/roxygen2/version: 8.1.1
