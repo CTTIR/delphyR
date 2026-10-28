@@ -63,9 +63,7 @@ Approved
 Approved for local test receipts
 Approved from (UTC):
 Approved. No email will be sent.
-Assess evidence together
 Assign feedback
-Assign to selected subsequent round
 At least one topic needs a statement.
 Authors and responsibilities
 Awaiting acceptance
@@ -73,7 +71,6 @@ Block
 Blocking
 Blocks of this round
 Browse…
-By
 By stakeholder group:
 CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.
 CSV could not be parsed
@@ -428,7 +425,6 @@ New stakeholder group
 New state
 New version confirmed:
 Next block
-No accessible study. Contact the study team.
 No account chosen yet.
 No access to this application
 No accessible study yet. Contact the study team.
@@ -446,7 +442,6 @@ No feedback was assigned: the round has no enrolled panel members yet. Enroll th
 No file selected
 No findings.
 No further state change is possible for this round.
-No panel view is available for this study.
 No partial import: the entire file remains blocked.
 No recorded event matches this selection.
 No released feedback is assigned to this round.
@@ -456,9 +451,7 @@ No round created: an item keeps its version number although its wording, scale o
 No round created: the deadline must lie in the future.
 No round created: the feedback of the current round must be released first.
 No round created: the protocol allows no further round.
-No partial import: the entire file remains blocked.
 No rating (%s)
-No released feedback is assigned to this round.
 No round has been opened yet.
 Normalized email
 Not applicable
@@ -605,9 +598,6 @@ Released contributions of the previous round
 Released feedback
 Released feedback is assigned to this round. A later correction of that feedback reaches the round’s participants without a new assignment.
 Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.
-Released previous-round feedback:
-Released versions for this feedback
-Released versions of the corrected version
 Reminder
 Remove
 Replaced
@@ -618,8 +608,6 @@ Request export
 Request the exports your role permits. Every retrieval is checked and recorded.
 Requested exports
 Requested:
-Required fields are open in block:
-Required response fields are still open. They are named in the overview above the submit button.
 Required statements are open in block:
 Requirement
 Research data export
@@ -682,19 +670,13 @@ Save theme version
 Save version
 Save your changes first. The current round stays open.
 Saved (UTC)
-Saved response
 Saved response loaded.
 Saved version
 Saved. Original history is preserved.
-Saved:
-Saving …
 Scale of the dimension:
 Saved
 Saved at %s
 Saved on %s
-Saved response loaded.
-Saved version
-Saved. Original history is preserved.
 Select consent explicitly first.
 Semicolon
 Setup
@@ -755,9 +737,6 @@ Study team and rights
 Study team’s decision
 Study text, scale anchors and consent remain in their approved language.
 Subject
-Submission confirmed:
-Submission receipt:
-Subject of the other account
 Submission confirmed: %s.
 Submit by:
 Submit final responses
@@ -808,8 +787,6 @@ The study is completed.
 The study is not in a state that allows data collection.
 The study lead requests the analysis of this round.
 The uploaded protocol is identical to the current version; there is nothing to approve.
-The wording changed. Ratings are not directly comparable.
-The wording was revised. The study team assessed both versions as comparable.
 The study team assessed both versions as comparable.
 The wording changed since round %s.
 The wording changed since the previous round.
@@ -849,10 +826,8 @@ Unable to judge
 Unanswered
 Uncertain delivery
 Uncertain delivery resolved
-Unsaved change.
 Upload the complete new protocol as JSON. The preview shows every change from the current version; only your approval saves a new version.
 Valid ratings
-Upload a complete study protocol as JSON. It is validated and displayed; only your confirmation creates the study with protocol version 1. Thresholds are methodological decisions of the study team. Only synthetic studies are permitted in this development environment.
 Valid ratings per value
 Valid until (UTC)
 Valid until (UTC):
@@ -887,7 +862,6 @@ You can read the rounds and their analyses. Changes of state, item decisions and
 You joined the panel. Select the study to continue.
 Your account is not registered for this application. Contact the study coordinators.
 Your current rights do not permit this download.
-Your previous response:
 Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.
 a group has fewer than %s valid ratings
 and
@@ -898,21 +872,15 @@ at most
 by
 by a panel member
 by the background worker, approved by
-Worker, approved by
 You can answer the statements once you have given consent above.
 You can submit once you have given consent.
 You chose: %s
 You declined consent. You can still give consent.
 You did not answer.
 You ended your participation. This round can no longer be answered.
-You joined the panel. Select the study to continue.
-Your account is not registered for this application. Contact the study coordinators.
 Your answers in this round can no longer be changed.
 Your rating: %s
-Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.
 Your studies
-active
-agreement
 consensus for exclusion
 consensus for inclusion
 contacts imported;
@@ -924,9 +892,6 @@ in the pooled panel
 less than
 more than
 fewer than %s valid ratings in the panel or in one of its groups
-in every required group
-in the pooled panel
-inactive
 median %s
 no consensus
 of
@@ -937,12 +902,10 @@ released editorial version
 released editorial versions
 reminders:
 required
-response fields confirmed saved.
 revoked
 rows in the file.
 the account %s of %s
 the study team account
-rows in the file.
 too few valid ratings
 too few valid ratings to classify
 unbound invitation drafts.

@@ -16,9 +16,8 @@ A rationale and confirmation are required.	Une justification et une confirmation
 A reason and confirmation are required.	Une justification et une confirmation sont requises.
 A required group has fewer enrolled members than the minimum valid n; its results would be insufficient data.	Un groupe requis compte moins de membres inscrits que le n valide minimal ; ses résultats seraient des données insuffisantes.
 A right applies to exactly one account, identified by its identity provider (issuer) and its account identifier at that provider (subject), never by an email address. Each change applies from the person’s next action in the application and is recorded with its rationale. The last management right of a study cannot be revoked.	Un droit s’applique à un seul compte, identifié par son fournisseur d’identité (issuer) et son identifiant chez ce fournisseur (subject), jamais par une adresse e-mail. Chaque modification s’applique dès la prochaine action de la personne dans l’application et est enregistrée avec sa justification. Le dernier droit de direction d’une étude ne peut pas être retiré.
-A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.	Un processus distinct traite les analyses, les exports et les messages approuvés. Signalez à l’exploitant les longues attentes ou les opérations définitivement échouées.
-A study is created from a complete study protocol in JSON format. It is checked and shown to you; only your confirmation creates the study with protocol version 1.	Une étude est créée à partir d’un protocole d’étude complet au format JSON. Il est vérifié et affiché ; seule votre confirmation crée l’étude avec la version 1 du protocole.
 A separate worker processes analyses, exports and approved messages. Report long waiting times or permanently failed operations to the operator.	Un processus d’arrière-plan distinct traite les analyses, les exports et les messages approuvés. Signalez à l’exploitant les longues attentes ou les opérations définitivement échouées.
+A study is created from a complete study protocol in JSON format. It is checked and shown to you; only your confirmation creates the study with protocol version 1.	Une étude est créée à partir d’un protocole d’étude complet au format JSON. Il est vérifié et affiché ; seule votre confirmation crée l’étude avec la version 1 du protocole.
 A text and confirmation are required.	Un texte et une confirmation sont requis.
 A valid synthetic .invalid email is required	Une adresse e-mail synthétique .invalid valide est requise
 ACCORD/CREDES review	Examen ACCORD/CREDES
@@ -53,7 +52,6 @@ Analysis	Analyse
 Analysis and subsequent round	Analyse et tour suivant
 Analysis completed	Analyse terminée
 Analysis of round	Analyse du tour
-Analysis queued. Check the operation.	Analyse mise en attente. Consultez l’opération.
 Analysis queued. Check the operation.	Analyse mise en file d’attente. Consultez l’opération.
 Analysis requested	Analyse demandée
 Apply change of rights	Appliquer la modification des droits
@@ -211,9 +209,8 @@ Each event names its time, action, object and actor, and the rationale where the
 Each invitation is bound to exactly one verified account (identity-provider issuer and subject). An email address never selects an account. No email is sent.	Chaque invitation est liée à un seul compte vérifié (émetteur et sujet du fournisseur d’identité). Une adresse e-mail ne sélectionne jamais un compte. Aucun e-mail n’est envoyé.
 Each profile contains only the data of its purpose. The export is prepared in the background and stored privately. A downloaded file is no longer covered by this application’s access control.	Chaque profil ne contient que les données correspondant à sa finalité. L’export est préparé en arrière-plan et conservé de manière privée. Un fichier téléchargé n’est plus couvert par le contrôle d’accès de cette application.
 Each published version is immutable. A round refers to exactly one version; changed text is a new version.	Chaque version publiée est immuable. Un tour renvoie à une seule version ; un texte modifié constitue une nouvelle version.
-Each submitted free-text answer is preserved as an immutable original source, without a pseudonym. Answers already taken over are skipped. Participants see only versions that another person has released.	Chaque réponse en texte libre soumise est conservée comme source originale immuable, sans pseudonyme. Les réponses déjà reprises sont ignorées. Les participants ne voient que les versions publiées par une autre personne.
-Earlier answers are kept	Les réponses antérieures sont conservées
 Each submitted free-text answer is preserved as an immutable original source, without a pseudonym. Answers already taken over are skipped. Participants see only versions that another person has released.	Chaque réponse en texte libre envoyée est conservée comme source originale immuable, sans pseudonyme. Les réponses déjà reprises sont ignorées. Les participants ne voient que les versions publiées par une autre personne.
+Earlier answers are kept	Les réponses antérieures sont conservées
 Earlier item version	Version antérieure de l’item
 Earlier version	Version antérieure
 Earlier wording	Formulation antérieure
@@ -239,10 +236,9 @@ Enroll eligible panel members	Inscrire les membres admissibles du panel
 Enrolled panel members	Membres du panel inscrits
 Enter a date (YYYY-MM-DD) and a time (HH:MM).	Indiquez une date (AAAA-MM-JJ) et une heure (HH:MM).
 Enter text or select another response type.	Saisissez un texte ou sélectionnez un autre type de réponse.
-Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.	Saisissez le code de remise reçu de la coordination de l’étude. La vérification ne modifie rien. Seule votre confirmation explicite vous ajoute au panel ; le consentement et les réponses restent des étapes distinctes.
+Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.	Saisissez le code d’invitation reçu de la coordination de l’étude. La vérification ne modifie rien. Seule votre confirmation explicite vous ajoute au panel ; le consentement et les réponses restent des étapes distinctes.
 Enter the identity provider and the account identifier of the other account.	Indiquez le fournisseur d’identité et l’identifiant de l’autre compte.
 Enter the purpose of the export (10 to 500 characters).	Indiquez la finalité de l’export (10 à 500 caractères).
-Enter the hand-over code you received from the study coordinators. Checking changes nothing. Only your explicit confirmation adds you to the panel; consent and responses remain separate steps.	Saisissez le code d’invitation reçu de la coordination de l’étude. La vérification ne modifie rien. Seule votre confirmation explicite vous ajoute au panel ; le consentement et les réponses restent des étapes distinctes.
 Error code	Code d’erreur
 Event	Événement
 Events, approvals and rationales without response content, contacts or editorial originals.	Événements, approbations et justifications sans contenu de réponses, contacts ni originaux éditoriaux.
@@ -259,9 +255,8 @@ Exploratory Delphi in rounds	Delphi exploratoire par tours
 Export	Export
 Export downloaded	Export téléchargé
 Export profile	Profil d’export
-Export queued. Check the operation.	Export mis en attente. Consultez l’opération.
-Export queued. Follow it with “Check status”.	Export mis en file d’attente. Suivez-le avec « Vérifier l’état ».
 Export queued. Check the operation.	Export mis en file d’attente. Consultez l’opération.
+Export queued. Follow it with “Check status”.	Export mis en file d’attente. Suivez-le avec « Vérifier l’état ».
 Export requested	Export demandé
 Export the data of round %s	Exporter les données du tour %s
 Export:	Export :
@@ -437,16 +432,13 @@ No accessible study. Contact the study team.	Aucune étude accessible. Contactez
 No account chosen yet.	Aucun compte choisi pour l’instant.
 No approved translation is available; displayed language:	Aucune traduction approuvée n’est disponible ; langue affichée :
 No assigned round.	Aucun tour attribué.
-No clear answer from the provider	Pas de réponse claire du service
+No clear answer from the provider	Pas de réponse claire du prestataire
 No consensus	Pas de consensus
 No access to this application	Pas d’accès à cette application
 No accessible study yet. Contact the study team.	Aucune étude accessible pour le moment. Contactez l’équipe de l’étude.
 No accessible study yet. Enter the hand-over code of your invitation above, or contact the study team.	Aucune étude accessible pour le moment. Saisissez ci-dessus le code de votre invitation ou contactez l’équipe de l’étude.
 No accessible study yet. You can create a study below or enter the hand-over code of an invitation above.	Aucune étude accessible pour le moment. Vous pouvez créer une étude ci-dessous ou saisir ci-dessus le code d’une invitation.
 No accessible study yet. You can create a study below.	Aucune étude accessible pour le moment. Vous pouvez créer une étude ci-dessous.
-No approved translation is available; displayed language:	Aucune traduction approuvée n’est disponible ; langue affichée :
-No assigned round.	Aucun tour attribué.
-No clear answer from the provider	Pas de réponse claire du prestataire
 No contact rows	Aucune ligne de contact
 No editorial version has been released yet; versions are released under Editorial review.	Aucune version éditoriale n’a encore été publiée ; les versions sont publiées sous Examen éditorial.
 No eligible panel member is enrolled.	Aucun membre admissible du panel n’est inscrit.
@@ -464,9 +456,7 @@ No round created: an item keeps its version number although its wording, scale o
 No round created: the deadline must lie in the future.	Aucun tour créé : la date limite doit se situer dans le futur.
 No round created: the feedback of the current round must be released first.	Aucun tour créé : le retour du tour en cours doit d’abord être publié.
 No round created: the protocol allows no further round.	Aucun tour créé : le protocole n’autorise aucun tour supplémentaire.
-No partial import: the entire file remains blocked.	Aucune importation partielle : le fichier entier reste bloqué.
 No rating (%s)	Pas de note (%s)
-No released feedback is assigned to this round.	Aucun retour publié n’est attribué à ce tour.
 No round has been opened yet.	Aucun tour n’a encore été ouvert.
 Normalized email	E-mail normalisé
 Not applicable	Sans objet
@@ -553,21 +543,18 @@ Pseudonym	Pseudonyme
 Pseudonymized data of one round	Données pseudonymisées d’un tour
 Pseudonymized research data	Données de recherche pseudonymisées
 Publish a new version	Publier une nouvelle version
-Publish study information	Publier l’information sur l’étude
-Publish the study information under Setup first.	Publiez d’abord l’information sur l’étude dans Configuration.
+Publish study information	Publier les informations sur l’étude
+Publish the study information under Setup first.	Publiez d’abord les informations sur l’étude dans Configuration.
 Purpose of the export (10 to 500 characters)	Finalité de l’export (10 à 500 caractères)
 Purpose of this export (10 to 500 characters)	Finalité de cet export (10 à 500 caractères)
 Purpose:	Finalité :
-Publish study information	Publier les informations sur l’étude
-Publish the study information under Setup first.	Publiez d’abord les informations sur l’étude dans Configuration.
 Qualitative content enters feedback only as a version that another person has released. Summaries are labelled as such, never as quotations.	Un contenu qualitatif n’entre dans le retour que sous la forme d’une version publiée par une autre personne. Les synthèses sont signalées comme telles, jamais comme des citations.
 Qualitative editorial work	Travail éditorial qualitatif
 Question %s:	Question %s :
 Questions	Questions
 Queue again, a duplicate is possible	Remettre en file d’attente, un doublon est possible
-Queued	En attente
-Queued again	Remis en file d’attente
 Queued	En file d’attente
+Queued again	Remis en file d’attente
 Quiet hours:	Heures de silence :
 Rate again	Évaluer de nouveau
 Rating	Note
@@ -596,8 +583,6 @@ Receipt:	Reçu :
 Record an item split or merge	Enregistrer une division ou une fusion d’items
 Record an original source	Enregistrer une source originale
 Recorded	Enregistrée le
-Redacted contribution	Contribution révisée
-Redacted contribution:	Contribution révisée :
 Redacted contribution	Contribution expurgée
 Redacted contribution:	Contribution expurgée :
 Redacted version	Version expurgée
@@ -611,17 +596,12 @@ Refusal recorded. Receipt:	Refus enregistré. Reçu :
 Register account and issue invitation	Enregistrer le compte et émettre l’invitation
 Relationship	Relation
 Release correction	Publier la correction
-Release feedback	Publier la restitution
-Release version	Approuver la version
+Release feedback	Publier le retour
+Release version	Publier la version
 Released	Publié le
 Released contributions of the previous round	Contributions publiées du tour précédent
 Released feedback	Retour publié
 Released feedback is assigned to this round. A later correction of that feedback reaches the round’s participants without a new assignment.	Un retour publié est attribué à ce tour. Une correction ultérieure de ce retour parvient aux participants du tour sans nouvelle attribution.
-Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.	Un retour publié n’est jamais modifié. Une correction publie une nouvelle version qui le remplace pour les consultations ultérieures ; les affichages antérieurs restent attribués à l’ancienne version. Évaluez l’effet sur les évaluations déjà données.
-Released previous-round feedback:	Restitution publiée du tour précédent :
-Release feedback	Publier le retour
-Release version	Publier la version
-Released contributions of the previous round	Contributions publiées du tour précédent
 Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.	Un retour publié n’est jamais modifié. Une correction publie une nouvelle version qui le remplace pour les consultations ultérieures ; les affichages antérieurs restent attribués à l’ancienne version. Évaluez l’effet sur les notes déjà données.
 Released previous-round feedback:	Retour publié du tour précédent :
 Released versions for this feedback	Versions publiées pour ce retour
@@ -637,9 +617,8 @@ Request the exports your role permits. Every retrieval is checked and recorded.	
 Requested exports	Exports demandés
 Requested:	Demandé le :
 Required fields are open in block:	Des champs obligatoires sont ouverts dans le bloc :
-Required response fields are still open. They are named in the overview above the submit button.	Des champs de réponse obligatoires sont encore ouverts. Ils sont indiqués dans l’aperçu au-dessus du bouton de soumission.
-Required statements are open in block:	Des énoncés obligatoires sont ouverts dans le bloc :
 Required response fields are still open. They are named in the overview above the submit button.	Des champs de réponse obligatoires sont encore ouverts. Ils sont indiqués dans l’aperçu au-dessus du bouton d’envoi.
+Required statements are open in block:	Des énoncés obligatoires sont ouverts dans le bloc :
 Requirement	Exigence
 Research data export	Export des données de recherche
 Resolve uncertain deliveries	Régler les remises incertaines
@@ -651,9 +630,8 @@ Results by stakeholder group	Résultats par groupe de parties prenantes
 Results for participants	Résultats pour les participants
 Results of the earlier wording are not directly comparable.	Les résultats de la formulation antérieure ne sont pas directement comparables.
 Retain	Conserver
-Review and release feedback	Examiner et publier la restitution
-Review and submit	Vérifier et envoyer
 Review and release feedback	Examiner et publier le retour
+Review and submit	Vérifier et envoyer
 Review instrument and readiness	Examiner l’instrument et l’état de préparation
 Review rationale including dissent	Justification de l’examen, y compris les avis divergents
 Review relationship	Examiner la relation
@@ -681,9 +659,8 @@ Round frozen	Tour figé
 Round opening	Ouverture du tour
 Round prepared	Tour préparé
 Round state changed	État du tour modifié
-Round submitted	Tour soumis
-Round: version %s; current: version %s	Tour : version %s ; actuelle : version %s
 Round submitted	Tour envoyé
+Round: version %s; current: version %s	Tour : version %s ; actuelle : version %s
 Rounds and analysis	Tours et analyse
 Rounds enrolled	Tours avec inscription
 Rounds submitted	Tours envoyés
@@ -715,9 +692,6 @@ Scale of the dimension:	Échelle de la dimension :
 Saved	Enregistré
 Saved at %s	Enregistré à %s
 Saved on %s	Enregistré le %s
-Saved response loaded.	Réponse enregistrée chargée.
-Saved version	Version enregistrée
-Saved. Original history is preserved.	Enregistré. L’historique original est conservé.
 Select consent explicitly first.	Cochez d’abord explicitement le consentement.
 Semicolon	Point-virgule
 Setup	Configuration
@@ -752,7 +726,6 @@ State change confirmed.	Changement d’état confirmé.
 State of round	État du tour
 State of the latest export:	État du dernier export :
 Statements answered and saved: %s of %s.	Énoncés avec une réponse enregistrée : %s sur %s.
-Status	Statut
 Status	État
 Status of background work	État des traitements en arrière-plan
 Study	Étude
@@ -767,13 +740,10 @@ Study documentation recorded	Documentation de l’étude enregistrée
 Study exports	Exports de l’étude
 Study information	Informations sur l’étude
 Study information and consent	Informations sur l’étude et consentement
-Study information and consent text	Texte d’information sur l’étude et de consentement
-Study information published	Information sur l’étude publiée
-Study information published.	Information sur l’étude publiée.
-Study information, version	Informations sur l’étude, version
 Study information and consent text	Texte des informations sur l’étude et du consentement
 Study information published	Informations sur l’étude publiées
 Study information published.	Informations sur l’étude publiées.
+Study information, version	Informations sur l’étude, version
 Study leadership	Direction de l’étude
 Study protocol (JSON, maximum 1 MB)	Protocole d’étude (JSON, 1 Mo maximum)
 Study sections	Sections de l’étude
@@ -830,9 +800,8 @@ The round was withdrawn; its state no longer changes.	Le tour a été retiré ; 
 The round’s protocol no longer validates.	Le protocole du tour n’est plus valide.
 The rule outcome of the analysis is not a decision. Record the study team’s decision for each item with its rationale; no consensus is a legitimate result.	Le résultat de la règle d’analyse n’est pas une décision. Consignez pour chaque item la décision de l’équipe de l’étude avec sa justification ; l’absence de consensus est un résultat légitime.
 The study can be completed once its last round is finalized and the study team has recorded a decision for every item of that round.	L’étude peut être terminée dès que son dernier tour est finalisé et que l’équipe de l’étude a enregistré une décision pour chaque item de ce tour.
-The study information is not in one of the protocol languages.	L’information sur l’étude n’est rédigée dans aucune des langues du protocole.
-The study is completed.	L’étude est terminée.
 The study information is not in one of the protocol languages.	Les informations sur l’étude ne sont rédigées dans aucune des langues du protocole.
+The study is completed.	L’étude est terminée.
 The study is not in a state that allows data collection.	L’étude n’est pas dans un état permettant la collecte de données.
 The study lead requests the analysis of this round.	La direction de l’étude demande l’analyse de ce tour.
 The uploaded protocol is identical to the current version; there is nothing to approve.	Le protocole téléversé est identique à la version actuelle ; il n’y a rien à approuver.
@@ -910,15 +879,14 @@ Withdrawn (never opened)	Retiré (jamais ouvert)
 Without consent you cannot answer this round; you can still give consent later. To stop taking part in the study, use “End participation” at the end of this page.	Sans consentement, vous ne pouvez pas répondre à ce tour ; vous pourrez encore consentir plus tard. Pour ne plus participer à l’étude, utilisez « Mettre fin à la participation » en bas de cette page.
 Wording	Libellé
 Wording of the statement in that language	Libellé de l’énoncé dans cette langue
-Worker interrupted during delivery	Worker interrompu pendant la remise
-You can read the rounds and their analyses. Changes of state, item decisions and feedback releases are made by the study lead.	Vous pouvez consulter les tours et leurs analyses. Les changements d’état, les décisions sur les items et la publication des retours relèvent de la direction de l’étude.
 Worker interrupted during delivery	Processus d’arrière-plan interrompu pendant la remise
+You can read the rounds and their analyses. Changes of state, item decisions and feedback releases are made by the study lead.	Vous pouvez consulter les tours et leurs analyses. Les changements d’état, les décisions sur les items et la publication des retours relèvent de la direction de l’étude.
 Worker, approved by	Processus d’arrière-plan, approuvé par
 You joined the panel. Select the study to continue.	Vous avez rejoint le panel. Sélectionnez l’étude pour continuer.
 Your account is not registered for this application. Contact the study coordinators.	Votre compte n’est pas enregistré pour cette application. Contactez la coordination de l’étude.
 Your current rights do not permit this download.	Vos droits actuels ne permettent pas ce téléchargement.
 Your previous response:	Votre réponse précédente :
-Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.	Votre connexion a expiré. Rechargez la page et connectez-vous à nouveau. Les saisies dont l’enregistrement a été confirmé sont conservées ; cette action n’a pas été exécutée.
+Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.	Votre session a expiré. Rechargez la page et reconnectez-vous. Les saisies dont l’enregistrement a été confirmé sont conservées ; cette action n’a pas été exécutée.
 a group has fewer than %s valid ratings	un groupe compte moins de %s évaluations valides
 and	et
 and adapt it: study code and title, languages, stakeholder groups, rating dimensions and scales, consensus rule and number of rounds.	et l’adapter : code et titre de l’étude, langues, groupes de parties prenantes, dimensions et échelles d’évaluation, règle de consensus et nombre de tours.
@@ -928,19 +896,14 @@ at most	au plus
 by	par
 by a panel member	par un membre du panel
 by the background worker, approved by	par le traitement en arrière-plan, approuvé par
-Worker, approved by	Traitement automatique, approuvé par
 You can answer the statements once you have given consent above.	Vous pourrez répondre aux énoncés une fois votre consentement donné ci-dessus.
 You can submit once you have given consent.	Vous pourrez envoyer une fois votre consentement donné.
 You chose: %s	Votre choix : %s
 You declined consent. You can still give consent.	Vous avez refusé le consentement. Vous pouvez encore consentir.
 You did not answer.	Vous n’avez pas répondu.
 You ended your participation. This round can no longer be answered.	Vous avez mis fin à votre participation. Il n’est plus possible de répondre à ce tour.
-You joined the panel. Select the study to continue.	Vous avez rejoint le panel. Sélectionnez l’étude pour continuer.
-Your account is not registered for this application. Contact the study coordinators.	Votre compte n’est pas enregistré pour cette application. Contactez la coordination de l’étude.
 Your answers in this round can no longer be changed.	Vos réponses à ce tour ne peuvent plus être modifiées.
 Your rating: %s	Votre note : %s
-Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.	Votre connexion a expiré. Rechargez la page et connectez-vous à nouveau. Les saisies dont l’enregistrement a été confirmé sont conservées ; cette action n’a pas été exécutée.
-Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.	Votre session a expiré. Rechargez la page et reconnectez-vous. Les saisies dont l’enregistrement a été confirmé sont conservées ; cette action n’a pas été exécutée.
 Your studies	Vos études
 active	actif
 agreement	accord
@@ -955,8 +918,6 @@ in the pooled panel	dans l’ensemble du panel
 less than	moins de
 more than	plus de
 fewer than %s valid ratings in the panel or in one of its groups	moins de %s évaluations valides dans le panel ou dans l’un de ses groupes
-in every required group	dans chaque groupe requis
-in the pooled panel	dans l’ensemble du panel
 inactive	inactif
 median %s	médiane %s
 no consensus	pas de consensus
@@ -973,7 +934,6 @@ revoked	retiré
 rows in the file.	lignes dans le fichier.
 the account %s of %s	le compte %s de %s
 the study team account	le compte de l’équipe de l’étude
-rows in the file.	lignes dans le fichier.
 too few valid ratings	trop peu d’évaluations valides
 too few valid ratings to classify	trop peu d’évaluations valides pour un classement
 unbound invitation drafts.	brouillons d’invitation non associés.
