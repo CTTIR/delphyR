@@ -257,7 +257,7 @@ test_that("managers read the status of background work without content", {
     session$flushReact()
     expect_match(output$body$html, "Status of background work", fixed = TRUE)
     session$setInputs(background_load = 1)
-    expect_match(output$background_jobs, "Export study_summary", fixed = TRUE)
+    expect_match(output$background_jobs, "Export: Aggregated study summary", fixed = TRUE)
     expect_match(output$background_jobs, "Permanently failed", fixed = TRUE)
     expect_match(output$background_jobs, "DEL_RENDER", fixed = TRUE)
     expect_match(output$background_messages, "Outcome unknown", fixed = TRUE)
