@@ -797,7 +797,7 @@ truncate_text <- function(x, width) {
 
 # The wording of a statement in the interface language where the instrument
 # has it, otherwise in its first language. Study content is never translated.
-statement_text <- function(items, code, lang, fallback = NULL) {
+statement_wording <- function(items, code, lang, fallback = NULL) {
   if (is.null(items) || !is.data.frame(items) || !nrow(items)) {
     return(list(text = NA_character_, locale = NA_character_))
   }
@@ -816,11 +816,11 @@ statement_text <- function(items, code, lang, fallback = NULL) {
 }
 statement_label <- function(codes, items, lang, fallback = NULL, width = 70L) {
   codes <- as.character(codes)
-  text <- vapply(codes, function(code) statement_text(items, code, lang, fallback)$text, character(1))
+  text <- vapply(codes, function(code) statement_wording(items, code, lang, fallback)$text, character(1))
   unname(ifelse(is.na(text), codes, paste0(codes, " \u00b7 ", truncate_text(text, width))))
 }
 statement_cell <- function(code, items, lang, fallback = NULL, dimension = NULL) {
-  s <- statement_text(items, code, lang, fallback)
+  s <- statement_wording(items, code, lang, fallback)
   shiny::tagList(shiny::tags$strong(code), if (length(dimension)) paste0(" \u00b7 ", dimension), if (!is.na(s$text)) shiny::tagList(shiny::tags$br(), shiny::tags$span(lang = s$locale, s$text)))
 }
 
