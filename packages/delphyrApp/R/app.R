@@ -82,16 +82,14 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
   ui <- shiny::fluidPage(
     theme = bslib::bs_theme(version = 5, bg = "#eceff2", fg = "#22303c", primary = "#0e6e78", success = "#0e6e78", danger = "#b3372b", base_font = "system-ui"),
     shiny::tags$head(
-      shiny::tags$script(shiny::HTML(page_script(language))), shiny::tags$style(shiny::HTML(app_css())),
-      shiny::tags$link(rel = "icon", type = "image/png", href = "delphyr-brand/delphyR-mark.png"),
-      shiny::tags$link(rel = "icon", type = "image/svg+xml", href = "delphyr-brand/delphyR-mark.svg")
+      shiny::tags$script(shiny::HTML(page_script(language))), shiny::tags$style(shiny::HTML(app_css()))
     ),
     shiny::tags$div(
       class = "del-wrap",
       shiny::tags$header(
         class = "del-header", shiny::tags$div(
           class = "del-brand",
-          shiny::tags$img(class = "del-logo", src = "delphyr-brand/delphyR-mark.svg", alt = "", width = 64, height = 72),
+          .cttir_brand_logo(72),
           shiny::tags$h1("delphyR")
         ),
         shiny::tags$div(

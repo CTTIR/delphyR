@@ -1,4 +1,4 @@
-# delphyr <img src="man/figures/logo.png" align="right" width="150" alt="delphyr hex logo" />
+# delphyr <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="man/figures/logo-with-name-dark.png" /><img src="man/figures/logo-with-name.png" align="right" alt="delphyr logo" width="120" height="139" /></picture>
 
 **Reproducible Delphi analysis, independent of the application.**
 

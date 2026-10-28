@@ -168,7 +168,7 @@ test_that("a person without any study is told what can be done next", {
 
 test_that("the header shows a clean mark, plain lists and nothing empty beside the language", {
   html <- shell_page(run_app(actor = list(principal_id = "p"), services = shell_services()))
-  expect_match(html, "<img class=\"del-logo\" src=\"delphyr-brand/delphyR-mark.svg\"", fixed = TRUE)
+  expect_match(html, "class=\"cttir-app-brand\"", fixed = TRUE)
   expect_true(file.exists(system.file("www", "delphyR-mark.svg", package = "delphyrApp")))
   expect_false(grepl("delphyR-hex.png", html, fixed = TRUE))
   # The language and study lists are the browser's own, like the other lists.

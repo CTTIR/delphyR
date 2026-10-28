@@ -1,4 +1,4 @@
-# delphyR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="packages/delphyrApp/man/figures/logo-with-name-dark.png" /><img src="packages/delphyrApp/man/figures/logo-with-name.png" align="right" alt="delphyR hex logo" width="150" height="174" /></picture>
+# delphyR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="packages/delphyrApp/man/figures/logo-with-name-dark.png" /><img src="packages/delphyrApp/man/figures/logo-with-name.png" align="right" alt="delphyrApp logo" width="120" height="139" /></picture>
 
 **A traceable workflow for round-based Delphi studies.**
 

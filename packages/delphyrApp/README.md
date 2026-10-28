@@ -1,4 +1,4 @@
-# delphyrApp <img src="man/figures/logo.png" align="right" width="150" alt="delphyR hex logo" />
+# delphyrApp <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="man/figures/logo-with-name-dark.png" /><img src="man/figures/logo-with-name.png" align="right" alt="delphyrApp logo" width="120" height="139" /></picture>
 
 **A focused workspace for synthetic Delphi studies.**
 
