@@ -63,9 +63,7 @@ Approved	Approuvé
 Approved for local test receipts	Approuvé pour les traces de test locales
 Approved from (UTC):	Approuvé à partir de (UTC) :
 Approved. No email will be sent.	Approuvé. Aucun e-mail ne sera envoyé.
-Assess evidence together	Évaluer ensemble les connaissances
 Assign feedback	Attribuer le retour
-Assign to selected subsequent round	Attribuer au tour suivant sélectionné
 At least one topic needs a statement.	Au moins un sujet doit contenir une déclaration.
 Authors and responsibilities	Auteurs et responsabilités
 Awaiting acceptance	En attente d’acceptation
@@ -73,7 +71,6 @@ Block	Bloc
 Blocking	Bloquant
 Blocks of this round	Blocs de ce tour
 Browse…	Parcourir…
-By	Par
 By stakeholder group:	Par groupe de parties prenantes :
 CSV columns: external_ref, email, display_name, locale, stakeholder_group. Use UTF-8; the entire file must pass validation before import.	Colonnes CSV : external_ref, email, display_name, locale, stakeholder_group. Utilisez UTF-8 ; le fichier entier doit être validé avant l’importation.
 CSV could not be parsed	Le fichier CSV n’a pas pu être lu
@@ -428,7 +425,6 @@ New stakeholder group	Nouveau groupe de parties prenantes
 New state	Nouvel état
 New version confirmed:	Nouvelle version confirmée :
 Next block	Bloc suivant
-No accessible study. Contact the study team.	Aucune étude accessible. Contactez l’équipe de l’étude.
 No account chosen yet.	Aucun compte choisi pour l’instant.
 No approved translation is available; displayed language:	Aucune traduction approuvée n’est disponible ; langue affichée :
 No assigned round.	Aucun tour attribué.
@@ -446,7 +442,6 @@ No feedback was assigned: the round has no enrolled panel members yet. Enroll th
 No file selected	Aucun fichier sélectionné
 No findings.	Aucun constat.
 No further state change is possible for this round.	Aucun autre changement d’état n’est possible pour ce tour.
-No panel view is available for this study.	Aucune vue de participation n’est disponible pour cette étude.
 No partial import: the entire file remains blocked.	Aucune importation partielle : le fichier entier reste bloqué.
 No recorded event matches this selection.	Aucun événement enregistré ne correspond à cette sélection.
 No released feedback is assigned to this round.	Aucun retour publié n’est attribué à ce tour.
@@ -603,9 +598,6 @@ Released contributions of the previous round	Contributions publiées du tour pr�
 Released feedback	Retour publié
 Released feedback is assigned to this round. A later correction of that feedback reaches the round’s participants without a new assignment.	Un retour publié est attribué à ce tour. Une correction ultérieure de ce retour parvient aux participants du tour sans nouvelle attribution.
 Released feedback is never changed. A correction releases a new version that replaces it for later views; earlier displays remain attributed to the old version. Assess the effect on ratings already given.	Un retour publié n’est jamais modifié. Une correction publie une nouvelle version qui le remplace pour les consultations ultérieures ; les affichages antérieurs restent attribués à l’ancienne version. Évaluez l’effet sur les notes déjà données.
-Released previous-round feedback:	Retour publié du tour précédent :
-Released versions for this feedback	Versions publiées pour ce retour
-Released versions of the corrected version	Versions publiées de la version corrigée
 Reminder	Rappel
 Remove	Retirer
 Replaced	Remplacé
@@ -616,8 +608,6 @@ Request export	Demander l’export
 Request the exports your role permits. Every retrieval is checked and recorded.	Demandez les exports que votre rôle autorise. Chaque récupération est vérifiée et enregistrée.
 Requested exports	Exports demandés
 Requested:	Demandé le :
-Required fields are open in block:	Des champs obligatoires sont ouverts dans le bloc :
-Required response fields are still open. They are named in the overview above the submit button.	Des champs de réponse obligatoires sont encore ouverts. Ils sont indiqués dans l’aperçu au-dessus du bouton d’envoi.
 Required statements are open in block:	Des énoncés obligatoires sont ouverts dans le bloc :
 Requirement	Exigence
 Research data export	Export des données de recherche
@@ -639,7 +629,6 @@ Review synthetic contacts and exact recipient lists before approving imports or 
 Review the recorded history of this study. Response content and contacts are not part of this view.	Examinez l’historique enregistré de cette étude. Le contenu des réponses et les contacts ne font pas partie de cette vue.
 Review the round state and record a rationale for every transition. Permissions and state are checked again when the action runs.	Vérifiez l’état du tour et indiquez une justification pour chaque transition. Les autorisations et l’état sont de nouveau vérifiés lors de l’exécution de l’action.
 Review the summary and the complete protocol, then confirm.	Vérifiez le résumé et le protocole complet, puis confirmez.
-Review the round state and record a reason for every transition. Permissions and state are checked again when the action runs.	Examinez l’état du tour et indiquez un motif pour chaque transition. Les autorisations et l’état sont de nouveau vérifiés lors de l’exécution de l’action.
 Revise	Réviser
 Revocation rationale	Justification de la révocation
 Revoke	Retirer
@@ -649,7 +638,6 @@ Revoked	Révoquée
 Revoked rights	Droits retirés
 Right	Droit
 Right granted or revoked	Droit accordé ou retiré
-Rights apply to exactly one account with issuer and subject, never to an email address. Each change takes effect at the person’s next protected action and is recorded with its rationale. The last management right of a study cannot be revoked.	Les droits s’appliquent à un seul compte identifié par son émetteur et son sujet, jamais à une adresse e-mail. Chaque modification prend effet à la prochaine action protégée de la personne et est consignée avec sa justification. Le dernier droit de direction d’une étude ne peut pas être retiré.
 Round	Tour
 Round data (pseudonymized)	Données du tour (pseudonymisées)
 Round %s	Tour %s
@@ -682,12 +670,9 @@ Save theme version	Enregistrer la version du thème
 Save version	Enregistrer la version
 Save your changes first. The current round stays open.	Enregistrez d’abord vos modifications. Le tour actuel reste ouvert.
 Saved (UTC)	Enregistrée (UTC)
-Saved response	Réponse enregistrée
 Saved response loaded.	Réponse enregistrée chargée.
 Saved version	Version enregistrée
 Saved. Original history is preserved.	Enregistré. L’historique original est conservé.
-Saved:	Enregistré :
-Saving …	Enregistrement…
 Scale of the dimension:	Échelle de la dimension :
 Saved	Enregistré
 Saved at %s	Enregistré à %s
@@ -752,9 +737,6 @@ Study team and rights	Équipe de l’étude et droits
 Study team’s decision	Décision de l’équipe de l’étude
 Study text, scale anchors and consent remain in their approved language.	Les textes de l’étude, les libellés des échelles et le consentement restent dans leur langue approuvée.
 Subject	Objet
-Submission confirmed:	Envoi confirmé :
-Submission receipt:	Reçu d’envoi :
-Subject of the other account	Sujet de l’autre compte
 Submission confirmed: %s.	Envoi confirmé : %s.
 Submit by:	À envoyer avant le :
 Submit final responses	Envoyer les réponses définitives
@@ -805,8 +787,6 @@ The study is completed.	L’étude est terminée.
 The study is not in a state that allows data collection.	L’étude n’est pas dans un état permettant la collecte de données.
 The study lead requests the analysis of this round.	La direction de l’étude demande l’analyse de ce tour.
 The uploaded protocol is identical to the current version; there is nothing to approve.	Le protocole téléversé est identique à la version actuelle ; il n’y a rien à approuver.
-The wording changed. Ratings are not directly comparable.	La formulation a changé. Les notes ne sont pas directement comparables.
-The wording was revised. The study team assessed both versions as comparable.	Le libellé a été révisé. L’équipe de l’étude a jugé les deux versions comparables.
 The study team assessed both versions as comparable.	L’équipe de l’étude a jugé les deux versions comparables.
 The wording changed since round %s.	La formulation a changé depuis le tour %s.
 The wording changed since the previous round.	La formulation a changé depuis le tour précédent.
@@ -846,10 +826,8 @@ Unable to judge	Impossible à évaluer
 Unanswered	Sans réponse
 Uncertain delivery	Remise incertaine
 Uncertain delivery resolved	Remise incertaine réglée
-Unsaved change.	Modification non enregistrée.
 Upload the complete new protocol as JSON. The preview shows every change from the current version; only your approval saves a new version.	Téléversez le nouveau protocole complet au format JSON. L’aperçu montre chaque modification par rapport à la version actuelle ; seule votre approbation enregistre une nouvelle version.
 Valid ratings	Évaluations valides
-Upload a complete study protocol as JSON. It is validated and displayed; only your confirmation creates the study with protocol version 1. Thresholds are methodological decisions of the study team. Only synthetic studies are permitted in this development environment.	Téléversez un protocole d’étude complet au format JSON. Il est validé et affiché ; seule votre confirmation crée l’étude avec la version 1 du protocole. Les seuils sont des décisions méthodologiques de l’équipe de l’étude. Seules les études synthétiques sont autorisées dans cet environnement de développement.
 Valid ratings per value	Évaluations valides par valeur
 Valid until (UTC)	Valable jusqu’au (UTC)
 Valid until (UTC):	Valable jusqu’au (UTC) :
@@ -881,11 +859,9 @@ Wording	Libellé
 Wording of the statement in that language	Libellé de l’énoncé dans cette langue
 Worker interrupted during delivery	Processus d’arrière-plan interrompu pendant la remise
 You can read the rounds and their analyses. Changes of state, item decisions and feedback releases are made by the study lead.	Vous pouvez consulter les tours et leurs analyses. Les changements d’état, les décisions sur les items et la publication des retours relèvent de la direction de l’étude.
-Worker, approved by	Processus d’arrière-plan, approuvé par
 You joined the panel. Select the study to continue.	Vous avez rejoint le panel. Sélectionnez l’étude pour continuer.
 Your account is not registered for this application. Contact the study coordinators.	Votre compte n’est pas enregistré pour cette application. Contactez la coordination de l’étude.
 Your current rights do not permit this download.	Vos droits actuels ne permettent pas ce téléchargement.
-Your previous response:	Votre réponse précédente :
 Your sign-in has expired. Reload the page and sign in again. Entries confirmed as saved are kept; this action was not carried out.	Votre session a expiré. Rechargez la page et reconnectez-vous. Les saisies dont l’enregistrement a été confirmé sont conservées ; cette action n’a pas été exécutée.
 a group has fewer than %s valid ratings	un groupe compte moins de %s évaluations valides
 and	et
@@ -905,8 +881,6 @@ You ended your participation. This round can no longer be answered.	Vous avez mi
 Your answers in this round can no longer be changed.	Vos réponses à ce tour ne peuvent plus être modifiées.
 Your rating: %s	Votre note : %s
 Your studies	Vos études
-active	actif
-agreement	accord
 consensus for exclusion	consensus pour l’exclusion
 consensus for inclusion	consensus pour l’inclusion
 contacts imported;	contacts importés ;
@@ -918,7 +892,6 @@ in the pooled panel	dans l’ensemble du panel
 less than	moins de
 more than	plus de
 fewer than %s valid ratings in the panel or in one of its groups	moins de %s évaluations valides dans le panel ou dans l’un de ses groupes
-inactive	inactif
 median %s	médiane %s
 no consensus	pas de consensus
 of	sur
@@ -929,7 +902,6 @@ released editorial version	version éditoriale publiée
 released editorial versions	versions éditoriales publiées
 reminders:	rappels :
 required	obligatoire
-response fields confirmed saved.	champs de réponse confirmés comme enregistrés.
 revoked	retiré
 rows in the file.	lignes dans le fichier.
 the account %s of %s	le compte %s de %s
