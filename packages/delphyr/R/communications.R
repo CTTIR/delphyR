@@ -41,7 +41,7 @@ campaign_get <- function(repo, actor, id, lock = FALSE) {
 }
 campaign_hash <- function(repo, c) {
   ids <- query(repo, "SELECT enrollment_id FROM ops.campaign_recipients WHERE campaign_id=$1 ORDER BY enrollment_id", c$id)$enrollment_id
-  content_hash(list(round_id = c$round_id, enrollment_ids = sort(ids), kind = c$kind, subject = c$subject, body = c$body, locale = c$locale, template_version = c$template_version))
+  hash_content(list(round_id = c$round_id, enrollment_ids = sort(ids), kind = c$kind, subject = c$subject, body = c$body, locale = c$locale, template_version = c$template_version), c$hash)
 }
 #' Preview exact campaign text and pseudonymous recipients
 #' @param repo Repository.

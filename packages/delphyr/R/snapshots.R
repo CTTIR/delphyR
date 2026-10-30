@@ -8,7 +8,7 @@ read_snapshot <- function(value) {
   r$value_text <- as.character(r$value_text)
   r$value_integer <- as.integer(r$value_integer)
   x$items$item_version <- as.integer(x$items$item_version)
-  s <- new_snapshot(r, x$assignments, x$items, p, x$round_number, x$snapshot_id)
+  s <- new_snapshot(r, x$assignments, x$items, p, x$round_number, x$snapshot_id, hash_version = hash_version(x$content_hash))
   ensure(identical(s$content_hash, x$content_hash), "snapshot.hash")
   s
 }

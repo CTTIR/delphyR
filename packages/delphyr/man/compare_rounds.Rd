@@ -7,7 +7,7 @@
 compare_rounds(previous, current, mapping = NULL)
 }
 \arguments{
-\item{previous, current}{Validated snapshots.}
+\item{previous, current}{Validated snapshots with the same study code.}
 
 \item{mapping}{Optional table item_code, dimension_code, previous_version,
 current_version, comparable, reason. Explicit approval required for new versions.}

@@ -17,8 +17,16 @@ protocol_summary <- function(p, lang) {
     v <- range(unlist(values))
     if (v[1] == v[2]) as.character(v[1]) else paste0(v[1], "\u2013", v[2])
   }
-  # A threshold keeps its decimals; only a share of ratings is rounded.
-  share <- function(x) paste0(format_number(100 * x, lang, 2L), if (lang %in% c("fr", "de")) "\u00a0%" else "%")
+  # A readable percentage is sufficient only if converting it back recovers
+  # the exact threshold. Multiplying a double by 100 can itself lose a digit.
+  share <- function(x) {
+    text <- paste0(format_number(100 * x, lang, 2L), if (lang %in% c("fr", "de")) "\u00a0%" else "%")
+    if (round(100 * x, 2L) / 100 != x) {
+      exact <- format(x, digits = 17L, trim = TRUE, decimal.mark = if (lang %in% c("fr", "de")) "," else ".")
+      text <- paste0(text, " (", if (lang == "de") "Anteil" else "proportion", " ", exact, ")")
+    }
+    text
+  }
   agree <- function(b) sprintf(tr(lang, "%s %s Zustimmung (%s)", "%s %s agreement (%s)"), words[[b$operator]], share(b$proportion), span(rule$agree_values))
   disagree <- function(b) sprintf(tr(lang, "%s %s Ablehnung (%s)", "%s %s disagreement (%s)"), words[[b$operator]], share(b$proportion), span(rule$disagree_values))
   consensus <- function(side) paste(agree(side$agree), tr(lang, "und", "and"), disagree(side$disagree))
@@ -38,7 +46,7 @@ protocol_summary <- function(p, lang) {
 }
 
 # The complete protocol as it is shown for review.
-protocol_json <- function(p) jsonlite::toJSON(unclass(p), auto_unbox = TRUE, pretty = TRUE, null = "null", digits = NA)
+protocol_json <- function(p) jsonlite::toJSON(unclass(p), auto_unbox = TRUE, pretty = TRUE, null = "null", digits = 17L)
 
 # Creating a study is an account right granted by the operator. The exact
 # uploaded protocol is validated, shown and confirmed before anything is stored.

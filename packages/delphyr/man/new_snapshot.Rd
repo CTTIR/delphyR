@@ -10,7 +10,8 @@ new_snapshot(
   items,
   protocol,
   round_number = 1L,
-  snapshot_id = NULL
+  snapshot_id = NULL,
+  hash_version = "2"
 )
 }
 \arguments{
@@ -19,13 +20,17 @@ dimension_code, answer_status, value_integer, value_text. Only submitted data.}
 
 \item{assignments}{All assigned panelists: panelist_id, group_code, submitted.}
 
-\item{items}{Instrument table: item_code, item_version, dimension_code, scale_code.}
+\item{items}{Instrument table: item_code, item_version, dimension_code, scale_code.
+Item versions must be positive and within R's integer range.}
 
 \item{protocol}{Validated protocol.}
 
 \item{round_number}{Positive round number.}
 
 \item{snapshot_id}{Stable identifier, or content hash when NULL.}
+
+\item{hash_version}{"2" for new snapshots; "1" only to reconstruct an
+existing legacy record without changing its scientific identity.}
 }
 \value{
 delphyr_snapshot, with all assigned fields materialized, including missingness.

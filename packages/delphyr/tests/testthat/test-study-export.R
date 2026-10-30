@@ -21,7 +21,7 @@ export_run <- function(r, actor, study_id, profile, key = uid()) {
 }
 # Two rounds, a rating and a free-text dimension, one revised item, attrition,
 # one released redaction, decisions, documentation and imported contacts.
-export_fixture <- function(r) {
+export_fixture <- function(r, minimum_display_cell_n = 3L) {
   code <- paste0("EXPORT-", substr(uid(), 1, 8))
   manager <- demo_actor(r, provision_demo_principal(r, paste0("demo-manager-", code), TRUE))
   p <- demo_protocol()
@@ -31,7 +31,7 @@ export_fixture <- function(r) {
   p$instrument$scales$comment_text <- list(type = "free_text", values = list(), anchors = list(low = "not applicable", high = "not applicable"), missing_options = c("unable_to_judge"))
   p$analysis$consensus$min_valid_n <- 2
   p$analysis$consensus$group_policy <- "pooled"
-  p$feedback$minimum_display_cell_n <- 3
+  p$feedback$minimum_display_cell_n <- minimum_display_cell_n
   study <- create_study(r, manager, p, "create")$id
   consent <- publish_consent(r, manager, study, "Synthetic information.", "en", "consent")$id
   panel <- lapply(1:4, function(i) {
@@ -201,6 +201,68 @@ test_that("the summary profile holds aggregates only and suppresses small cells"
     expect_match(html, "not documented", fixed = TRUE)
   } else {
     expect_false("report.html" %in% files)
+  }
+})
+
+test_that("summary classifications use the same disclosure boundary in every dimension", {
+  s <- demo_snapshot(c(9L, 9L, 9L))
+  p <- unclass(s$protocol)
+  p$analysis$consensus$min_valid_n <- 2L
+  p$feedback$minimum_display_cell_n <- 3L
+  p$instrument$dimensions <- c(p$instrument$dimensions, list(list(code = "clarity", scale = "relevance_9")))
+  fields <- c("panelist_id", "item_code", "item_version", "dimension_code", "answer_status", "value_integer", "value_text")
+  responses <- s$data[, fields]
+  clarity <- transform(responses, dimension_code = "clarity")
+  clarity$answer_status[3] <- "not_answered"
+  clarity$value_integer[3] <- NA_integer_
+  items <- rbind(s$items, transform(s$items, dimension_code = "clarity"))
+  snapshot <- new_snapshot(rbind(responses, clarity), unique(s$data[, c("panelist_id", "group_code", "submitted")]), items, p)
+  analysis <- analyse_round(snapshot)
+  shown <- suppress_small_cells(analysis, snapshot$protocol)
+  expect_identical(analysis$decisions$classification, rep("consensus_in", 2L))
+  hidden <- shown$decisions$dimension_code == "clarity"
+  expect_true(all(is.na(shown$decisions$classification[hidden])))
+  expect_identical(shown$decisions$classification[!hidden], "consensus_in")
+  expect_equal(shown$decisions[, setdiff(names(shown$decisions), "classification")],
+               analysis$decisions[, setdiff(names(analysis$decisions), "classification")])
+  expect_identical(analysis$decisions$classification, rep("consensus_in", 2L))
+})
+
+test_that("summary exports keep small final classifications suppressed while preserving human decisions", {
+  r <- export_repo()
+  f <- export_fixture(r, minimum_display_cell_n = 5L)
+  summary <- export_run(r, f$manager, f$study_id, "study_summary")
+  read_report <- function(path) jsonlite::fromJSON(file.path(path, "report-data.json"), simplifyVector = TRUE)
+  report <- read_report(summary$path)
+  expect_true(all(report$results$suppressed))
+  expect_true(all(is.na(report$results$classification)))
+  expect_true(all(is.na(report$final_items$classification)))
+  expect_identical(report$final_items$disposition, rep("finalize", 3L))
+  csv <- utils::read.csv(file.path(summary$path, "analysis_results.csv"), stringsAsFactors = FALSE)
+  expect_true(all(is.na(csv$classification)))
+  prepared <- prepare_study_report_data(r, f$manager, f$study_id)
+  expect_true(all(is.na(prepared$final_items$classification)))
+  expect_identical(prepared$final_items$disposition, report$final_items$disposition)
+
+  research <- export_run(r, f$manager, f$study_id, "research_pseudonymized")
+  unrestricted <- read_report(research$path)
+  again <- reproduce_study_export(research$path)
+  last <- again$analyses[[as.character(max(unrestricted$final_items$round_number))]]$decisions
+  expect_identical(unrestricted$final_items$classification, last$classification)
+  expect_true("consensus_in" %in% unrestricted$final_items$classification)
+  expect_identical(unrestricted$final_items$disposition, report$final_items$disposition)
+
+  if (nzchar(Sys.which("quarto")) && requireNamespace("rmarkdown", quietly = TRUE)) {
+    html <- paste(readLines(file.path(summary$path, "report.html"), warn = FALSE), collapse = "\n")
+    start <- regexpr('<section id="final-items-persistent-dissent-and-undecided-items"', html, fixed = TRUE)[1]
+    expect_gt(start, 0L)
+    final_section <- substring(html, start)
+    end <- regexpr("</section>", final_section, fixed = TRUE)[1]
+    expect_gt(end, 0L)
+    final_section <- substr(final_section, 1L, end - 1L)
+    expect_false(grepl("consensus_in|consensus_out|no_consensus|not_rated", final_section))
+    expect_match(final_section, "finalize", fixed = TRUE)
+    expect_match(final_section, "not available", fixed = TRUE)
   }
 })
 

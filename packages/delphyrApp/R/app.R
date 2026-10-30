@@ -125,7 +125,7 @@ run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), s
         shiny::tags$div(id = "section-exports", exports_ui("exports")),
         shiny::tags$div(id = "section-audit", audit_ui("audit"))
       ),
-      shiny::tags$footer(class = "del-note", "CTTIR \u00b7 delphyR \u00b7 0.0.1")
+      shiny::tags$footer(class = "del-note", paste("CTTIR \u00b7 delphyR \u00b7", utils::packageVersion("delphyrApp")))
     )
   )
   server <- function(input, output, session) {

@@ -89,7 +89,7 @@ accept_panel_invitation <- function(repo, actor, study_id, invitation_id, token,
   valid_id(invitation_id)
   h <- invitation_hash(token)
   ensure(scalar_text(command_id) && nchar(command_id) <= 200L, "command_id")
-  payload <- content_hash(list(invitation_id, h, confirmed))
+  payload <- list(invitation_id, h, confirmed)
   transaction(repo, function() {
     invitation_identity(repo, actor)
     one(query(repo, "SELECT id FROM research.studies WHERE id=$1 AND state IN ('draft','active') FOR NO KEY UPDATE", study_id))
@@ -98,7 +98,7 @@ accept_panel_invitation <- function(repo, actor, study_id, invitation_id, token,
     old <- query(repo, "SELECT invitation_id,membership_id,panelist_id,payload_hash FROM identity.panel_invitation_acceptances WHERE study_id=$1 AND principal_id=$2 AND command_key=$3", study_id, actor$principal_id, command_id)
     receipt <- function(x) list(id = x$invitation_id, membership_id = x$membership_id, panelist_id = x$panelist_id)
     if (nrow(old)) {
-      ensure(identical(old$payload_hash, payload), "command.payload", "DEL_CONFLICT")
+      ensure(identical(old$payload_hash, hash_content(payload, old$payload_hash)), "command.payload", "DEL_CONFLICT")
       return(receipt(old))
     }
     ensure(isTRUE(query(repo, "SELECT expires_at>clock_timestamp() AS valid FROM identity.panel_invitations WHERE id=$1", invitation_id)$valid) &&
@@ -120,7 +120,7 @@ accept_panel_invitation <- function(repo, actor, study_id, invitation_id, token,
     execute(repo, "INSERT INTO research.panelists(id,study_id,group_code) VALUES($1,$2,$3)", id, study_id, contact$stakeholder_group)
     execute(repo, "INSERT INTO identity.panelist_links VALUES($1,$2,$3)", study_id, m$id, id)
     execute(repo, "INSERT INTO identity.capabilities(study_id,membership_id,capability) VALUES($1,$2,'panel') ON CONFLICT DO NOTHING", study_id, m$id)
-    execute(repo, "INSERT INTO identity.panel_invitation_acceptances(invitation_id,study_id,draft_id,principal_id,membership_id,panelist_id,command_key,payload_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", invitation_id, study_id, inv$draft_id, actor$principal_id, m$id, id, command_id, payload)
+    execute(repo, "INSERT INTO identity.panel_invitation_acceptances(invitation_id,study_id,draft_id,principal_id,membership_id,panelist_id,command_key,payload_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", invitation_id, study_id, inv$draft_id, actor$principal_id, m$id, id, command_id, content_hash(payload))
     audit(repo, actor, study_id, "invitation_accept", invitation_id)
     list(id = invitation_id, membership_id = m$id, panelist_id = id)
   })

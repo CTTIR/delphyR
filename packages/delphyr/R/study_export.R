@@ -23,7 +23,7 @@ export_snapshot <- function(repo, study_id, row) {
   released <- texts$released_text[match(key(d[answered, , drop = FALSE]), key(texts))]
   d$value_text[answered] <- ifelse(is.na(released), withheld_text, released)
   fields <- c("panelist_id", "item_code", "item_version", "dimension_code", "answer_status", "value_integer", "value_text")
-  redacted <- new_snapshot(d[d$submitted, fields, drop = FALSE], unique(d[, c("panelist_id", "group_code", "submitted"), drop = FALSE]), s$items, s$protocol, s$round_number, s$snapshot_id)
+  redacted <- new_snapshot(d[d$submitted, fields, drop = FALSE], unique(d[, c("panelist_id", "group_code", "submitted"), drop = FALSE]), s$items, s$protocol, s$round_number, s$snapshot_id, hash_version = hash_version(s$content_hash))
   ensure(identical(analyse_round(s)$provenance$result_hash, analyse_round(redacted)$provenance$result_hash), "export.redaction_changed_results", "DEL_STORAGE")
   list(snapshot = redacted, frozen_hash = s$content_hash, text_redacted = TRUE, released = sum(!is.na(released)), withheld = sum(is.na(released)))
 }
@@ -45,7 +45,9 @@ suppress_small_cells <- function(analysis, protocol) {
   r$classification[r$suppressed] <- NA_character_
   if (nrow(d)) d <- d[!key(d) %in% small_total & (d$stratum == "overall" | !key(d) %in% small_group), , drop = FALSE]
   rownames(r) <- NULL
-  list(results = r, distributions = d)
+  decisions <- analysis$decisions
+  decisions$classification[key(decisions) %in% small_total] <- NA_character_
+  list(results = r, distributions = d, decisions = decisions)
 }
 suppress_comparisons <- function(x, minimum) {
   if (!nrow(x)) {
@@ -160,7 +162,7 @@ study_export_data <- function(repo, actor, study_id, profile) {
   documentation <- latest_documentation(repo, study_id)
   final_items <- data.frame()
   if (length(analyses)) {
-    last <- analyses[[length(analyses)]]$decisions
+    last <- if (summary) shown[[length(shown)]]$decisions else analyses[[length(analyses)]]$decisions
     last_round <- snapshots[[length(snapshots)]]$round_number
     latest <- decisions[decisions$round_number == last_round, , drop = FALSE]
     latest <- latest[!duplicated(latest$item_code, fromLast = TRUE), , drop = FALSE]
@@ -362,7 +364,7 @@ reproduce_study_export <- function(path) {
   history <- jsonlite::fromJSON(read("item_comparability.json"), simplifyVector = TRUE)
   if (!is.data.frame(history)) history <- data.frame(effective = logical())
   comparisons <- study_comparisons(snapshots, history)
-  ensure(identical(content_hash(comparisons), provenance$comparison_hash), "reproduction.comparisons")
+  ensure(identical(hash_content(comparisons, provenance$comparison_hash), provenance$comparison_hash), "reproduction.comparisons")
   structure(list(analyses = analyses, comparisons = comparisons, provenance = provenance), class = "delphyr_study_reproduction")
 }
 #' Write a panel member's own feedback for download

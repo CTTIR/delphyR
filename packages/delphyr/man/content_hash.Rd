@@ -4,13 +4,18 @@
 \alias{content_hash}
 \title{Canonical scientific content hash}
 \usage{
-content_hash(x)
+content_hash(x, version = "2")
 }
 \arguments{
 \item{x}{Declarative data; data frame row order is ignored.}
+
+\item{version}{Hash contract: "2" (default) preserves double precision;
+"1" reproduces the legacy 15-digit JSON contract for existing records only.}
 }
 \value{
 SHA-256 string of sorted UTF-8 JSON, excluding no fields implicitly.
+  Version 2 starts with `v2:`; legacy version 1 is an unprefixed digest.
+  A legacy hash cannot detect changes below its original numeric precision.
 }
 \description{
 Canonical scientific content hash

@@ -49,7 +49,7 @@ validate_report_data <- function(data) {
   value <- unclass(data)
   h <- value$content_hash
   value$content_hash <- NULL
-  ensure(identical(content_hash(value), h), "report.hash")
+  ensure(identical(hash_content(value, h), h), "report.hash")
   invisible(TRUE)
 }
 #' Write allowlisted numeric report supplements to a private staging directory

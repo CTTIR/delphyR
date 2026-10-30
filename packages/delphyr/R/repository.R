@@ -172,12 +172,12 @@ command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, 
   # Export requests are admitted by the capability of their profile.
   capability <- if (startsWith(type, "request_export:")) export_capability(sub("^request_export:", "", type)) else capability[[type]]
   if (length(capability) > 1L) authorize_any(repo, actor, study, capability) else authorize(repo, actor, study, capability)
-  h <- content_hash(payload)
   old <- query(repo, "SELECT payload_hash,outcome::text FROM ops.commands WHERE study_id=$1 AND actor_id=$2 AND command_type=$3 AND command_key=$4", study, actor$principal_id, type, key)
   if (nrow(old)) {
-    ensure(identical(old$payload_hash, h), "command.payload", "DEL_CONFLICT")
+    ensure(identical(old$payload_hash, hash_content(payload, old$payload_hash)), "command.payload", "DEL_CONFLICT")
     return(jsonlite::fromJSON(old$outcome, simplifyVector = TRUE))
   }
+  h <- content_hash(payload)
   result <- fun()
   stored <- query(repo, "INSERT INTO ops.commands VALUES($1,$2,$3,$4,$5,$6::jsonb) RETURNING outcome::text", study, actor$principal_id, type, key, h, json(result))
   # A retry returns the stored receipt; the first reply uses the same field order.

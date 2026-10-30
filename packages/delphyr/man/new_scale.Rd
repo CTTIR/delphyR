@@ -14,7 +14,8 @@ new_scale(
 \arguments{
 \item{type}{One of ordinal_integer, binary, free_text.}
 
-\item{levels}{Ordered integer categories; empty for text.}
+\item{levels}{Ordered integer categories within R's non-missing integer range;
+empty for text.}
 
 \item{labels}{Category labels, one per level.}
 
