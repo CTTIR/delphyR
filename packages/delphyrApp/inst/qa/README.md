@@ -84,7 +84,31 @@ open. The committed illustrative screenshots continue to use the deterministic
 service fixture. Queue, exact-feedback-review, and submission-guard tests use
 `testServer()`; they do not stand in for the open management browser matrix.
 
-Last run on 3 October 2026 against the current interface: passed.
+Historical run on 3 October 2026 against the then-current interface: passed.
+
+Maintenance recheck on 31 October 2026, delphyr/delphyrApp 0.0.2: 25 browser
+assertions passed against native PostgreSQL 17.11 on macOS, with Chromium
+156.0.8078.4 driven through Playwright. The current `preview-postgres.R` created
+one fresh synthetic study; the app used `delphyr_runtime`. Browser consent,
+explicit save, submission, EN/DE/FR labels and study wording, and a fresh page
+reload all passed. After reload, rating 7 remained read-only and the same
+submission receipt remained visible. No page or console errors or horizontal
+overflow occurred at the 1280-pixel desktop and 390-pixel mobile viewports.
+Five screenshots, including the consent screen and the fresh-session receipt,
+were visually inspected.
+
+The shipped `verify-postgres.R` then independently read the database through
+`delphyr_runtime`: consent accepted, enrollment `submitted`, exactly one
+response with value 7 and revision 1, and one receipt. Its full reference
+matched the browser reference: `62769bfc-ac99-4ae4-947c-81bfaf3a5cf5`.
+The runtime role was verified without superuser, database-creation or
+role-creation privileges. The fixture and evidence remain in the maintenance
+audit workspace; the owned browser and preview host were stopped. The
+Chromote driver was updated for current controls and syntax-checked; Chromote
+was unavailable, so its equivalent Playwright sequence was executed instead.
+This qualifies this local panel path and durable PostgreSQL result, not
+production identity-provider integration, external messages, every workflow,
+other browsers or assistive technologies.
 
 ## Reproduce the PostgreSQL browser check
 

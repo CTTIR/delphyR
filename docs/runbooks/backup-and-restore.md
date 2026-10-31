@@ -18,29 +18,89 @@ loses every response confirmed after the backup.
 
 ## Rehearse
 
-The check restores into a separate temporary database and never touches the
-source:
+The check reads an explicitly synthetic source and restores into a new private
+instance. It never restores over the source. Python 3, R with the repository's
+installed dependencies, and at least one frozen synthetic snapshot with a
+recorded analysis are required.
+
+On **macOS**, use native PostgreSQL 17 utilities, including `initdb`, `pg_ctl`,
+`psql`, `pg_dump`, `pg_restore` and `createdb`, from one installation. The source
+may be the Docker demonstration or a native development database; it must be
+reachable at `127.0.0.1`. Supply its port and database explicitly:
+
+```sh
+DELPHYR_RESTORE_BACKEND=native \
+DELPHYR_PG_BIN="/absolute/path/to/postgresql-17/bin" \
+DELPHYR_RESTORE_SOURCE_PORT=55439 \
+DELPHYR_RESTORE_SOURCE_DB=delphyr \
+scripts/restore-check.sh
+```
+
+Use the actual binary directory and a plain database name (letters, digits,
+underscores or hyphens, starting with a letter or underscore), not a connection
+URI. `DELPHYR_RESTORE_SOURCE_USER` defaults to
+`postgres`. Configure source authentication through the normal PostgreSQL
+client environment or a private password file; the script does not prompt or
+record passwords. Inherited host-address/service routing overrides are ignored.
+The restore instance has TCP disabled and accepts connections
+only through its own short Unix socket directory, created with mode `0700`
+under `/tmp`. Its database is named `delphyr`, independently of the source name.
+Neither a long checkout path nor a shared Docker filesystem is used for this
+socket.
+
+On a **native Linux Docker host**, the default mode uses the existing
+`delphyr-dev-postgres` container and the same image for its separate restore:
 
 ```sh
 scripts/restore-check.sh
-DELPHYR_RESTORE_STUDY="<study id>" scripts/restore-check.sh   # with that study's exports
 ```
 
-It dumps one consistent state, restores it without a network, and compares
-row counts and fingerprints of every table, the schema, migrations with their
-checksums and every frozen snapshot. It then uses the restored database as
-steps 4 to 8 below describe: no migration is pending, the restricted
-application role is set up, the status reports the schema as current, every
-message that waited for delivery is put on hold and a worker step sends
-nothing, a synthetic member reads the own round, staff read the rounds, and
-every frozen snapshot of one study is verified and analysed again with the
-recorded result. With a study it also copies that study's exports and
-recomputes their analysis. The receipt is `result.json` in a new directory
-under `.checks/`. Rehearse after every migration and on the schedule the
-organisation sets.
+The restore container retains `--network=none`. This mode requires a local
+Linux Docker engine whose Unix socket mount is accessible to native R. It is
+not a Docker Desktop/Colima socket-forwarding implementation; on macOS it exits
+before creating a backup and directs the operator to native mode.
 
-The rehearsal signs in with a synthetic development account. It does not
-exercise the sign-in through the gateway on the restored instance.
+To include a study's registered export files, add these variables to either
+invocation, using the private artifact directory of that source database:
+
+```sh
+DELPHYR_RESTORE_STUDY="<study UUID>" \
+DELPHYR_ARTIFACT_ROOT="/absolute/private/artifact-directory" \
+DELPHYR_RESTORE_BACKEND=native \
+DELPHYR_PG_BIN="/absolute/path/to/postgresql-17/bin" \
+DELPHYR_RESTORE_SOURCE_PORT=55439 \
+DELPHYR_RESTORE_SOURCE_DB=delphyr \
+scripts/restore-check.sh
+```
+
+Both modes dump one exported read-only source snapshot, restore it without
+external network access, and compare row counts and fingerprints of every
+table, the schema, migration checksums and every frozen snapshot. Comparison
+sessions use UTC so different server time zones do not change timestamp
+fingerprints. The restored services then check schema readiness, configure the restricted application
+role, hold waiting messages before any worker starts, confirm that a worker
+sends nothing, read a synthetic member's own round and the staff round list,
+and reanalyse every frozen snapshot of one study against its recorded result.
+
+Every copied artifact must match its registered manifest hash, profile and
+member checksums, with no extra files. `research_round` artifacts are reproduced
+with `reproduce_export`; `research_pseudonymized` artifacts use
+`reproduce_study_export`. Summary, audit and contact profiles receive checksum
+verification and explicitly report `analysis_reproduced: false`. Missing files
+of a registered, unremoved export fail the check; files of exports recorded as
+removed after expiry are not required.
+
+A `result.json` receipt is written in a new private `.checks/restore-*`
+directory only after verification and cleanup succeed. Dumps and evidence are
+retained; the owned restore server, transient data directory and socket are
+removed. If a server cannot be stopped, its data are retained and the check
+fails rather than deleting a running cluster. Rehearse after migrations and
+on the schedule the organisation sets.
+
+The rehearsal uses synthetic development identities. It does not verify OIDC
+sign-in, external delivery, production permissions, PITR, or production
+recovery-time and data-loss objectives. A native result does not qualify the
+Linux Docker transport.
 
 ## Restore after a loss
 

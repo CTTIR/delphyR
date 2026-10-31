@@ -15,6 +15,12 @@ production release or scientific validation. The current evidence and remaining
 gates are recorded in [implementation status](docs/IMPLEMENTATION_STATUS.md).
 This is not a CRAN release.
 
+The 0.0.2 maintenance changes and verification are recorded in the
+[31 October audit](docs/validation/2026-10-31-maintenance.md). New scientific
+hashes preserve double precision and carry a `v2:` prefix; see the
+[hash compatibility contract](docs/hash-contract.md) before integrating a
+consumer that assumes an unprefixed digest.
+
 ## Install and analyse
 
 The repository contains two packages. Install the core package for offline
@@ -57,8 +63,11 @@ build its HTML vignette.
 ## Run the local application
 
 The application demonstration uses synthetic accounts and loopback addresses.
-It requires Docker, R, and the dependencies documented in `renv.lock`.
-Run these commands from the repository root:
+It requires Docker and R. Bootstrap installs missing or outdated declared
+dependencies into `.R-library` and uses the exact roxygen2 version recorded by
+both packages. An archived roxygen2 version is built from source and requires
+a compiler toolchain. Other dependencies may use newer CRAN releases;
+`renv.lock` records the tested set. Run these commands from the repository root:
 
 ```sh
 Rscript scripts/bootstrap.R
@@ -89,6 +98,22 @@ application processes, session lifetimes and sign-out
 people rating at the same time ([load qualification](docs/load.md)). The stock
 Shiny Server OSS identity-header path and production deployment remain
 unqualified.
+
+
+For a synthetic recovery rehearsal on macOS, use the native PostgreSQL 17
+utilities and select the loopback source explicitly:
+
+```sh
+DELPHYR_RESTORE_BACKEND=native \
+DELPHYR_PG_BIN="/absolute/path/to/postgresql-17/bin" \
+DELPHYR_RESTORE_SOURCE_PORT=55439 \
+DELPHYR_RESTORE_SOURCE_DB=delphyr \
+scripts/restore-check.sh
+```
+
+The [recovery runbook](docs/runbooks/backup-and-restore.md) covers prerequisites,
+export-file verification and the separate native-Linux Docker mode. The native
+restore instance uses a private Unix socket with TCP disabled.
 
 ## Study workflows
 

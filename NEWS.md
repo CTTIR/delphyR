@@ -13,6 +13,11 @@
 - Preserve exact consensus thresholds in the protocol displayed by both HTML
   report templates, and render successfully through macOS temporary-directory
   aliases.
+- Check dependency versions during bootstrap, including the recorded roxygen2
+  version, and align the dependency record with the qualified runtime.
+- Rehearse recovery with native PostgreSQL on macOS, short private socket
+  paths, UTC comparison sessions and verification appropriate to each export
+  profile.
 
 # delphyr / delphyrApp 0.0.1 (development)
 
