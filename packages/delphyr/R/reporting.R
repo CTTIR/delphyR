@@ -86,6 +86,9 @@ render_study_report <- function(data, output_dir, timeout = 60L) {
   output_dir <- normalizePath(output_dir, mustWork = TRUE)
   work <- tempfile("delphyr-report-")
   dir.create(work, mode = "0700")
+  # Resolve aliases such as macOS /var -> /private/var before Quarto computes
+  # relative output paths against the process's canonical working directory.
+  work <- normalizePath(work, mustWork = TRUE)
   previous_dir <- getwd()
   on.exit(
     {
@@ -101,7 +104,7 @@ render_study_report <- function(data, output_dir, timeout = 60L) {
   # Command arguments are fixed or shell-quoted local paths, never study text.
   status <- suppressWarnings(system2(quarto,
     args = c(
-      "render", shQuote(file.path(work, "study.qmd")),
+      "render", "study.qmd",
       "--to", "html", "--output", "report.html", "--quiet"
     ), stdout = log, stderr = log, timeout = timeout,
     env = paste0("R_LIBS=", shQuote(paste(.libPaths(), collapse = .Platform$path.sep)))

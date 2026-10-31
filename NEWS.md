@@ -10,6 +10,9 @@
   between different study codes.
 - Apply small-cell suppression to the final-item classifications in summary
   exports as well as the corresponding statistics.
+- Preserve exact consensus thresholds in the protocol displayed by both HTML
+  report templates, and render successfully through macOS temporary-directory
+  aliases.
 
 # delphyr / delphyrApp 0.0.1 (development)
 
