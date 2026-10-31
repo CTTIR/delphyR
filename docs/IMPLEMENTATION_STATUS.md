@@ -1,5 +1,27 @@
 # Implementation status
 
+## Maintenance — 31 October 2026
+
+Development version 0.0.2 repairs scientific numeric/hash precision, preserves
+legacy verification, applies summary disclosure rules consistently, and repairs
+report rendering, dependency setup and recovery qualification. The
+[maintenance audit](validation/2026-10-31-maintenance.md) records the findings,
+roadmap, exact test scope, first-use commands and remaining gates.
+
+Local qualification uses synthetic data: package checks, actual browser and
+PostgreSQL workflows, all export profiles and native recovery, including a
+populated message queue and contacts. Database coverage includes a focused
+rerun after correcting a synthetic fixture; the record does not claim a single
+clean full orchestration run after that correction. Hosted CI, Linux Docker
+recovery and production acceptance remain separate and unobserved for these
+commits. No publication, submission or deployment occurred.
+
+## Historical qualification — 3 October 2026
+
+The following evidence retains its original version, date and limits. The
+October 31 maintenance work did not repeat the historical gateway or load
+qualification or grant study approval.
+
 As of 3 October 2026: version 0.0.1, synthetic development only. The
 software is at commit `2838509`; later commits add checks, fixture scripts
 and documentation. The release report with every number and the commit each

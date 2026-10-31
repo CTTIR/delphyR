@@ -44,7 +44,7 @@ test_that("PostgreSQL persistence retains a protocol's exact consensus boundary"
   r <- connect_repository(host = "127.0.0.1", port = 55439,
     dbname = Sys.getenv("DELPHYR_TEST_DB_NAME", "delphyr"), user = "postgres", environment = "test")
   on.exit(DBI::dbDisconnect(r$con))
-  actor <- demo_actor(r, provision_demo_principal(r, paste0("precision-", uid()), TRUE))
+  actor <- demo_actor(r, provision_demo_principal(r, paste0("demo-precision-", uid()), TRUE))
   p <- demo_protocol()
   p$study$code <- paste0("PREC-", substr(uid(), 1, 8))
   p$analysis$consensus$`in`$agree$proportion <- .7 + .Machine$double.eps / 2
