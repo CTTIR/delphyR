@@ -8,11 +8,24 @@ their actual scope. Scientific study text is not automatically translated.
 
 ## Deterministic panel fixture
 
-Run `preview.R` in one terminal after installing delphyrApp, then
+Run a fresh `preview.R` host in one terminal after installing delphyrApp, then
 `browser-smoke.R` in another with the optional chromote package and Chromium.
 Both use localhost port 3867. This is a deterministic injected-service fixture,
 not a database integration test. The fixture never sends mail and uses no
-real participant data.
+real participant data. Consent, saved answers and the submission receipt are
+kept in memory, so restart the host before repeating the smoke test.
+
+From the repository root, with both packages available in the R library:
+
+```sh
+Rscript packages/delphyrApp/inst/qa/preview.R
+# In another terminal:
+Rscript packages/delphyrApp/inst/qa/browser-smoke.R
+```
+
+The smoke test waits for the round selector, explicitly grants consent, and
+checks the regenerated response controls. It uses the native language selector
+and the statement's current save-status output. No rating is preselected.
 
 Verified in Chromium on Linux:
 
@@ -31,7 +44,25 @@ injected services; a complete real-database management browser journey remains o
 The application uses a separate worker for jobs. There is no browser control
 that assumes worker infrastructure privileges.
 
-Last run on 3 October 2026 against the current interface: passed.
+Historical run on 3 October 2026 against the then-current interface: passed.
+
+Maintenance recheck on 31 October 2026, delphyr/delphyrApp 0.0.2: 20 browser
+assertions passed in Chromium 156.0.8078.4 on macOS using a Playwright driver of
+the same fixture and smoke sequence. The optional chromote package was absent;
+the revised R driver was syntax-checked, but was not itself executed.
+The browser run verified consent blocking and enablement, an initially empty
+rating, preservation of pending rating 7 during EN-to-DE translation, explicit
+save confirmation, the exact submission reference and timestamps in the study
+timezone, and French interface labels after submission. There were no page or
+console errors. Document and body widths matched the 1280-pixel desktop and
+390-pixel mobile viewports. English consent, German desktop/mobile and French
+mobile screenshots were visually inspected and retained in the maintenance
+audit evidence; committed illustrative figures were not replaced.
+
+The fixture has English/German study wording and English anchors; the French
+interface correctly identifies its fallback to the approved English wording.
+This check does not qualify PostgreSQL persistence, authentication, external
+messages, every workflow, other browsers, or assistive technologies.
 
 ## PostgreSQL browser path
 

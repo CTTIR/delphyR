@@ -127,7 +127,10 @@ protocols_server <- function(id, study, lang, call, services) {
       latest <- v[which.max(v$version), , drop = FALSE]
       previous <- delphyr::new_protocol(jsonlite::fromJSON(latest$config, simplifyVector = FALSE))
       hash <- delphyr::content_hash(p)
-      if (identical(hash, latest$hash)) {
+      # Compare both protocols under the current precision contract. The
+      # recorded hash may use the legacy contract and remains the concurrency
+      # guard passed to amendment, not a rounded comparison of new content.
+      if (identical(hash, delphyr::content_hash(previous))) {
         status(tr(lang(), "Das hochgeladene Protokoll entspricht der aktuellen Version; es gibt nichts freizugeben.", "The uploaded protocol is identical to the current version; there is nothing to approve."))
         return()
       }
@@ -245,7 +248,7 @@ template_order <- function(x, template) {
 protocol_changes <- function(previous, proposed) {
   flatten <- function(x, path = "") {
     if (!is.list(x)) {
-      return(stats::setNames(jsonlite::toJSON(x, auto_unbox = TRUE, null = "null", digits = NA), path))
+      return(stats::setNames(jsonlite::toJSON(x, auto_unbox = TRUE, null = "null", digits = 17L), path))
     }
     if (!length(x)) {
       return(stats::setNames("[]", path))

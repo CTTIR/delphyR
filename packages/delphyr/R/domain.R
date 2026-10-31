@@ -1,6 +1,7 @@
 #' Construct a validated response scale
 #' @param type One of ordinal_integer, binary, free_text.
-#' @param levels Ordered integer categories; empty for text.
+#' @param levels Ordered integer categories within R's non-missing integer range;
+#'   empty for text.
 #' @param labels Category labels, one per level.
 #' @param missing_options Allowed explicit missing categories.
 #' @return A delphyr_scale. Invalid input raises DEL_VALIDATION.
@@ -15,8 +16,9 @@ new_scale <- function(type, levels = integer(), labels = as.character(levels),
   if (type == "free_text") {
     ensure(length(levels) == 0L, "scale.levels")
   } else {
-    ensure(whole(levels) && length(levels) >= 2L && !anyDuplicated(levels) &&
-      all(diff(levels) > 0), "scale.levels")
+    ensure(whole(levels) && length(levels) >= 2L &&
+      all(abs(levels) <= .Machine$integer.max) && !anyDuplicated(levels) &&
+      all(diff(as.double(levels)) > 0), "scale.levels")
     if (type == "binary") ensure(identical(as.integer(levels), 0:1), "scale.binary")
     ensure(is.character(labels) && length(labels) == length(levels) &&
       all(!is.na(labels) & nzchar(labels)), "scale.labels")
@@ -46,7 +48,8 @@ validate_response <- function(value, status, scale) {
     ensure(scalar_text(value) && nchar(value, type = "bytes") <= 20000L, "value_text")
     list(status = status, value_int = NA_integer_, value_text = enc2utf8(value))
   } else {
-    ensure(whole(value) && length(value) == 1L && value %in% scale$levels, "value_int")
+    ensure(whole(value) && length(value) == 1L && abs(value) <= .Machine$integer.max &&
+      value %in% scale$levels, "value_int")
     list(status = status, value_int = as.integer(value), value_text = NA_character_)
   }
 }

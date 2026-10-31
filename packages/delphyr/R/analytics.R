@@ -29,15 +29,18 @@ classify_consensus <- function(counts, rule) {
 #'   dimension_code, answer_status, value_integer, value_text. Only submitted data.
 #' @param assignments All assigned panelists: panelist_id, group_code, submitted.
 #' @param items Instrument table: item_code, item_version, dimension_code, scale_code.
+#'   Item versions must be positive and within R's integer range.
 #' @param protocol Validated protocol.
 #' @param round_number Positive round number.
 #' @param snapshot_id Stable identifier, or content hash when NULL.
+#' @param hash_version "2" for new snapshots; "1" only to reconstruct an
+#'   existing legacy record without changing its scientific identity.
 #' @return delphyr_snapshot, with all assigned fields materialized, including missingness.
 #' @export
 #' @examples
 #' s <- demo_snapshot()
 #' s$content_hash
-new_snapshot <- function(responses, assignments, items, protocol, round_number = 1L, snapshot_id = NULL) {
+new_snapshot <- function(responses, assignments, items, protocol, round_number = 1L, snapshot_id = NULL, hash_version = "2") {
   protocol <- new_protocol(protocol)
   identifiers <- function(x) {
     is.character(x) && !anyNA(x) &&
@@ -51,7 +54,8 @@ new_snapshot <- function(responses, assignments, items, protocol, round_number =
   ensure(all(vapply(items[c("item_code", "dimension_code", "scale_code")], identifiers, logical(1))), "items.identifiers")
   ensure(!anyDuplicated(items[c("item_code", "dimension_code")]), "items.multiple_versions")
   key <- function(d) paste(d$item_code, d$item_version, d$dimension_code, sep = "\034")
-  ensure(!anyDuplicated(key(items)) && whole(items$item_version) && all(items$item_version > 0), "items.keys")
+  ensure(!anyDuplicated(key(items)) && whole(items$item_version) &&
+    all(items$item_version > 0 & items$item_version <= .Machine$integer.max), "items.keys")
   dims <- setNames(vapply(protocol$instrument$dimensions, `[[`, character(1), "scale"), vapply(protocol$instrument$dimensions, `[[`, character(1), "code"))
   ensure(all(items$dimension_code %in% names(dims)) && all(items$scale_code == dims[items$dimension_code]), "items.dimension_scale")
   required <- c("panelist_id", "item_code", "item_version", "dimension_code", "answer_status", "value_integer", "value_text")
@@ -69,7 +73,7 @@ new_snapshot <- function(responses, assignments, items, protocol, round_number =
   validate_snapshot_rows(joined, config_scales(protocol))
   ensure(whole(round_number) && length(round_number) == 1 && round_number > 0, "round_number")
   ensure(is.null(snapshot_id) || scalar_text(snapshot_id), "snapshot_id")
-  h <- content_hash(list(data = joined, items = items, protocol = protocol, round_number = round_number))
+  h <- content_hash(list(data = joined, items = items, protocol = protocol, round_number = round_number), version = hash_version)
   structure(list(
     data = joined, items = items, protocol = protocol, round_number = round_number,
     snapshot_id = if (is.null(snapshot_id)) h else snapshot_id, content_hash = h, schema_version = "1.0"
@@ -136,10 +140,10 @@ demo_snapshot <- function(values = c(1, 4, 6, 7, 7, 8, 8, 9, 9, 9), groups = rep
 analyse_round <- function(snapshot, rules = snapshot$protocol$analysis$consensus) {
   ensure(inherits(snapshot, "delphyr_snapshot"), "snapshot")
   # Verify content, so modifying a serialized snapshot cannot silently change provenance.
-  ensure(identical(snapshot$content_hash, content_hash(list(
+  ensure(identical(snapshot$content_hash, hash_content(list(
     data = snapshot$data, items = snapshot$items,
     protocol = snapshot$protocol, round_number = snapshot$round_number
-  ))), "snapshot.hash")
+  ), snapshot$content_hash)), "snapshot.hash")
   validate_rule(rules)
   groups <- unlist(snapshot$protocol$panel$groups)
   strata <- c("overall", groups)
@@ -193,14 +197,16 @@ analyse_round <- function(snapshot, rules = snapshot$protocol$analysis$consensus
     missingness = res[, c("item_code", "item_version", "dimension_code", "stratum", "n_not_answered", "n_unable", "n_abstained", "n_not_applicable")],
     settings = rules, provenance = list(
       snapshot_id = snapshot$snapshot_id, snapshot_hash = snapshot$content_hash,
-      rules_hash = content_hash(rules), software_version = as.character(utils::packageVersion("delphyr")), quantile_type = 7,
-      result_hash = content_hash(list(results = res, decisions = decisions, distributions = dist))
+      rules_hash = content_hash(rules, version = hash_version(snapshot$content_hash)),
+      software_version = as.character(utils::packageVersion("delphyr")), quantile_type = 7,
+      result_hash = content_hash(list(results = res, decisions = decisions, distributions = dist),
+        version = hash_version(snapshot$content_hash))
     ),
     warnings = character(), schema_version = "1.0"
   ), class = "delphyr_analysis")
 }
 #' Compare paired responses across compatible rounds
-#' @param previous,current Validated snapshots.
+#' @param previous,current Validated snapshots with the same study code.
 #' @param mapping Optional table item_code, dimension_code, previous_version,
 #'   current_version, comparable, reason. Explicit approval required for new versions.
 #' @return delphyr_comparison table, reporting attrition and unpaired means separately.
@@ -210,6 +216,8 @@ analyse_round <- function(snapshot, rules = snapshot$protocol$analysis$consensus
 compare_rounds <- function(previous, current, mapping = NULL) {
   analyse_round(previous)
   analyse_round(current)
+  ensure(scalar_text(previous$protocol$study$code) && scalar_text(current$protocol$study$code) &&
+    identical(previous$protocol$study$code, current$protocol$study$code), "comparison.study")
   if (!is.null(mapping)) {
     ensure(is.data.frame(mapping) && all(c(
       "item_code", "dimension_code", "previous_version",
@@ -244,7 +252,7 @@ compare_rounds <- function(previous, current, mapping = NULL) {
     a <- subset_valid(previous)
     b <- subset_valid(current)
     pairs <- merge(a, b, by = "panelist_id")
-    d <- pairs$value_integer.y - pairs$value_integer.x
+    d <- as.double(pairs$value_integer.y) - as.double(pairs$value_integer.x)
     n <- if (comparable) length(d) else 0L
     out[[i]] <- data.frame(
       item_code = it$item_code, dimension_code = it$dimension_code,

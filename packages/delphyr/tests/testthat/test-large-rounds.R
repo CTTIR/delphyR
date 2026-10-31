@@ -1,8 +1,8 @@
 # The canonical form of a table is written directly for speed. These tests
 # hold it to the generic form, which defines the hash, and hold the column-wise
 # snapshot validation to the row-by-row rules.
-generic_json <- function(x) as.character(jsonlite::toJSON(canonical(x), auto_unbox = TRUE, null = "null", na = "null", digits = NA))
-generic_hash <- function(x) digest::digest(generic_json(x), algo = "sha256", serialize = FALSE)
+generic_json <- function(x) as.character(jsonlite::toJSON(canonical(x), auto_unbox = TRUE, null = "null", na = "null", digits = 17L))
+generic_hash <- function(x) paste0("v2:", digest::digest(generic_json(x), algo = "sha256", serialize = FALSE))
 
 test_that("the direct table form is byte for byte the generic canonical form", {
   hostile <- c(

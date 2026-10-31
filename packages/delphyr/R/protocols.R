@@ -47,7 +47,7 @@ amend_protocol <- function(repo, actor, study_id, protocol, expected_hash, reaso
       max_round <- query(repo, "SELECT COALESCE(MAX(number),0) AS n FROM research.rounds WHERE study_id=$1 AND state<>'cancelled'", study_id)$n
       ensure(protocol$stopping$max_rounds >= max_round, "protocol.existing_rounds")
       hash <- content_hash(protocol)
-      ensure(!identical(hash, old$hash), "protocol.unchanged", "DEL_CONFLICT")
+      ensure(!identical(hash, content_hash(previous)), "protocol.unchanged", "DEL_CONFLICT")
       id <- uid()
       version <- old$version + 1L
       execute(repo, "INSERT INTO research.protocol_versions VALUES($1,$2,$3,$4::jsonb,$5)", id, study_id, version, json(protocol), hash)

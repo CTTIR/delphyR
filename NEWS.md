@@ -1,3 +1,16 @@
+# delphyr / delphyrApp 0.0.2 (development)
+
+- Preserve full numeric precision in protocol persistence, downloads, amendment
+  review and scientific content hashes. New hashes use the `v2:` contract;
+  existing unprefixed hashes retain their original verification contract.
+- Read and reproduce legacy snapshots and feedback without rewriting immutable
+  records. Legacy command receipts retain their original precision limitation.
+- Reject rating categories outside R's nonmissing integer range before coercion;
+  calculate differences without integer overflow and refuse paired comparisons
+  between different study codes.
+- Apply small-cell suppression to the final-item classifications in summary
+  exports as well as the corresponding statistics.
+
 # delphyr / delphyrApp 0.0.1 (development)
 
 - Validated protocols, explicit missingness, and independent round analysis.

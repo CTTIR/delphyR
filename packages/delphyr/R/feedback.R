@@ -9,10 +9,10 @@
 #' prepare_feedback(analyse_round(demo_snapshot()))$hash
 prepare_feedback <- function(analysis, qualitative = list(), policy = list(group_statistics = FALSE, minimum_display_cell_n = 5L, complementary_suppression = TRUE)) {
   ensure(inherits(analysis, "delphyr_analysis"), "analysis")
-  ensure(identical(analysis$provenance$result_hash, content_hash(list(
+  ensure(identical(analysis$provenance$result_hash, hash_content(list(
     results = analysis$results, decisions = analysis$decisions,
     distributions = analysis$distributions
-  ))), "analysis.hash")
+  ), analysis$provenance$result_hash)), "analysis.hash")
   ensure(is.list(qualitative), "qualitative")
   known_keys(policy, c("group_statistics", "minimum_display_cell_n", "complementary_suppression"), "policy")
   ensure(whole(policy$minimum_display_cell_n) && length(policy$minimum_display_cell_n) == 1 && policy$minimum_display_cell_n > 0, "policy.minimum_display_cell_n")
@@ -52,6 +52,6 @@ validate_feedback <- function(draft) {
   x <- unclass(draft)
   h <- x$hash
   x$hash <- NULL
-  ensure(identical(h, content_hash(x)), "feedback.hash")
+  ensure(identical(h, hash_content(x, h)), "feedback.hash")
   TRUE
 }

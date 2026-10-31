@@ -143,7 +143,7 @@ import_panel <- function(repo, actor, study_id, preview, expected_hash, reason, 
     original <- unclass(preview)
     original$hash <- NULL
     original$csv <- NULL
-    ensure(identical(content_hash(original), preview$hash) && identical(preview$hash, expected_hash), "panel_import.hash", "DEL_CONFLICT")
+    ensure(identical(hash_content(original, preview$hash), preview$hash) && identical(preview$hash, expected_hash), "panel_import.hash", "DEL_CONFLICT")
     bytes <- panel_csv_bytes(preview$csv)
     ensure(identical(bytes$hash, preview$file_hash), "panel_import.file_hash", "DEL_CONFLICT")
     query(repo, "SELECT id FROM research.studies WHERE id=$1 FOR UPDATE", study_id)
@@ -152,10 +152,13 @@ import_panel <- function(repo, actor, study_id, preview, expected_hash, reason, 
       ensure(study$state %in% c("draft", "active"), "panel_import.study_state", "DEL_CONFLICT")
       current <- panel_preview_value(repo, study_id, bytes$bytes, preview$schema_version, preview$delimiter)
       ensure(isTRUE(current$valid), "panel_import.review_required", "DEL_VALIDATION")
-      ensure(identical(current$hash, expected_hash), "panel_import.preview_changed", "DEL_CONFLICT")
+      current_content <- unclass(current)
+      current_content$hash <- NULL
+      current_content$csv <- NULL
+      ensure(identical(hash_content(current_content, expected_hash), expected_hash), "panel_import.preview_changed", "DEL_CONFLICT")
       receipt <- uid()
       report <- list(valid = TRUE, issues = list(), accepted_rows = nrow(current$rows), rejected_rows = 0L)
-      execute(repo, "INSERT INTO identity.panel_import_receipts(id,study_id,file_hash,preview_hash,schema_version,accepted_rows,rejected_rows,actor_id,reason,validation_report) VALUES($1,$2,$3,$4,$5,$6,0,$7,$8,$9::jsonb)", receipt, study_id, current$file_hash, current$hash, current$schema_version, nrow(current$rows), actor$principal_id, reason, json(report))
+      execute(repo, "INSERT INTO identity.panel_import_receipts(id,study_id,file_hash,preview_hash,schema_version,accepted_rows,rejected_rows,actor_id,reason,validation_report) VALUES($1,$2,$3,$4,$5,$6,0,$7,$8,$9::jsonb)", receipt, study_id, current$file_hash, expected_hash, current$schema_version, nrow(current$rows), actor$principal_id, reason, json(report))
       invitations <- character()
       for (i in seq_len(nrow(current$rows))) {
         row <- current$rows[i, ]
@@ -165,7 +168,7 @@ import_panel <- function(repo, actor, study_id, preview, expected_hash, reason, 
         execute(repo, "INSERT INTO identity.panel_invitation_drafts(id,study_id,contact_id,import_id) VALUES($1,$2,$3,$4)", invitation, study_id, contact, receipt)
         invitations <- c(invitations, invitation)
       }
-      list(id = receipt, file_hash = current$file_hash, preview_hash = current$hash, accepted_rows = nrow(current$rows), rejected_rows = 0L, invitation_ids = invitations)
+      list(id = receipt, file_hash = current$file_hash, preview_hash = expected_hash, accepted_rows = nrow(current$rows), rejected_rows = 0L, invitation_ids = invitations)
     }, reason = reason)
   })
 }

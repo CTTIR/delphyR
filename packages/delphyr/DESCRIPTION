@@ -1,6 +1,6 @@
 Package: delphyr
 Title: Reproducible Round-Based Delphi Studies
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "58561665+r-heller@users.noreply.github.com")
 Description: Validated study protocols, deterministic consensus and longitudinal
  analysis, and transactional PostgreSQL services for round-based Delphi
@@ -9,7 +9,7 @@ Description: Validated study protocols, deterministic consensus and longitudinal
  gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Imports: DBI, digest, jsonlite, openssl, uuid
+Imports: DBI, digest, jsonlite (>= 1.8.8), openssl, uuid
 Suggests: RPostgres, callr, withr, pkgload, testthat (>= 3.0.0), knitr, rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
