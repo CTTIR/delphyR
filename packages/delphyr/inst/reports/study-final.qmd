@@ -43,7 +43,7 @@ show_table <- function(table, empty = "No entries.") {
     paste0("<tr>", rows, "</tr>", collapse = "\n"), "\n</tbody></table></div>"
   )
 }
-show_json <- function(value) raw_html("<pre>", escape(jsonlite::toJSON(value, auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null")), "</pre>")
+show_json <- function(value) raw_html("<pre>", escape(jsonlite::toJSON(value, auto_unbox = TRUE, pretty = TRUE, null = "null", na = "null", digits = 17L)), "</pre>")
 show_lines <- function(value) raw_html(paste0("<p>", escape(as.character(unlist(value))), "</p>", collapse = "\n"))
 ```
 
