@@ -18,10 +18,22 @@ jobs:
       - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
           use-public-rspm: true
+      - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2
+        with:
+          version: '1.10.19'
       - name: System dependencies
         run: sudo apt-get update && sudo apt-get install -y libpq-dev libuv1-dev libssl-dev pandoc
       - name: R dependencies
         run: Rscript scripts/bootstrap.R
+      - name: Dependency selection regressions
+        run: Rscript scripts/test-bootstrap.R
+      - name: Offline recovery regressions
+        env:
+          DELPHYR_TEST_DB: 'false'
+        run: |
+          bash -n scripts/restore-check.sh
+          python3 scripts/tests/test_restore_check.py
+          Rscript -e '.libPaths(c(normalizePath(".R-library"), .libPaths())); pkgload::load_all("packages/delphyr", quiet=TRUE); testthat::test_dir("scripts/tests", filter="restore_artifacts", stop_on_failure=TRUE)'
       - name: Unit tests and documentation
         run: mkdir -p .checks && Rscript scripts/check.R
       - name: Restricted development database role

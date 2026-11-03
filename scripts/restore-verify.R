@@ -1,12 +1,34 @@
 # Function check of a restored database, called by scripts/restore-check.sh:
 #   Rscript scripts/restore-verify.R <socket directory> [study id]
+#   Rscript scripts/restore-verify.R --artifact <directory> <registry profile>
 # The restored instance has no network; the connection uses its local socket.
 # Prints one JSON object and exits with status 0 only if every check passed.
 # The steps are those of docs/runbooks/backup-and-restore.md.
 .libPaths(c(normalizePath(".R-library"), .libPaths()))
 pkgload::load_all("packages/delphyr", quiet = TRUE)
 options(delphyr.log_level = "off")
+# This standalone verifier must also keep libpq on its explicit local socket.
+Sys.unsetenv(c("PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"))
+verify_restored_artifact <- function(path, profile) {
+  ensure(scalar_text(profile) && profile %in% c("research_round", "research_pseudonymized", "study_summary", "audit_restricted", "contacts_restricted"), "restore.artifact_profile")
+  manifest <- verify_manifest(path, exact = TRUE)
+  ensure(identical(manifest$profile, profile), "restore.artifact_profile")
+  analytical <- profile %in% c("research_round", "research_pseudonymized")
+  if (profile == "research_round") {
+    reproduce_export(path)
+  } else if (profile == "research_pseudonymized") {
+    reproduce_study_export(path)
+  }
+  list(passed = TRUE, profile = profile, checksums_verified = TRUE, analysis_reproduced = analytical)
+}
 arguments <- commandArgs(TRUE)
+if (length(arguments) && identical(arguments[1], "--artifact")) {
+  ensure(length(arguments) == 3L, "restore.arguments")
+  result <- verify_restored_artifact(arguments[2], arguments[3])
+  cat(json(result), "\n")
+  quit(save = "no", status = 0L)
+}
+ensure(length(arguments) %in% c(1L, 2L), "restore.arguments")
 socket <- normalizePath(arguments[1], mustWork = TRUE)
 connect <- function(user) connect_repository(host = socket, port = 5432L, dbname = "delphyr", user = user, environment = "test", artifact_root = tempfile("delphyr-restore-"))
 owner <- connect("postgres")
@@ -20,7 +42,7 @@ checks$no_migration_pending <- identical(query(owner, "SELECT count(*)::int AS n
 # Roles are not part of a dump: the restricted application role is set up anew.
 # system2 passes environment entries to the shell as they are; the socket
 # path is quoted, so a space or a shell character in it stays part of it.
-configured <- system2("Rscript", "scripts/configure-dev-role.R", env = c(paste0("DELPHYR_DB_HOST=", shQuote(socket)), "DELPHYR_DB_PORT=5432"), stdout = FALSE, stderr = FALSE)
+configured <- system2("Rscript", "scripts/configure-dev-role.R", env = c(paste0("DELPHYR_DB_HOST=", shQuote(socket)), "DELPHYR_DB_PORT=5432", "DELPHYR_DB_NAME=delphyr", "DELPHYR_DB_ADMIN=postgres"), stdout = FALSE, stderr = FALSE)
 runtime <- if (identical(configured, 0L)) tryCatch(connect("delphyr_runtime"), error = function(e) NULL)
 checks$application_role_configured <- !is.null(runtime)
 if (is.null(runtime)) runtime <- owner
