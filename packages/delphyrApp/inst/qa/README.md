@@ -46,7 +46,7 @@ that assumes worker infrastructure privileges.
 
 Historical run on 3 October 2026 against the then-current interface: passed.
 
-Maintenance recheck on 31 October 2026, delphyr/delphyrApp 0.0.2: 20 browser
+Initial maintenance recheck on 31 October 2026, delphyr/delphyrApp 0.0.2: 20 browser
 assertions passed in Chromium 156.0.8078.4 on macOS using a Playwright driver of
 the same fixture and smoke sequence. The optional chromote package was absent;
 the revised R driver was syntax-checked, but was not itself executed.
@@ -86,7 +86,7 @@ service fixture. Queue, exact-feedback-review, and submission-guard tests use
 
 Historical run on 3 October 2026 against the then-current interface: passed.
 
-Maintenance recheck on 31 October 2026, delphyr/delphyrApp 0.0.2: 25 browser
+Initial maintenance recheck on 31 October 2026, delphyr/delphyrApp 0.0.2: 25 browser
 assertions passed against native PostgreSQL 17.11 on macOS, with Chromium
 156.0.8078.4 driven through Playwright. The current `preview-postgres.R` created
 one fresh synthetic study; the app used `delphyr_runtime`. Browser consent,
@@ -109,6 +109,25 @@ was unavailable, so its equivalent Playwright sequence was executed instead.
 This qualifies this local panel path and durable PostgreSQL result, not
 production identity-provider integration, external messages, every workflow,
 other browsers or assistive technologies.
+
+## Additional Chromote qualification on 31 October 2026
+
+The actual shipped `browser-smoke.R` and `browser-postgres.R` subsequently
+both passed under Chromote 0.5.1 and Chromium 156.0.8078.4 on macOS, using
+fresh fixtures. Chromote and its dependencies were available on recheck;
+no packages were installed or upgraded. The drivers exercised their EN/DE
+consent, pending-rating preservation, explicit-save and submission checks.
+
+The PostgreSQL run used the separate synthetic database
+`delphyr_browser_20261031_audit`, with PostgreSQL 17.11 and all 18 migrations.
+The shipped `verify-postgres.R` independently passed under `delphyr_runtime`:
+consent accepted, enrollment submitted, one response with value 7 and revision
+1, and one receipt matching the browser:
+`420f06d3-f178-4adc-9173-4f0c51c3dd3b`. The existing runtime role was unchanged.
+Both preview hosts and their browsers were stopped; the synthetic fixture and
+execution logs were retained in the maintenance audit evidence. These runs
+qualify the shipped drivers; the wider language, viewport and screenshot
+evidence remains the separate initial Playwright qualification above.
 
 ## Reproduce the PostgreSQL browser check
 
