@@ -49,3 +49,14 @@ These files are copied without regenerating font outlines. Additional platform
 icon sizes continue to use the bundled R motif renderer. `assets.csv` records
 the intended variant for each destination; display logos use `lockup`, while
 favicons and explicitly compact symbols use artwork-only variants.
+
+## Family colour
+
+delphyR (delphyr and delphyrApp) is in the consensus and ideation family (`consensus`, plum #91617B),
+shared with brainwritR. The approved hexmakR masters are drawn in the former
+evidence colour, so `render.R` recolours them: when an identity's family
+differs from the family hexmakR drew it in, the bundled renderer redraws the
+same elements in the new family and its colours replace the master's one by
+one, keeping the supplied name outlines. Greyscale versions are copied
+unchanged. The colour is defined in `design_tokens.csv` (`topic,consensus`);
+see CTTIR/.github `tools/branding/README.md` for how it was chosen.
