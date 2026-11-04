@@ -1,7 +1,7 @@
 Package: delphyr
 Title: Reproducible Round-Based Delphi Studies
 Version: 0.0.2
-Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "58561665+r-heller@users.noreply.github.com")
+Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "raban.heller@uni-ulm.de")
 Description: Validated study protocols, deterministic consensus and longitudinal
  analysis, and transactional PostgreSQL services for round-based Delphi
  studies. Provides reproducible research exports and synthetic examples.
