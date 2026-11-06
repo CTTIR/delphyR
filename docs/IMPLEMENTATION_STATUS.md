@@ -1,5 +1,15 @@
 # Implementation status
 
+## Package audit — 4 November 2026
+
+Both packages use the reachable maintainer address used by the published
+qviewparsR package. Local R 4.6.1 checks with `--as-cran`, full manuals and
+vignettes passed the code tests. `delphyr` has only the new-submission note.
+`delphyrApp` has an incoming dependency warning because `delphyr` is not yet
+on CRAN or Bioconductor; submit the underlying package first. PostgreSQL
+integration was not repeated in this local package-only pass. Existing
+production and scientific acceptance gates remain open.
+
 ## Maintenance — 31 October 2026
 
 Development version 0.0.2 repairs scientific numeric/hash precision, preserves
