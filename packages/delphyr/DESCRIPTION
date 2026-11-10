@@ -1,7 +1,7 @@
 Package: delphyr
 Title: Reproducible Round-Based Delphi Studies
 Version: 0.1.0
-Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "raban.heller@uni-ulm.de",
+Authors@R: person("R.", "Heller", role = c("aut", "cre", "cph"), email = "raban.heller@uni-ulm.de",
     comment = c(ORCID = "0000-0001-8006-9742"))
 Description: Supports round-based Delphi studies with validated study
     protocols, deterministic consensus classification, longitudinal analysis

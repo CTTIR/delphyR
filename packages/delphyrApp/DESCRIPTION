@@ -1,7 +1,7 @@
 Package: delphyrApp
 Title: Trilingual 'shiny' Workflows for Delphi Studies
 Version: 0.1.0
-Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "raban.heller@uni-ulm.de",
+Authors@R: person("R.", "Heller", role = c("aut", "cre", "cph"), email = "raban.heller@uni-ulm.de",
     comment = c(ORCID = "0000-0001-8006-9742"))
 Description: Provides an English, French and German 'shiny' interface for
     round-based Delphi studies that uses the transactional services of
