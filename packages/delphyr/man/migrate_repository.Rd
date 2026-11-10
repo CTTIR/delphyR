@@ -19,8 +19,7 @@ Apply checksummed forward migrations
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 migrate_repository(repo)
 }

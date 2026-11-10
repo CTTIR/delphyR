@@ -37,11 +37,20 @@ Release an exact qualitative version after independent review
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-# 'edit' is a reviewed edit from redact_qualitative_source().
+# An edit is released by someone other than its editor.
+principal <- provision_demo_principal(repo, "demo-example-editor")
+editor <- demo_actor(repo, principal)
+set_capability(repo, study$manager, study$study_id, editor$principal_id,
+               "edit", TRUE, "example-grant")
+source <- record_qualitative_source(repo, editor, study$study_id,
+                                    "Synthetic comment by a named person.",
+                                    "EXAMPLE-SRC", "example-source")
+edit <- redact_qualitative_source(repo, editor, study$study_id, source$id,
+                                  "Synthetic comment by [name removed].",
+                                  "Remove a name", "example-redact")
 release_qualitative_edit(repo, study$manager, study$study_id, edit$id,
                          edit$hash, "Faithful; dissent kept", "example-edit")
 }

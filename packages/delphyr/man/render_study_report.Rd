@@ -21,8 +21,7 @@ Render a trusted packaged Quarto report without executing study text
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server (see migrate_repository()) and 'Quarto'.
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 for (state in c("review", "approved", "open")) {
@@ -32,8 +31,10 @@ for (state in c("review", "approved", "open")) {
 transition_round(repo, study$manager, study$round$id, "closed",
                  study$round$hash, "Example", "example-closed")
 snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
-# Rendering also needs the external 'Quarto' program.
 data <- prepare_report_data(repo, study$manager, snapshot$id)
-render_study_report(data, tempdir())
+out <- tempfile("report-")
+dir.create(out)
+render_study_report(data, out)
+unlink(out, recursive = TRUE)
 }
 }

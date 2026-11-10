@@ -27,8 +27,7 @@ Record an explicit consent decision
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 record_consent(repo, study$panel[[1]], study$study_id, study$consent_id,

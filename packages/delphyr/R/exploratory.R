@@ -6,11 +6,10 @@
 #'   answers, with how many are already preserved as qualitative sources.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' list_contribution_rounds(repo, study$panel[[1]], study$study_id)
+#' list_contribution_rounds(repo, study$manager, study$study_id)
 #' }
 #' @export
 list_contribution_rounds <- function(repo, actor, study_id) {
@@ -37,8 +36,7 @@ list_contribution_rounds <- function(repo, actor, study_id) {
 #' @return Snapshot UUID and the number of sources created.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -73,8 +71,7 @@ import_round_contributions <- function(repo, actor, snapshot_id, command_id) {
 #'   the item codes linked to the source. Originals are not included.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_released_edits(repo, study$manager, study$study_id)
@@ -107,8 +104,7 @@ list_released_edits <- function(repo, actor, study_id) {
 #' @return The replacement feedback UUID and the feedback it replaces.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -119,9 +115,27 @@ list_released_edits <- function(repo, actor, study_id) {
 #'                  study$round$hash, "Example", "example-closed")
 #' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
 #' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
-#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#' released <- create_feedback(repo, study$manager, analysis$id,
 #'                             command_id = "example-feedback")
-#' # 'released' is a released feedback, 'replacement' a newer candidate.
+#' release_feedback(repo, study$manager, released$id, released$hash,
+#'                  "example-release")
+#' # The replacement adds a summary of a comment, released by a second manager.
+#' principal <- provision_demo_principal(repo, "demo-example-reviewer")
+#' reviewer <- demo_actor(repo, principal)
+#' set_capability(repo, study$manager, study$study_id, principal, "manage",
+#'                TRUE, "example-grant")
+#' source <- record_qualitative_source(repo, study$manager, study$study_id,
+#'                                     "Synthetic comment that disagrees.",
+#'                                     "EXAMPLE-SRC", "example-source")
+#' edit <- redact_qualitative_source(repo, study$manager, study$study_id,
+#'                                   source$id, "One member disagrees.",
+#'                                   "Editorial summary", "example-summary",
+#'                                   kind = "summary")
+#' release_qualitative_edit(repo, reviewer, study$study_id, edit$id, edit$hash,
+#'                          "Faithful; dissent kept", "example-edit")
+#' replacement <- create_feedback(repo, study$manager, analysis$id,
+#'                                command_id = "example-feedback-2",
+#'                                released_edits = edit$id)
 #' release_feedback_correction(repo, study$manager, released$id, replacement$id,
 #'                             replacement$hash, "Dissent was missing",
 #'                             "No rating affected",
@@ -155,8 +169,7 @@ release_feedback_correction <- function(repo, actor, feedback_id, replacement_id
 #'   assigned to and, where it was corrected, its replacement with rationale.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_released_feedback(repo, study$manager, study$study_id)

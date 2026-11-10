@@ -28,8 +28,7 @@ restored database. Without `dry_run = FALSE` it changes nothing.
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 hold_pending_messages(repo, dry_run = TRUE)
 }

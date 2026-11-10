@@ -41,12 +41,16 @@ requeued message is sent, eligibility is checked again.
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-message <- list_uncertain_deliveries(repo, study$manager, study$study_id)$id[1]
-resolve_delivery(repo, study$manager, study$study_id, message, "requeue",
-                 "Provider confirmed no delivery", "example-resolve")
+uncertain <- list_uncertain_deliveries(repo, study$manager, study$study_id)
+# A new study has no uncertain delivery; one arises when an adapter of
+# process_campaign_message() fails after it may have sent the message.
+for (message in uncertain$message_id) {
+  resolve_delivery(repo, study$manager, study$study_id, message, "requeue",
+                   "Provider log shows no acceptance",
+                   paste("example-resolve", message))
+}
 }
 }

@@ -45,8 +45,7 @@ request_job <- function(repo, actor, snapshot_id, type, key, purpose = NULL) {
 #' @return Operation id.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -73,8 +72,7 @@ request_analysis <- function(repo, actor, snapshot_id, command_id) request_job(r
 #' @return Operation id. Free-text exports require a separate reviewed profile.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -113,8 +111,7 @@ request_export <- function(repo, actor, snapshot_id, command_id, purpose = NULL)
 #' @return Operation id and state.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' job <- request_study_export(repo, study$manager, study$study_id,
@@ -142,8 +139,7 @@ request_study_export <- function(repo, actor, study_id, profile, command_id, pur
 #' @return State, result reference and safe error code.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -171,8 +167,7 @@ get_operation <- function(repo, actor, operation_id) {
 #' @return Claimed row or empty data frame. Worker infrastructure API.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -322,21 +317,11 @@ verify_manifest <- function(path, exact = TRUE) {
 #' @param path Export directory under the user's control.
 #' @return Recomputed delphyr_analysis after all listed checksums match.
 #' @examples
-#' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
-#' repo <- connect_repository(dbname = "delphyr")
-#' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' for (state in c("review", "approved", "open")) {
-#'   transition_round(repo, study$manager, study$round$id, state,
-#'                    study$round$hash, "Example", paste0("example-", state))
-#' }
-#' transition_round(repo, study$manager, study$round$id, "closed",
-#'                  study$round$hash, "Example", "example-closed")
-#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
-#' # 'path' is a directory with the files of a downloaded round export.
-#' reproduce_export(path)$results
-#' }
+#' # A synthetic round export as download_artifact() delivers it.
+#' path <- system.file("extdata", "example-round-export", package = "delphyr")
+#' reproduced <- reproduce_export(path)
+#' reproduced$provenance$result_hash
+#' reproduced$results[, c("item_code", "stratum", "n_valid", "classification")]
 #' @export
 reproduce_export <- function(path) {
   manifest <- verify_manifest(path, exact = FALSE)
@@ -359,8 +344,7 @@ reproduce_export <- function(path) {
 #'   the job is no longer held by that claim. Worker infrastructure API.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -426,8 +410,7 @@ delegated_actor <- function(repo, j) {
 #' @return FALSE when idle, otherwise a safe operation state.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -511,8 +494,7 @@ worker_step <- function(repo, study_id = NULL, lease_seconds = 600L, download_ho
 #'   name is delivered from its temporary name, `<id>.partial`.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -525,7 +507,8 @@ worker_step <- function(repo, study_id = NULL, lease_seconds = 600L, download_ho
 #' job <- request_export(repo, study$manager, snapshot$id, "example-export")
 #' worker_step(repo, study_id = study$study_id)
 #' operation <- get_operation(repo, study$manager, job$id)
-#' download_artifact(repo, study$manager, operation$artifact_id)
+#' path <- download_artifact(repo, study$manager, operation$result_ref)
+#' list.files(path)
 #' }
 #' @export
 download_artifact <- function(repo, actor, artifact_id) {

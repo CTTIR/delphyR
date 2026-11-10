@@ -21,10 +21,9 @@ Provision a synthetic development principal
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
-principal <- provision_demo_principal(repo, "example-manager", TRUE)
+principal <- provision_demo_principal(repo, "demo-example-manager", TRUE)
 demo_actor(repo, principal)
 }
 }

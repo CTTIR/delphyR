@@ -1,0 +1,3 @@
+"previous_round","current_round","item_code","dimension_code","status","reason","n_paired","n_previous","n_current","n_lost","n_new","previous_mean","current_mean","mean_absolute_change","median_absolute_change","proportion_unchanged","proportion_within_one"
+1,2,"I001","relevance","descriptive","unchanged",4,4,4,0,0,6.75,7.75,1,0.5,0.5,0.75
+1,2,"I002","relevance","descriptive","unchanged",4,4,4,0,0,5.25,6.25,1,1,0.25,0.75

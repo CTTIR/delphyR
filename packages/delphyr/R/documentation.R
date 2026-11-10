@@ -46,8 +46,7 @@ latest_documentation <- function(repo, study_id) {
 #' @return Documentation id, version and content hash.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' record_study_documentation(repo, study$manager, study$study_id,
@@ -85,8 +84,7 @@ record_study_documentation <- function(repo, actor, study_id, fields, expected_v
 #'   reporting topic documented or not documented; and the version history.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_study_documentation(repo, study$manager, study$study_id)
@@ -115,10 +113,29 @@ get_study_documentation <- function(repo, actor, study_id) {
 #' @return Decision UUID.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#'                             command_id = "example-feedback")
+#' release_feedback(repo, study$manager, feedback$id, feedback$hash,
+#'                  "example-release")
+#' # Round 2 asks item I001 in a revised version 2.
+#' items <- study$items
+#' revised <- items$item_code == "I001"
+#' items$item_version[revised] <- 2L
+#' items$text[revised] <- paste(items$text[revised], "(revised)")
+#' deadline <- format(Sys.time() + 7 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+#' prepare_round(repo, study$manager, study$study_id, items, study$consent_id,
+#'               deadline, "example-round-2")
 #' record_item_comparability(repo, study$manager, study$study_id, "I001",
 #'                           "relevance", 1L, 2L, TRUE, "Wording only",
 #'                           "example-comparability")
@@ -152,8 +169,7 @@ comparability_history <- function(repo, study_id) {
 #' @return Decision history; effective marks the latest decision per version pair.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_item_comparability(repo, study$manager, study$study_id)

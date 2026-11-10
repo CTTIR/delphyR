@@ -9,8 +9,7 @@
 #' @return Invisibly TRUE.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' record_worker_heartbeat(repo, "worker-1", TRUE)
 #' get_system_status(repo)
@@ -44,8 +43,7 @@ record_worker_heartbeat <- function(repo, worker_id, started = FALSE) {
 #'   the schema is not current or the database does not answer.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' get_system_status(repo)
 #' }
@@ -116,8 +114,7 @@ get_system_status <- function(repo, path = system.file("sql", package = "delphyr
 #'   files are present and whether the removal was recorded.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' remove_expired_artifacts(repo, dry_run = TRUE)
 #' }
@@ -201,8 +198,7 @@ unfinished_exports <- function(repo, older_than_hours) {
 #'   whether it was removed.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' remove_unfinished_exports(repo, dry_run = TRUE)
 #' }
@@ -236,8 +232,7 @@ remove_unfinished_exports <- function(repo, dry_run = TRUE, older_than_hours = 1
 #'   were found and the number `held`, which is zero for a dry run.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' hold_pending_messages(repo, dry_run = TRUE)
 #' }
@@ -270,8 +265,7 @@ hold_pending_messages <- function(repo, dry_run = TRUE, study_id = NULL) {
 #'   older_than_period.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_retention_report(repo, study$manager, study$study_id)

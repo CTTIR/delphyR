@@ -27,8 +27,7 @@ Assign released feedback to an unopened subsequent round
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 for (state in c("review", "approved", "open")) {
@@ -41,7 +40,12 @@ snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
 analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
 feedback <- create_feedback(repo, study$manager, analysis$id,
                             command_id = "example-feedback")
-# 'next_round' is the round prepared after the analysed one.
-assign_feedback(repo, study$manager, next_round$id, feedback$id, "example-assign")
+release_feedback(repo, study$manager, feedback$id, feedback$hash,
+                 "example-release")
+deadline <- format(Sys.time() + 7 * 86400, "\%Y-\%m-\%dT\%H:\%M:\%SZ", tz = "UTC")
+next_round <- prepare_round(repo, study$manager, study$study_id, study$items,
+                            study$consent_id, deadline, "example-round-2")
+assign_feedback(repo, study$manager, next_round$id, feedback$id,
+                "example-assign")
 }
 }

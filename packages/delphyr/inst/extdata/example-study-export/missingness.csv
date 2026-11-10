@@ -1,0 +1,13 @@
+"round_number","item_code","item_version","dimension_code","stratum","n_not_answered","n_unable","n_abstained","n_not_applicable"
+1,"I001",1,"relevance","overall",0,0,0,0
+1,"I001",1,"relevance","professionals",0,0,0,0
+1,"I001",1,"relevance","public_contributors",0,0,0,0
+1,"I002",1,"relevance","overall",0,0,0,0
+1,"I002",1,"relevance","professionals",0,0,0,0
+1,"I002",1,"relevance","public_contributors",0,0,0,0
+2,"I001",1,"relevance","overall",0,0,0,0
+2,"I001",1,"relevance","professionals",0,0,0,0
+2,"I001",1,"relevance","public_contributors",0,0,0,0
+2,"I002",1,"relevance","overall",0,0,0,0
+2,"I002",1,"relevance","professionals",0,0,0,0
+2,"I002",1,"relevance","public_contributors",0,0,0,0

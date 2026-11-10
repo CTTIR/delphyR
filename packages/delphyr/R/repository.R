@@ -5,8 +5,7 @@
 #' @return A delphyr repository. Close its connection with DBI::dbDisconnect(repo$con).
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' migrate_repository(repo)
 #' DBI::dbDisconnect(repo$con)
@@ -65,8 +64,7 @@ consistent_read <- function(repo, code) {
 #' @return Invisibly TRUE. Changed historical migration files are rejected.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' migrate_repository(repo)
 #' }
@@ -99,10 +97,9 @@ migrate_repository <- function(repo, path = system.file("sql", package = "delphy
 #' @return Principal UUID. This is not a production authentication adapter.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
-#' principal <- provision_demo_principal(repo, "example-manager", TRUE)
+#' principal <- provision_demo_principal(repo, "demo-example-manager", TRUE)
 #' demo_actor(repo, principal)
 #' }
 #' @export
@@ -118,10 +115,9 @@ provision_demo_principal <- function(repo, subject, can_create = FALSE) {
 #' @return Actor context for trusted server code, never accepted from browser payloads.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
-#' principal <- provision_demo_principal(repo, "example-manager", TRUE)
+#' principal <- provision_demo_principal(repo, "demo-example-manager", TRUE)
 #' manager <- demo_actor(repo, principal)
 #' list_studies(repo, manager)
 #' }
@@ -226,10 +222,10 @@ command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, 
 #' @return Study id and protocol id.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
-#' manager <- demo_actor(repo, provision_demo_principal(repo, "example-manager", TRUE))
+#' principal <- provision_demo_principal(repo, "demo-example-manager", TRUE)
+#' manager <- demo_actor(repo, principal)
 #' protocol <- demo_protocol()
 #' protocol$study$code <- "EXAMPLE-1"
 #' create_study(repo, manager, protocol, "example-create")
@@ -275,11 +271,10 @@ create_study <- function(repo, actor, protocol, command_id) {
 #'   revoked: a study always keeps one person who can manage it.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' principal <- provision_demo_principal(repo, "example-analyst")
+#' principal <- provision_demo_principal(repo, "demo-example-analyst")
 #' set_capability(repo, study$manager, study$study_id, principal, "analyse",
 #'                TRUE, "example-grant", reason = "Performs the analysis")
 #' }
@@ -312,8 +307,7 @@ set_capability <- function(repo, actor, study_id, principal_id, capability, enab
 #' @return Study table without contacts or response data.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_studies(repo, study$manager)
@@ -330,8 +324,7 @@ list_studies <- function(repo, actor) {
 #' @return Character vector; this UI hint does not replace service authorization.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_capabilities(repo, study$manager, study$study_id)

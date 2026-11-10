@@ -11,23 +11,20 @@
 #' @return Campaign id, exact content/recipient hash and recipient count.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
 #'   transition_round(repo, study$manager, study$round$id, state,
 #'                    study$round$hash, "Example", paste0("example-", state))
 #' }
-#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
-#' panelist <- study$panel[[1]]
-#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
-#' enrollments <- list_campaign_enrollments(repo, study$manager, study$round$id)$id
+#' enrollments <- list_campaign_enrollments(repo, study$manager,
+#'                                          study$round$id)$enrollment_id
 #' campaign <- prepare_campaign(repo, study$manager, study$round$id, enrollments,
 #'                              "invitation", "Synthetic invitation",
 #'                              "Synthetic study only.", locale = "en",
 #'                              command_id = "example-campaign")
-#' preview_campaign(repo, study$manager, campaign$id)
+#' campaign
 #' }
 #' @export
 prepare_campaign <- function(repo, actor, round_id, enrollment_ids, kind, subject, body,
@@ -71,11 +68,19 @@ campaign_hash <- function(repo, c) {
 #'   window, pseudonyms and delivery states; no contacts or answers.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'campaign' comes from prepare_campaign().
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enrollments <- list_campaign_enrollments(repo, study$manager,
+#'                                          study$round$id)$enrollment_id
+#' campaign <- prepare_campaign(repo, study$manager, study$round$id, enrollments,
+#'                              "invitation", "Synthetic invitation",
+#'                              "Synthetic study only.", locale = "en",
+#'                              command_id = "example-campaign")
 #' preview_campaign(repo, study$manager, campaign$id)
 #' }
 #' @export
@@ -153,11 +158,19 @@ valid_send_time <- function(x) {
 #'   send time. No message is sent.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'campaign' comes from prepare_campaign().
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enrollments <- list_campaign_enrollments(repo, study$manager,
+#'                                          study$round$id)$enrollment_id
+#' campaign <- prepare_campaign(repo, study$manager, study$round$id, enrollments,
+#'                              "invitation", "Synthetic invitation",
+#'                              "Synthetic study only.", locale = "en",
+#'                              command_id = "example-campaign")
 #' release_campaign(repo, study$manager, campaign$id, campaign$hash,
 #'                  "Reviewed recipients and text", "example-release")
 #' }
@@ -207,11 +220,19 @@ release_campaign <- function(repo, actor, campaign_id, expected_hash, reason, co
 #'   campaign that is already cancelled is refused as `campaign.state`.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'campaign' comes from prepare_campaign().
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enrollments <- list_campaign_enrollments(repo, study$manager,
+#'                                          study$round$id)$enrollment_id
+#' campaign <- prepare_campaign(repo, study$manager, study$round$id, enrollments,
+#'                              "invitation", "Synthetic invitation",
+#'                              "Synthetic study only.", locale = "en",
+#'                              command_id = "example-campaign")
 #' cancel_campaign(repo, study$manager, campaign$id, "Sent in error",
 #'                 "example-cancel")
 #' }
@@ -348,8 +369,7 @@ complete_campaign_sink <- function(repo, j) {
 #' @return FALSE when idle or a message id/state/reason. Never sends external mail.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' process_campaign_sink(repo, study$study_id)
@@ -398,8 +418,7 @@ new_message_adapter <- function(name, send) {
 #' @return FALSE when idle, or message id, state and reason.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' adapter <- new_message_adapter("local_test", function(message) {
@@ -477,8 +496,7 @@ deliver_campaign_message <- function(repo, adapter, study_id, lease_seconds) {
 #'   cause, the adapter and the time of the uncertain attempt.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_uncertain_deliveries(repo, study$manager, study$study_id)
@@ -503,13 +521,17 @@ list_uncertain_deliveries <- function(repo, actor, study_id) {
 #' @return Message UUID and its new delivery state.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' message <- list_uncertain_deliveries(repo, study$manager, study$study_id)$id[1]
-#' resolve_delivery(repo, study$manager, study$study_id, message, "requeue",
-#'                  "Provider confirmed no delivery", "example-resolve")
+#' uncertain <- list_uncertain_deliveries(repo, study$manager, study$study_id)
+#' # A new study has no uncertain delivery; one arises when an adapter of
+#' # process_campaign_message() fails after it may have sent the message.
+#' for (message in uncertain$message_id) {
+#'   resolve_delivery(repo, study$manager, study$study_id, message, "requeue",
+#'                    "Provider log shows no acceptance",
+#'                    paste("example-resolve", message))
+#' }
 #' }
 #' @export
 resolve_delivery <- function(repo, actor, study_id, message_id, resolution, reason, command_id) {
@@ -538,8 +560,7 @@ resolve_delivery <- function(repo, actor, study_id, message_id, resolution, reas
 #'   waiting message, and the number of uncertain deliveries. No content.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_operations_status(repo, study$manager, study$study_id)
@@ -561,8 +582,7 @@ get_operations_status <- function(repo, actor, study_id) {
 #' @return Minimal round identifiers, numbers and states.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_campaign_rounds(repo, study$manager, study$study_id)
@@ -582,8 +602,7 @@ list_campaign_rounds <- function(repo, actor, study_id) {
 #'   including reminders delivered before their campaign was cancelled.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_campaign_enrollments(repo, study$manager, study$round$id)

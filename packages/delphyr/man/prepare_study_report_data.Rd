@@ -27,11 +27,13 @@ documentation. Topics without an entry stay marked "not documented".
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 data <- prepare_study_report_data(repo, study$manager, study$study_id)
-write_report_data(data, tempdir())
+out <- tempfile("report-")
+dir.create(out)
+write_report_data(data, out)
+unlink(out, recursive = TRUE)
 }
 }

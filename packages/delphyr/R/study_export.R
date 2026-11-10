@@ -338,12 +338,14 @@ write_study_export <- function(repo, actor, study_id, profile) {
 #' @return A delphyr_report_data with a content hash, for render_study_report().
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' data <- prepare_study_report_data(repo, study$manager, study$study_id)
-#' write_report_data(data, tempdir())
+#' out <- tempfile("report-")
+#' dir.create(out)
+#' write_report_data(data, out)
+#' unlink(out, recursive = TRUE)
 #' }
 #' @export
 prepare_study_report_data <- function(repo, actor, study_id, profile = "study_summary") {
@@ -355,14 +357,12 @@ prepare_study_report_data <- function(repo, actor, study_id, profile = "study_su
 #' @return The recomputed analysis of every round and the comparisons between
 #'   rounds, after all checksums, snapshot hashes and result hashes matched.
 #' @examples
-#' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
-#' repo <- connect_repository(dbname = "delphyr")
-#' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'path' is a directory with the files of a downloaded study export.
-#' reproduce_study_export(path)$comparisons
-#' }
+#' # A synthetic two-round study export as download_artifact() delivers it.
+#' path <- system.file("extdata", "example-study-export", package = "delphyr")
+#' reproduced <- reproduce_study_export(path)
+#' names(reproduced$analyses)
+#' reproduced$comparisons[, c("item_code", "n_paired", "previous_mean",
+#'                            "current_mean")]
 #' @export
 reproduce_study_export <- function(path) {
   manifest <- verify_manifest(path, exact = FALSE)
@@ -396,12 +396,47 @@ reproduce_study_export <- function(path) {
 #' @return Written file names; DEL_NOT_FOUND when no feedback is assigned.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'enrollment' is an enrollment of a round with assigned, released feedback.
-#' write_participant_feedback(repo, study$panel[[1]], enrollment, tempdir())
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' panelist <- study$panel[[1]]
+#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id
+#' record_consent(repo, panelist, study$study_id, study$consent_id, TRUE,
+#'                "example-consent")
+#' q <- get_questionnaire(repo, panelist, enrollment)
+#' saved <- lapply(q$items$id, function(item) {
+#'   save_response(repo, panelist, enrollment, item,
+#'                 list(value = 8L, status = "answered"), 0L, paste("save", item))
+#' })
+#' revisions <- setNames(vapply(saved, `[[`, integer(1), "revision"), q$items$id)
+#' submit_round(repo, panelist, enrollment, revisions, "example-submit")
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#'                             command_id = "example-feedback")
+#' release_feedback(repo, study$manager, feedback$id, feedback$hash,
+#'                  "example-release")
+#' deadline <- format(Sys.time() + 7 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+#' round_2 <- prepare_round(repo, study$manager, study$study_id, study$items,
+#'                          study$consent_id, deadline, "example-round-2")
+#' assign_feedback(repo, study$manager, round_2$id, feedback$id, "example-assign")
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, round_2$id, state, round_2$hash,
+#'                    "Example", paste0("example-2-", state))
+#' }
+#' # The panel member's enrollment in round 2 shows the released feedback.
+#' enrollments <- list_enrollments(repo, panelist, study$study_id)
+#' enrollment <- enrollments$id[enrollments$number == 2]
+#' out <- tempfile("feedback-")
+#' dir.create(out)
+#' write_participant_feedback(repo, panelist, enrollment, out)
+#' unlink(out, recursive = TRUE)
 #' }
 #' @export
 write_participant_feedback <- function(repo, actor, enrollment_id, output_dir) {

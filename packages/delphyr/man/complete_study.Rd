@@ -25,10 +25,24 @@ Complete a study after finalization and explicit item decisions
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+transition_round(repo, study$manager, study$round$id, "closed",
+                 study$round$hash, "Example", "example-closed")
+snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+# Every item has a decision before its round is finalized.
+for (item in unique(study$items$item_code)) {
+  record_item_decision(repo, study$manager, analysis$id, item, "finalize",
+                       "Consensus reached", paste("example-decision", item))
+}
+transition_round(repo, study$manager, study$round$id, "finalized",
+                 study$round$hash, "Final round", "example-finalized")
 complete_study(repo, study$manager, study$study_id, "Stop after round 1",
                "example-complete")
 }

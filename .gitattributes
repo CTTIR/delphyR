@@ -1,3 +1,6 @@
 # Test fixtures are checked byte for byte against their recorded SHA-256
 # sums, so their line endings must not be converted on checkout.
 packages/*/tests/testthat/fixtures/** -text
+# The bundled example exports are verified against the SHA-256 sums in
+# their manifests in the same way.
+packages/*/inst/extdata/** -text

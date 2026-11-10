@@ -121,11 +121,14 @@ print.delphyr_panel_preview <- function(x, ...) {
 #' @return Restricted preview with rows, row/column issues, exact file hash and approval hash.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'csv' is the text of a panel import file in the documented schema.
+#' csv <- paste(
+#'   "external_ref,email,display_name,locale,stakeholder_group",
+#'   "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+#'   sep = "\n"
+#' )
 #' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
 #' preview
 #' }
@@ -146,11 +149,14 @@ preview_panel_import <- function(repo, actor, study_id, csv, schema_version = "1
 #' @return Receipt id, file/preview hashes, counts and opaque invitation-draft IDs.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'csv' is the text of a panel import file in the documented schema.
+#' csv <- paste(
+#'   "external_ref,email,display_name,locale,stakeholder_group",
+#'   "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+#'   sep = "\n"
+#' )
 #' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
 #' import_panel(repo, study$manager, study$study_id, preview, preview$hash,
 #'              "Reviewed import", "example-import")
@@ -200,11 +206,17 @@ import_panel <- function(repo, actor, study_id, preview, expected_hash, reason, 
 #' @return Receipt metadata and invitation IDs without contact values.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'receipt' comes from import_panel().
+#' csv <- paste(
+#'   "external_ref,email,display_name,locale,stakeholder_group",
+#'   "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+#'   sep = "\n"
+#' )
+#' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+#' receipt <- import_panel(repo, study$manager, study$study_id, preview,
+#'                         preview$hash, "Reviewed import", "example-import")
 #' get_panel_import_receipt(repo, study$manager, receipt$id)
 #' }
 #' @export

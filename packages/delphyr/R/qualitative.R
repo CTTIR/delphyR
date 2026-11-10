@@ -18,8 +18,7 @@ qualitative_object <- function(repo, study, id, table) {
 #' @return Source UUID and content hash. This is restricted editorial data.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' record_qualitative_source(repo, study$manager, study$study_id,
@@ -58,13 +57,14 @@ record_qualitative_source <- function(repo, actor, study_id, text, source_ref, c
 #' @return Edit UUID and exact hash, requiring independent release.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'source' comes from record_qualitative_source().
+#' source <- record_qualitative_source(repo, study$manager, study$study_id,
+#'                                     "Synthetic comment by a named person.",
+#'                                     "EXAMPLE-SRC", "example-source")
 #' redact_qualitative_source(repo, study$manager, study$study_id, source$id,
-#'                           "Synthetic comment with [name removed].",
+#'                           "Synthetic comment by [name removed].",
 #'                           "Remove a name", "example-redact")
 #' }
 #' @export
@@ -95,11 +95,20 @@ redact_qualitative_source <- function(repo, actor, study_id, source_id, text, re
 #' @return Immutable release UUID and content hash.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'edit' is a reviewed edit from redact_qualitative_source().
+#' # An edit is released by someone other than its editor.
+#' principal <- provision_demo_principal(repo, "demo-example-editor")
+#' editor <- demo_actor(repo, principal)
+#' set_capability(repo, study$manager, study$study_id, editor$principal_id,
+#'                "edit", TRUE, "example-grant")
+#' source <- record_qualitative_source(repo, editor, study$study_id,
+#'                                     "Synthetic comment by a named person.",
+#'                                     "EXAMPLE-SRC", "example-source")
+#' edit <- redact_qualitative_source(repo, editor, study$study_id, source$id,
+#'                                   "Synthetic comment by [name removed].",
+#'                                   "Remove a name", "example-redact")
 #' release_qualitative_edit(repo, study$manager, study$study_id, edit$id,
 #'                          edit$hash, "Faithful; dissent kept", "example-edit")
 #' }
@@ -130,8 +139,7 @@ release_qualitative_edit <- function(repo, actor, study_id, edit_id, expected_ha
 #' @return Theme UUID.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' create_qualitative_theme(repo, study$manager, study$study_id, "DECISION", 1L,
@@ -164,12 +172,16 @@ create_qualitative_theme <- function(repo, actor, study_id, code, version, label
 #' @return Coding-event UUID. Counts represent decisions, not unique people.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'source' and 'theme' come from record_qualitative_source() and
-#' # create_qualitative_theme().
+#' source <- record_qualitative_source(repo, study$manager, study$study_id,
+#'                                     "Synthetic comment by a named person.",
+#'                                     "EXAMPLE-SRC", "example-source")
+#' theme <- create_qualitative_theme(repo, study$manager, study$study_id,
+#'                                   "DECISION", 1L, "Shared decision making",
+#'                                   "Proposals on joint decisions",
+#'                                   "example-theme")
 #' code_qualitative_source(repo, study$manager, study$study_id, source$id,
 #'                         theme$id, "include", "Fits the theme", "example-code")
 #' }
@@ -205,11 +217,12 @@ qualitative_item <- function(repo, study, code, version) {
 #' @return Source-link UUID. This does not import or approve an instrument item.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'source' comes from record_qualitative_source().
+#' source <- record_qualitative_source(repo, study$manager, study$study_id,
+#'                                     "Synthetic comment by a named person.",
+#'                                     "EXAMPLE-SRC", "example-source")
 #' link_item_source(repo, study$manager, study$study_id, "I001", 1L, source$id,
 #'                  "Item derived from the comment", "example-link")
 #' }
@@ -238,8 +251,7 @@ link_item_source <- function(repo, actor, study_id, item_code, item_version, sou
 #' @return Lineage-event UUID and hash. Child codes are new semantic identities.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' record_item_lineage(repo, study$manager, study$study_id,
@@ -291,8 +303,7 @@ record_item_lineage <- function(repo, actor, study_id, parents, children, relati
 #'   These are restricted research records, not participant feedback.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_qualitative_provenance(repo, study$manager, study$study_id)
@@ -335,8 +346,7 @@ get_qualitative_provenance <- function(repo, actor, study_id, export = FALSE) {
 #' @return Reviewed content candidates and release state; excludes originals.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_qualitative_reviews(repo, study$manager, study$study_id)

@@ -37,11 +37,13 @@ Prepare a frozen-instrument candidate and enroll active panelists
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-# demo_study() prepares round 1; a later round needs the earlier one closed.
+# demo_study() prepared round 1. A later round needs the earlier one
+# released or finalized; here the candidate is withdrawn and replaced.
+transition_round(repo, study$manager, study$round$id, "cancelled",
+                 study$round$hash, "Replaced", "example-withdraw")
 deadline <- format(Sys.time() + 7 * 86400, "\%Y-\%m-\%dT\%H:\%M:\%SZ", tz = "UTC")
 prepare_round(repo, study$manager, study$study_id, study$items,
               study$consent_id, deadline, "example-round")

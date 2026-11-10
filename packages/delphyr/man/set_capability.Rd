@@ -42,11 +42,10 @@ Assign or revoke a study capability
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-principal <- provision_demo_principal(repo, "example-analyst")
+principal <- provision_demo_principal(repo, "demo-example-analyst")
 set_capability(repo, study$manager, study$study_id, principal, "analyse",
                TRUE, "example-grant", reason = "Performs the analysis")
 }

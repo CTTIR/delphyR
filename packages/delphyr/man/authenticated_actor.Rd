@@ -24,13 +24,22 @@ isolated authentication gateway. A header alone is not authentication.
 }
 \examples{
 \dontrun{
-# Needs a migrated PostgreSQL repository and a request forwarded by the
-# trusted authentication gateway, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# A deployment reads the secret shared with the gateway from its
+# configuration, for example Sys.getenv("DELPHYR_GATEWAY_SECRET").
 config <- new_authentication_config(
-  "https://identity.example/realms/study",
-  Sys.getenv("DELPHYR_GATEWAY_SECRET"), "127.0.0.1"
+  "https://identity.example/realms/study", strrep("a", 64), "127.0.0.1"
 )
-# In a trusted session factory:
-actor <- authenticated_actor(repo, session$request, config)
+register_staff_account(repo, study$manager, study$study_id, config$issuer,
+                       "example-staff", "Study coordinator",
+                       "example-staff")
+# A trusted session factory passes session$request; this request, as the
+# gateway forwards it, is synthetic.
+request <- list(REMOTE_ADDR = "127.0.0.1",
+                HTTP_X_DELPHYR_GATEWAY = config$gateway_secret,
+                HTTP_X_FORWARDED_USER = "example-staff")
+authenticated_actor(repo, request, config)
 }
 }

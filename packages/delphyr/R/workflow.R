@@ -139,8 +139,7 @@ validate_items <- function(items, protocol) {
 #'   DEL_CONFLICT (path study.state).
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' publish_consent(repo, study$manager, study$study_id,
@@ -169,8 +168,7 @@ publish_consent <- function(repo, actor, study_id, text, locale, command_id) {
 #' @return Consent event id.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' record_consent(repo, study$panel[[1]], study$study_id, study$consent_id,
@@ -201,12 +199,11 @@ record_consent <- function(repo, actor, study_id, consent_version_id, decision, 
 #'   with DEL_CONFLICT (path study.state).
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' principal <- provision_demo_principal(repo, "example-panelist")
-#' add_panelist(repo, study$manager, study$study_id, principal, "experts",
+#' principal <- provision_demo_principal(repo, "demo-example-panelist")
+#' add_panelist(repo, study$manager, study$study_id, principal, "professionals",
 #'              "example-add")
 #' }
 #' @export
@@ -257,11 +254,13 @@ eligible_panel <- function(repo, study_id, number, config) {
 #' @return Round UUID and exact instrument hash.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # demo_study() prepares round 1; a later round needs the earlier one closed.
+#' # demo_study() prepared round 1. A later round needs the earlier one
+#' # released or finalized; here the candidate is withdrawn and replaced.
+#' transition_round(repo, study$manager, study$round$id, "cancelled",
+#'                  study$round$hash, "Replaced", "example-withdraw")
 #' deadline <- format(Sys.time() + 7 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 #' prepare_round(repo, study$manager, study$study_id, study$items,
 #'               study$consent_id, deadline, "example-round")
@@ -349,8 +348,7 @@ valid_deadline <- function(deadline) {
 #' @return Round id and the new deadline in UTC.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' later <- format(Sys.time() + 14 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
@@ -389,8 +387,7 @@ change_round_deadline <- function(repo, actor, round_id, deadline, expected_hash
 #' @return Round id and new state.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -459,17 +456,17 @@ current_responses <- function(repo, e) query(repo, "SELECT v.* FROM research.res
 #' @return Committed revision id, revision and server time.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
 #'   transition_round(repo, study$manager, study$round$id, state,
 #'                    study$round$hash, "Example", paste0("example-", state))
 #' }
-#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
 #' panelist <- study$panel[[1]]
 #' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+#' record_consent(repo, panelist, study$study_id, study$consent_id, TRUE,
+#'                "example-consent")
 #' q <- get_questionnaire(repo, panelist, enrollment)
 #' save_response(repo, panelist, enrollment, q$items$id[1],
 #'               list(value = 7L, status = "answered"), 0L, "example-save")
@@ -508,17 +505,17 @@ save_response <- function(repo, actor, enrollment_id, round_item_id, response, e
 #' @return Durable submission receipt id and timestamp.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
 #'   transition_round(repo, study$manager, study$round$id, state,
 #'                    study$round$hash, "Example", paste0("example-", state))
 #' }
-#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
 #' panelist <- study$panel[[1]]
 #' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+#' record_consent(repo, panelist, study$study_id, study$consent_id, TRUE,
+#'                "example-consent")
 #' q <- get_questionnaire(repo, panelist, enrollment)
 #' saved <- lapply(q$items$id, function(item) {
 #'   save_response(repo, panelist, enrollment, item,
@@ -561,15 +558,13 @@ submit_round <- function(repo, actor, enrollment_id, expected_revision_set, comm
 #' @return Instrument, own responses, receipt and required consent information.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
 #'   transition_round(repo, study$manager, study$round$id, state,
 #'                    study$round$hash, "Example", paste0("example-", state))
 #' }
-#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
 #' panelist <- study$panel[[1]]
 #' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
 #' get_questionnaire(repo, panelist, enrollment)
@@ -596,18 +591,15 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
 #' @return Enrollment table.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
 #'   transition_round(repo, study$manager, study$round$id, state,
 #'                    study$round$hash, "Example", paste0("example-", state))
 #' }
-#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
-#' panelist <- study$panel[[1]]
-#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
-#' list_enrollments(repo, study$manager, study$study_id)
+#' # Each panel member sees only their own enrollments.
+#' list_enrollments(repo, study$panel[[1]], study$study_id)
 #' }
 #' @export
 list_enrollments <- function(repo, actor, study_id) {
@@ -693,8 +685,7 @@ readiness_blocking <- function(readiness, target) {
 #'   deadline_passed and no_enrollments findings; opening requires none.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_round_readiness(repo, study$manager, study$round$id)
@@ -713,8 +704,7 @@ get_round_readiness <- function(repo, actor, round_id) {
 #'   Contains no panel identities or responses.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_round_instrument(repo, study$manager, study$round$id)
@@ -749,8 +739,7 @@ get_round_instrument <- function(repo, actor, round_id) {
 #' @return Round UUID and the number of enrollments added.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {

@@ -38,8 +38,7 @@ that no registration covers, left by a stopped worker or an earlier release
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 get_system_status(repo)
 }

@@ -39,14 +39,26 @@ invitation_match <- function(repo, actor, inv, token_hash) {
 #' @return Invitation UUID and expiry, without the token or contact fields.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'draft' and 'principal' identify a reviewed contact draft and account.
+#' csv <- paste(
+#'   "external_ref,email,display_name,locale,stakeholder_group",
+#'   "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+#'   sep = "\n"
+#' )
+#' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+#' draft <- import_panel(repo, study$manager, study$study_id, preview,
+#'                       preview$hash, "Reviewed import",
+#'                       "example-import")$invitation_ids[[1]]
+#' issuer <- "https://identity.example/realms/study"
+#' account <- register_invited_account(repo, study$manager, study$study_id,
+#'                                     issuer, "example-member",
+#'                                     "Verified account", "example-account")
 #' token <- new_invitation_token()
-#' issue_panel_invitation(repo, study$manager, study$study_id, draft, principal,
-#'                        token, 900L, "Approved account", "example-issue")
+#' issue_panel_invitation(repo, study$manager, study$study_id, draft,
+#'                        account$id, token, 900L, "Approved account",
+#'                        "example-issue")
 #' }
 #' @export
 issue_panel_invitation <- function(repo, actor, study_id, draft_id, principal_id, token, ttl_seconds = 900L, reason, command_id) {
@@ -76,11 +88,26 @@ issue_panel_invitation <- function(repo, actor, study_id, draft_id, principal_id
 #' @return Invitation UUID.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'invitation' comes from issue_panel_invitation().
+#' csv <- paste(
+#'   "external_ref,email,display_name,locale,stakeholder_group",
+#'   "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+#'   sep = "\n"
+#' )
+#' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+#' draft <- import_panel(repo, study$manager, study$study_id, preview,
+#'                       preview$hash, "Reviewed import",
+#'                       "example-import")$invitation_ids[[1]]
+#' issuer <- "https://identity.example/realms/study"
+#' account <- register_invited_account(repo, study$manager, study$study_id,
+#'                                     issuer, "example-member",
+#'                                     "Verified account", "example-account")
+#' token <- new_invitation_token()
+#' invitation <- issue_panel_invitation(repo, study$manager, study$study_id,
+#'                                      draft, account$id, token, 900L,
+#'                                      "Approved account", "example-issue")
 #' revoke_panel_invitation(repo, study$manager, study$study_id, invitation$id,
 #'                         "No longer needed", "example-revoke")
 #' }
@@ -108,13 +135,35 @@ revoke_panel_invitation <- function(repo, actor, study_id, invitation_id, reason
 #'   enrollment is created. Existing provisioned accounts are required.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'invitation' and 'token' come from issue_panel_invitation().
-#' accept_panel_invitation(repo, study$panel[[1]], study$study_id, invitation$id,
-#'                         token, TRUE, "example-accept")
+#' csv <- paste(
+#'   "external_ref,email,display_name,locale,stakeholder_group",
+#'   "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+#'   sep = "\n"
+#' )
+#' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+#' draft <- import_panel(repo, study$manager, study$study_id, preview,
+#'                       preview$hash, "Reviewed import",
+#'                       "example-import")$invitation_ids[[1]]
+#' issuer <- "https://identity.example/realms/study"
+#' account <- register_invited_account(repo, study$manager, study$study_id,
+#'                                     issuer, "example-member",
+#'                                     "Verified account", "example-account")
+#' token <- new_invitation_token()
+#' invitation <- issue_panel_invitation(repo, study$manager, study$study_id,
+#'                                      draft, account$id, token, 900L,
+#'                                      "Approved account", "example-issue")
+#' # The invited person signs in through the authentication gateway; this
+#' # request is synthetic.
+#' config <- new_authentication_config(issuer, strrep("a", 64), "127.0.0.1")
+#' request <- list(REMOTE_ADDR = "127.0.0.1",
+#'                 HTTP_X_DELPHYR_GATEWAY = config$gateway_secret,
+#'                 HTTP_X_FORWARDED_USER = "example-member")
+#' member <- authenticated_actor(repo, request, config)
+#' accept_panel_invitation(repo, member, study$study_id, invitation$id, token,
+#'                         TRUE, "example-accept")
 #' }
 #' @export
 accept_panel_invitation <- function(repo, actor, study_id, invitation_id, token, confirmed, command_id) {
@@ -164,13 +213,34 @@ accept_panel_invitation <- function(repo, actor, study_id, invitation_id, token,
 #' @return Study title and invitation expiry only, for the exact approved account.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
-#' # 'invitation' and 'token' come from issue_panel_invitation().
-#' preview_panel_invitation(repo, study$panel[[1]], study$study_id,
-#'                          invitation$id, token)
+#' csv <- paste(
+#'   "external_ref,email,display_name,locale,stakeholder_group",
+#'   "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+#'   sep = "\n"
+#' )
+#' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+#' draft <- import_panel(repo, study$manager, study$study_id, preview,
+#'                       preview$hash, "Reviewed import",
+#'                       "example-import")$invitation_ids[[1]]
+#' issuer <- "https://identity.example/realms/study"
+#' account <- register_invited_account(repo, study$manager, study$study_id,
+#'                                     issuer, "example-member",
+#'                                     "Verified account", "example-account")
+#' token <- new_invitation_token()
+#' invitation <- issue_panel_invitation(repo, study$manager, study$study_id,
+#'                                      draft, account$id, token, 900L,
+#'                                      "Approved account", "example-issue")
+#' # The invited person signs in through the authentication gateway; this
+#' # request is synthetic.
+#' config <- new_authentication_config(issuer, strrep("a", 64), "127.0.0.1")
+#' request <- list(REMOTE_ADDR = "127.0.0.1",
+#'                 HTTP_X_DELPHYR_GATEWAY = config$gateway_secret,
+#'                 HTTP_X_FORWARDED_USER = "example-member")
+#' member <- authenticated_actor(repo, request, config)
+#' preview_panel_invitation(repo, member, study$study_id, invitation$id, token)
 #' }
 #' @export
 preview_panel_invitation <- function(repo, actor, study_id, invitation_id, token) {
@@ -194,8 +264,7 @@ preview_panel_invitation <- function(repo, actor, study_id, invitation_id, token
 #' @return Principal UUID for issue_panel_invitation(); no rights are granted.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' register_invited_account(repo, study$manager, study$study_id,
@@ -224,8 +293,7 @@ register_invited_account <- function(repo, actor, study_id, issuer, subject, rea
 #'   revoked or accepted). Never contains tokens, hashes, emails or pseudonyms.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_panel_invitations(repo, study$manager, study$study_id)

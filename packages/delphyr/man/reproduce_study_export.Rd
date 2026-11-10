@@ -17,12 +17,10 @@ The recomputed analysis of every round and the comparisons between
 Verify and reproduce a study-level research export without a database
 }
 \examples{
-\dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
-repo <- connect_repository(dbname = "delphyr")
-study <- demo_study(repo, n = 4L, item_count = 2L)
-# 'path' is a directory with the files of a downloaded study export.
-reproduce_study_export(path)$comparisons
-}
+# A synthetic two-round study export as download_artifact() delivers it.
+path <- system.file("extdata", "example-study-export", package = "delphyr")
+reproduced <- reproduce_study_export(path)
+names(reproduced$analyses)
+reproduced$comparisons[, c("item_code", "n_paired", "previous_mean",
+                           "current_mean")]
 }

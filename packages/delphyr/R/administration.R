@@ -5,8 +5,7 @@
 #'   operator to an account, never chosen in the interface.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' get_account_rights(repo, study$manager)
@@ -25,8 +24,7 @@ get_account_rights <- function(repo, actor) {
 #'   Panel membership is not part of this list.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_study_staff(repo, study$manager, study$study_id)
@@ -57,8 +55,7 @@ list_study_staff <- function(repo, actor, study_id) {
 #' @return Principal UUID for set_capability().
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' register_staff_account(repo, study$manager, study$study_id,
@@ -91,8 +88,7 @@ register_staff_account <- function(repo, actor, study_id, issuer, subject, reaso
 #'   references, contacts or responses.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_panel(repo, study$manager, study$study_id)
@@ -111,8 +107,7 @@ list_panel <- function(repo, actor, study_id) {
 #' @return Round number, item, disposition, rationale and time of each decision.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' list_item_decisions(repo, study$manager, study$study_id)

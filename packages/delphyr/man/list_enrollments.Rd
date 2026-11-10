@@ -23,17 +23,14 @@ and its instrument cannot be read through any panel service.
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 for (state in c("review", "approved", "open")) {
   transition_round(repo, study$manager, study$round$id, state,
                    study$round$hash, "Example", paste0("example-", state))
 }
-enroll_panel(repo, study$manager, study$round$id, "example-enroll")
-panelist <- study$panel[[1]]
-enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
-list_enrollments(repo, study$manager, study$study_id)
+# Each panel member sees only their own enrollments.
+list_enrollments(repo, study$panel[[1]], study$study_id)
 }
 }

@@ -3,3 +3,4 @@
 ^site$
 ^pkgdown$
 ^cran-comments\.md$
+^data-raw$

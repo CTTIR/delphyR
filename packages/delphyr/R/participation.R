@@ -11,8 +11,7 @@
 #' @return Withdrawal event id and policy receipt.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' withdraw_participation(repo, study$panel[[1]], study$study_id,
@@ -56,8 +55,7 @@ withdraw_participation <- function(repo, actor, study_id, retention_policy, comm
 #' @return Immutable group-change receipt; existing enrollments stay unchanged.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' member <- list_panel(repo, study$manager, study$study_id)$panelist_id[1]

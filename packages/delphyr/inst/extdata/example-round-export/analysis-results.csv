@@ -1,0 +1,7 @@
+"round_number","item_code","item_version","dimension_code","scale_code","stratum","n_assigned","n_submitted","n_answered","n_not_answered","n_unable","n_abstained","n_not_applicable","n_valid","n_agree","n_disagree","p_agree","p_disagree","classification","median","q1","q3","iqr"
+1,"I001",1,"relevance","relevance_9","overall",4,4,4,0,0,0,0,4,3,1,0.75,0.25,"insufficient_data",7.5,6,8.25,2.25
+1,"I001",1,"relevance","relevance_9","professionals",2,2,2,0,0,0,0,2,2,0,1,0,"insufficient_data",7.5,7.25,7.75,0.5
+1,"I001",1,"relevance","relevance_9","public_contributors",2,2,2,0,0,0,0,2,1,1,0.5,0.5,"insufficient_data",6,4.5,7.5,3
+1,"I002",1,"relevance","relevance_9","overall",4,4,4,0,0,0,0,4,1,1,0.25,0.25,"insufficient_data",5.5,4.25,6.5,2.25
+1,"I002",1,"relevance","relevance_9","professionals",2,2,2,0,0,0,0,2,1,0,0.5,0,"insufficient_data",6.5,5.75,7.25,1.5
+1,"I002",1,"relevance","relevance_9","public_contributors",2,2,2,0,0,0,0,2,0,1,0,0.5,"insufficient_data",4,3,5,2

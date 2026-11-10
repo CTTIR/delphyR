@@ -12,6 +12,10 @@
   `system2(env = )`, which does not work for 'Quarto' on Windows.
 * Without a configured log sink, technical log entries are written to
   standard error as messages, so `suppressMessages()` silences them.
+* Two synthetic exports are bundled in `inst/extdata`; the examples of
+  `reproduce_export()` and `reproduce_study_export()` verify them without a
+  database. The examples of the database services are complete and say in
+  one line why they are not run.
 
 # delphyr 0.0.2
 

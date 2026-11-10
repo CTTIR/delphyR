@@ -44,22 +44,19 @@ Prepare an exact synthetic communication campaign
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 for (state in c("review", "approved", "open")) {
   transition_round(repo, study$manager, study$round$id, state,
                    study$round$hash, "Example", paste0("example-", state))
 }
-enroll_panel(repo, study$manager, study$round$id, "example-enroll")
-panelist <- study$panel[[1]]
-enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
-enrollments <- list_campaign_enrollments(repo, study$manager, study$round$id)$id
+enrollments <- list_campaign_enrollments(repo, study$manager,
+                                         study$round$id)$enrollment_id
 campaign <- prepare_campaign(repo, study$manager, study$round$id, enrollments,
                              "invitation", "Synthetic invitation",
                              "Synthetic study only.", locale = "en",
                              command_id = "example-campaign")
-preview_campaign(repo, study$manager, campaign$id)
+campaign
 }
 }

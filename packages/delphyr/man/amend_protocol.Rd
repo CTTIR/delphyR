@@ -40,14 +40,15 @@ synthetic technical approval, not institutional or ethical approval.
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 versions <- list_protocol_versions(repo, study$manager, study$study_id)
-protocol <- demo_protocol()
-amend_protocol(repo, study$manager, study$study_id, protocol,
-               versions$hash[nrow(versions)], "Prospective amendment",
-               "example-amend")
+current <- versions[nrow(versions), ]
+# An amendment keeps the study code and changes the protocol.
+protocol <- jsonlite::fromJSON(current$config, simplifyVector = FALSE)
+protocol$panel$late_entry <- TRUE
+amend_protocol(repo, study$manager, study$study_id, protocol, current$hash,
+               "Admit late entry", "example-amend")
 }
 }

@@ -26,11 +26,19 @@ Cancel remaining synthetic campaign delivery
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-# 'campaign' comes from prepare_campaign().
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+enrollments <- list_campaign_enrollments(repo, study$manager,
+                                         study$round$id)$enrollment_id
+campaign <- prepare_campaign(repo, study$manager, study$round$id, enrollments,
+                             "invitation", "Synthetic invitation",
+                             "Synthetic study only.", locale = "en",
+                             command_id = "example-campaign")
 cancel_campaign(repo, study$manager, campaign$id, "Sent in error",
                 "example-cancel")
 }

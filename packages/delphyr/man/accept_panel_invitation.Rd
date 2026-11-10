@@ -38,12 +38,34 @@ Accept an invitation after verified login and an explicit confirmed action
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-# 'invitation' and 'token' come from issue_panel_invitation().
-accept_panel_invitation(repo, study$panel[[1]], study$study_id, invitation$id,
-                        token, TRUE, "example-accept")
+csv <- paste(
+  "external_ref,email,display_name,locale,stakeholder_group",
+  "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+  sep = "\n"
+)
+preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+draft <- import_panel(repo, study$manager, study$study_id, preview,
+                      preview$hash, "Reviewed import",
+                      "example-import")$invitation_ids[[1]]
+issuer <- "https://identity.example/realms/study"
+account <- register_invited_account(repo, study$manager, study$study_id,
+                                    issuer, "example-member",
+                                    "Verified account", "example-account")
+token <- new_invitation_token()
+invitation <- issue_panel_invitation(repo, study$manager, study$study_id,
+                                     draft, account$id, token, 900L,
+                                     "Approved account", "example-issue")
+# The invited person signs in through the authentication gateway; this
+# request is synthetic.
+config <- new_authentication_config(issuer, strrep("a", 64), "127.0.0.1")
+request <- list(REMOTE_ADDR = "127.0.0.1",
+                HTTP_X_DELPHYR_GATEWAY = config$gateway_secret,
+                HTTP_X_FORWARDED_USER = "example-member")
+member <- authenticated_actor(repo, request, config)
+accept_panel_invitation(repo, member, study$study_id, invitation$id, token,
+                        TRUE, "example-accept")
 }
 }

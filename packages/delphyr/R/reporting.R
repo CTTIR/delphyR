@@ -5,8 +5,7 @@
 #' @return A delphyr_report_data with allowlisted tables and a content hash.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -17,7 +16,10 @@
 #'                  study$round$hash, "Example", "example-closed")
 #' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
 #' data <- prepare_report_data(repo, study$manager, snapshot$id)
-#' write_report_data(data, tempdir())
+#' out <- tempfile("report-")
+#' dir.create(out)
+#' write_report_data(data, out)
+#' unlink(out, recursive = TRUE)
 #' }
 #' @export
 prepare_report_data <- function(repo, actor, snapshot_id) {
@@ -74,8 +76,7 @@ validate_report_data <- function(data) {
 #' @return Written basenames, to include in the enclosing export manifest.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server prepared with migrate_repository().
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -86,7 +87,10 @@ validate_report_data <- function(data) {
 #'                  study$round$hash, "Example", "example-closed")
 #' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
 #' data <- prepare_report_data(repo, study$manager, snapshot$id)
-#' write_report_data(data, tempdir())
+#' out <- tempfile("report-")
+#' dir.create(out)
+#' write_report_data(data, out)
+#' unlink(out, recursive = TRUE)
 #' }
 #' @export
 write_report_data <- function(data, output_dir) {
@@ -106,8 +110,7 @@ write_report_data <- function(data, output_dir) {
 #' @return Path of the rendered report.html; DEL_DEPENDENCY if Quarto is absent.
 #' @examples
 #' \dontrun{
-#' # Needs a PostgreSQL database prepared with migrate_repository()
-#' # and the 'RPostgres' package, so the example is not run.
+#' # Needs a running PostgreSQL server (see migrate_repository()) and 'Quarto'.
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' for (state in c("review", "approved", "open")) {
@@ -117,9 +120,11 @@ write_report_data <- function(data, output_dir) {
 #' transition_round(repo, study$manager, study$round$id, "closed",
 #'                  study$round$hash, "Example", "example-closed")
 #' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
-#' # Rendering also needs the external 'Quarto' program.
 #' data <- prepare_report_data(repo, study$manager, snapshot$id)
-#' render_study_report(data, tempdir())
+#' out <- tempfile("report-")
+#' dir.create(out)
+#' render_study_report(data, out)
+#' unlink(out, recursive = TRUE)
 #' }
 #' @export
 render_study_report <- function(data, output_dir, timeout = 60L) {

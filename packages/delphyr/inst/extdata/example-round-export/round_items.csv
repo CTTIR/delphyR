@@ -1,0 +1,7 @@
+"item_code","item_version","dimension_code","scale_code","locale","text","required","display_order"
+"I001",1,"relevance","relevance_9","de","Synthetisches Beispielitem I001",TRUE,1
+"I001",1,"relevance","relevance_9","en","Synthetic example item I001",TRUE,1
+"I001",1,"relevance","relevance_9","fr","Exemple synthétique I001",TRUE,1
+"I002",1,"relevance","relevance_9","de","Synthetisches Beispielitem I002",TRUE,2
+"I002",1,"relevance","relevance_9","en","Synthetic example item I002",TRUE,2
+"I002",1,"relevance","relevance_9","fr","Exemple synthétique I002",TRUE,2

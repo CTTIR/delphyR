@@ -40,13 +40,14 @@ Create a separate redacted qualitative version
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-# 'source' comes from record_qualitative_source().
+source <- record_qualitative_source(repo, study$manager, study$study_id,
+                                    "Synthetic comment by a named person.",
+                                    "EXAMPLE-SRC", "example-source")
 redact_qualitative_source(repo, study$manager, study$study_id, source$id,
-                          "Synthetic comment with [name removed].",
+                          "Synthetic comment by [name removed].",
                           "Remove a name", "example-redact")
 }
 }

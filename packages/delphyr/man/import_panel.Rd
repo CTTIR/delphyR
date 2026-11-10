@@ -29,11 +29,14 @@ Atomically import exactly reviewed synthetic contacts as unbound drafts
 }
 \examples{
 \dontrun{
-# Needs a PostgreSQL database prepared with migrate_repository()
-# and the 'RPostgres' package, so the example is not run.
+# Needs a running PostgreSQL server prepared with migrate_repository().
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
-# 'csv' is the text of a panel import file in the documented schema.
+csv <- paste(
+  "external_ref,email,display_name,locale,stakeholder_group",
+  "X-1,member-1@example.invalid,Synthetic Member,en,professionals",
+  sep = "\n"
+)
 preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
 import_panel(repo, study$manager, study$study_id, preview, preview$hash,
              "Reviewed import", "example-import")
