@@ -29,7 +29,7 @@ first; this package will be submitted only after 'delphyr' is on CRAN.
 ## Notes
 
 * The application needs a migrated PostgreSQL database and an interactive
-  session, so the example of `run_app()` is wrapped in `\dontrun{}` with a
-  comment. The tests exercise the 'shiny' modules with `shiny::testServer()`
+  session, so the example of `run_app()` runs only in interactive sessions
+  (`if (interactive())`) and says so in a comment. The tests exercise the 'shiny' modules with `shiny::testServer()`
   and in-memory service doubles; they need no database or network access and
   write only to `tempdir()`.

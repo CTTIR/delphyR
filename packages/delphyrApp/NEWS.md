@@ -7,6 +7,8 @@
   the maintainer's ORCID is recorded.
 * The package has its own `NEWS.md` and spelling word list; earlier changes
   were recorded jointly for `delphyr` and `delphyrApp` (below).
+* The example of `run_app()` runs in interactive sessions instead of being
+  marked as not run.
 
 # delphyrApp 0.0.2
 

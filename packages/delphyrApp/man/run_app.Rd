@@ -57,12 +57,12 @@ shown as saved. Production authentication, external mail and deployment
 qualification are outside this interface's acceptance scope.
 }
 \examples{
-\dontrun{
-# Needs a migrated PostgreSQL repository (see delphyr::migrate_repository())
-# and an interactive session, so the example is not run.
-repo <- delphyr::connect_repository(dbname = "delphyr")
-study <- delphyr::demo_study(repo, n = 4L, item_count = 2L)
-# Resolve repo and actor on the server before constructing the application.
-shiny::runApp(run_app(repo, study$manager))
+# Serving a study needs a running PostgreSQL server prepared with
+# delphyr::migrate_repository().
+if (interactive()) {
+  repo <- delphyr::connect_repository(dbname = "delphyr")
+  study <- delphyr::demo_study(repo, n = 4L, item_count = 2L)
+  # Resolve repo and actor on the server before constructing the application.
+  shiny::runApp(run_app(repo, study$manager))
 }
 }
