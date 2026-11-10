@@ -150,13 +150,20 @@ render_study_report <- function(data, output_dir, timeout = 60L) {
   writeLines(json(unclass(data)), file.path(work, "report-data.json"), useBytes = TRUE)
   log <- file.path(work, "render.log")
   setwd(work)
-  # Command arguments are fixed or shell-quoted local paths, never study text.
+  # Quarto's R process must see this session's libraries. system2(env = )
+  # does not work for Quarto on Windows, so R_LIBS is set here and restored.
+  previous_libs <- Sys.getenv("R_LIBS", unset = NA)
+  Sys.setenv(R_LIBS = paste(.libPaths(), collapse = .Platform$path.sep))
+  on.exit(
+    if (is.na(previous_libs)) Sys.unsetenv("R_LIBS") else Sys.setenv(R_LIBS = previous_libs),
+    add = TRUE
+  )
+  # Command arguments are fixed local file names, never study text.
   status <- suppressWarnings(system2(quarto,
     args = c(
       "render", "study.qmd",
       "--to", "html", "--output", "report.html", "--quiet"
-    ), stdout = log, stderr = log, timeout = timeout,
-    env = paste0("R_LIBS=", shQuote(paste(.libPaths(), collapse = .Platform$path.sep)))
+    ), stdout = log, stderr = log, timeout = timeout
   ))
   ensure(identical(status, 0L) && file.exists(file.path(work, "report.html")), "report.render_failed", "DEL_RENDER")
   destination <- file.path(output_dir, "report.html")

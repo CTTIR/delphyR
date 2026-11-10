@@ -7,6 +7,9 @@
 * The package has its own `NEWS.md` and spelling word list; earlier changes
   were recorded jointly for `delphyr` and `delphyrApp` (below).
 * The offline vignette is titled "Analyzing two Delphi rounds offline".
+* `render_study_report()` passes the session's library paths to 'Quarto'
+  through `R_LIBS` (set and restored around the call) instead of
+  `system2(env = )`, which does not work for 'Quarto' on Windows.
 
 # delphyr 0.0.2
 
