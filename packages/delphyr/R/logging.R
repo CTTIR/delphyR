@@ -32,7 +32,9 @@ write_log <- function(level, fields) {
   line <- json(c(list(time = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC"), level = level), fields))
   sink <- getOption("delphyr.log_sink")
   # A failing log destination never changes the outcome of an operation.
-  tryCatch(if (is.function(sink)) sink(line) else cat(line, "\n", sep = "", file = stderr()), error = function(e) NULL)
+  # Without a sink, an entry is a message on standard error, which
+  # suppressMessages() silences.
+  tryCatch(if (is.function(sink)) sink(line) else message(line), error = function(e) NULL)
   invisible(TRUE)
 }
 # Entry for one unit of background work. State, code and reason are fixed
@@ -71,7 +73,8 @@ new_correlation_id <- function() paste(format(openssl::rand_bytes(6L)), collapse
 #' field path. Arguments, results, condition messages, account references and
 #' request headers are never written.
 #'
-#' Entries are written to standard error as one JSON object per line. Set
+#' Entries are written to standard error as messages, one JSON object per
+#' line; `suppressMessages()` silences them. Set
 #' `options(delphyr.log_sink = function(line) ...)` to route them elsewhere.
 #' `options(delphyr.log_level = )` or the environment variable
 #' `DELPHYR_LOG_LEVEL` selects `off`, `error` (failures), `warning` (refusals

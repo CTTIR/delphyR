@@ -10,6 +10,8 @@
 * `render_study_report()` passes the session's library paths to 'Quarto'
   through `R_LIBS` (set and restored around the call) instead of
   `system2(env = )`, which does not work for 'Quarto' on Windows.
+* Without a configured log sink, technical log entries are written to
+  standard error as messages, so `suppressMessages()` silences them.
 
 # delphyr 0.0.2
 

@@ -36,7 +36,8 @@ field path. Arguments, results, condition messages, account references and
 request headers are never written.
 }
 \details{
-Entries are written to standard error as one JSON object per line. Set
+Entries are written to standard error as messages, one JSON object per
+line; `suppressMessages()` silences them. Set
 `options(delphyr.log_sink = function(line) ...)` to route them elsewhere.
 `options(delphyr.log_level = )` or the environment variable
 `DELPHYR_LOG_LEVEL` selects `off`, `error` (failures), `warning` (refusals
