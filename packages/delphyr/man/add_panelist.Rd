@@ -26,3 +26,14 @@ Study-specific pseudonym. A completed study refuses new members
 \description{
 Register a synthetic panel member
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+principal <- provision_demo_principal(repo, "example-panelist")
+add_panelist(repo, study$manager, study$study_id, principal, "experts",
+             "example-add")
+}
+}

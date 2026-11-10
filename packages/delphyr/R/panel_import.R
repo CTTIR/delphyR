@@ -119,6 +119,16 @@ print.delphyr_panel_preview <- function(x, ...) {
 #' @param schema_version Explicit supported schema, 1.0.
 #' @param delimiter Explicit comma or semicolon.
 #' @return Restricted preview with rows, row/column issues, exact file hash and approval hash.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'csv' is the text of a panel import file in the documented schema.
+#' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+#' preview
+#' }
 #' @export
 preview_panel_import <- function(repo, actor, study_id, csv, schema_version = "1.0", delimiter = ",") {
   ensure(repo$environment %in% c("development", "test"), "panel_import.synthetic_only", "DEL_FORBIDDEN")
@@ -134,6 +144,17 @@ preview_panel_import <- function(repo, actor, study_id, csv, schema_version = "1
 #' @param reason Approval rationale.
 #' @param command_id Idempotency key for this approved import.
 #' @return Receipt id, file/preview hashes, counts and opaque invitation-draft IDs.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'csv' is the text of a panel import file in the documented schema.
+#' preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+#' import_panel(repo, study$manager, study$study_id, preview, preview$hash,
+#'              "Reviewed import", "example-import")
+#' }
 #' @export
 import_panel <- function(repo, actor, study_id, preview, expected_hash, reason, command_id) {
   transaction(repo, function() {
@@ -177,6 +198,15 @@ import_panel <- function(repo, actor, study_id, preview, expected_hash, reason, 
 #' @param actor Study coordinator.
 #' @param receipt_id Receipt UUID.
 #' @return Receipt metadata and invitation IDs without contact values.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'receipt' comes from import_panel().
+#' get_panel_import_receipt(repo, study$manager, receipt$id)
+#' }
 #' @export
 get_panel_import_receipt <- function(repo, actor, receipt_id) {
   valid_id(receipt_id)

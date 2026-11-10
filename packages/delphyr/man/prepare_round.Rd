@@ -35,3 +35,15 @@ Round UUID and exact instrument hash.
 \description{
 Prepare a frozen-instrument candidate and enroll active panelists
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# demo_study() prepares round 1; a later round needs the earlier one closed.
+deadline <- format(Sys.time() + 7 * 86400, "\%Y-\%m-\%dT\%H:\%M:\%SZ", tz = "UTC")
+prepare_round(repo, study$manager, study$study_id, study$items,
+              study$consent_id, deadline, "example-round")
+}
+}

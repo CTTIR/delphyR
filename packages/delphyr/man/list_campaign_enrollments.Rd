@@ -21,3 +21,12 @@ Enrollment UUID, study pseudonym, participation state and the
 \description{
 Preview eligible campaign selection fields without contacts or answers
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+list_campaign_enrollments(repo, study$manager, study$round$id)
+}
+}

@@ -26,3 +26,21 @@ Operation id. Free-text exports require a separate reviewed profile.
 \description{
 Queue a private pseudonymized numeric research export
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+transition_round(repo, study$manager, study$round$id, "closed",
+                 study$round$hash, "Example", "example-closed")
+snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+job <- request_export(repo, study$manager, snapshot$id, "example-export")
+worker_step(repo, study_id = study$study_id)
+get_operation(repo, study$manager, job$id)$state
+}
+}

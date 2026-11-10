@@ -23,3 +23,26 @@ Durable submission receipt id and timestamp.
 \description{
 Submit the exact confirmed revision set atomically
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+panelist <- study$panel[[1]]
+enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+q <- get_questionnaire(repo, panelist, enrollment)
+saved <- lapply(q$items$id, function(item) {
+  save_response(repo, panelist, enrollment, item,
+                list(value = 7L, status = "answered"), 0L, paste("save", item))
+})
+# The confirmed revision of every response, named by its round item.
+revisions <- setNames(vapply(saved, `[[`, integer(1), "revision"), q$items$id)
+submit_round(repo, panelist, enrollment, revisions, "example-submit")
+}
+}

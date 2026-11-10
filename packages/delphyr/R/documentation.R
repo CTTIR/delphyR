@@ -44,6 +44,16 @@ latest_documentation <- function(repo, study_id) {
 #' @param reason Rationale for this version.
 #' @param command_id Idempotency key.
 #' @return Documentation id, version and content hash.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' record_study_documentation(repo, study$manager, study$study_id,
+#'                            list(funding = "Synthetic example"), 0L,
+#'                            "Initial entry", "example-documentation")
+#' }
 #' @export
 record_study_documentation <- function(repo, actor, study_id, fields, expected_version, reason, command_id) {
   transaction(repo, function() {
@@ -73,6 +83,14 @@ record_study_documentation <- function(repo, actor, study_id, fields, expected_v
 #' @param actor Actor with manage, analyse, export or audit capability.
 #' @return Current version, hash and fields; a topic table that marks every
 #'   reporting topic documented or not documented; and the version history.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_study_documentation(repo, study$manager, study$study_id)
+#' }
 #' @export
 get_study_documentation <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("manage", "analyse", "export", "audit"))
@@ -95,6 +113,16 @@ get_study_documentation <- function(repo, actor, study_id) {
 #'   of this study.
 #' @param comparable TRUE if ratings of both versions may be paired.
 #' @return Decision UUID.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' record_item_comparability(repo, study$manager, study$study_id, "I001",
+#'                           "relevance", 1L, 2L, TRUE, "Wording only",
+#'                           "example-comparability")
+#' }
 #' @export
 record_item_comparability <- function(repo, actor, study_id, item_code, dimension_code, previous_version, current_version, comparable, reason, command_id) {
   transaction(repo, function() {
@@ -122,6 +150,14 @@ comparability_history <- function(repo, study_id) {
 #' @inheritParams get_study_documentation
 #' @param actor Actor with manage, analyse, export, edit or audit capability.
 #' @return Decision history; effective marks the latest decision per version pair.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_item_comparability(repo, study$manager, study$study_id)
+#' }
 #' @export
 get_item_comparability <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("manage", "analyse", "export", "edit", "audit"))

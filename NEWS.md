@@ -1,3 +1,10 @@
+# delphyr / delphyrApp 0.1.0
+
+- Prepare both packages for a first CRAN submission (`delphyr` first, then
+  `delphyrApp`): full-sentence descriptions, declared language and system
+  requirements, per-package `NEWS.md`, `cran-comments.md` and spelling word
+  lists, and an R CMD check workflow covering the CRAN platforms.
+
 # delphyr / delphyrApp 0.0.2 (development)
 
 - Show the logos in the new consensus and ideation colour (plum #91617B),

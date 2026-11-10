@@ -43,6 +43,22 @@ request_job <- function(repo, actor, snapshot_id, type, key, purpose = NULL) {
 #' @param snapshot_id Immutable snapshot UUID.
 #' @param command_id Idempotency key.
 #' @return Operation id.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' request_analysis(repo, study$manager, snapshot$id, "example-request")
+#' worker_step(repo, study_id = study$study_id)
+#' }
 #' @export
 request_analysis <- function(repo, actor, snapshot_id, command_id) request_job(repo, actor, snapshot_id, "analysis", command_id)
 #' Queue a private pseudonymized numeric research export
@@ -55,6 +71,23 @@ request_analysis <- function(repo, actor, snapshot_id, command_id) request_job(r
 #'   into the manifest of the export, under `purposes`. A request merged into
 #'   a pending export of the same snapshot adds its purpose there.
 #' @return Operation id. Free-text exports require a separate reviewed profile.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' job <- request_export(repo, study$manager, snapshot$id, "example-export")
+#' worker_step(repo, study_id = study$study_id)
+#' get_operation(repo, study$manager, job$id)$state
+#' }
 #' @export
 request_export <- function(repo, actor, snapshot_id, command_id, purpose = NULL) {
   valid_purpose(purpose)
@@ -78,6 +111,16 @@ request_export <- function(repo, actor, snapshot_id, command_id, purpose = NULL)
 #' @param purpose What the export is for, 10 to 500 characters; see
 #'   request_export().
 #' @return Operation id and state.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' job <- request_study_export(repo, study$manager, study$study_id,
+#'                             "study_summary", "example-study-export")
+#' worker_step(repo, study_id = study$study_id)
+#' }
 #' @export
 request_study_export <- function(repo, actor, study_id, profile, command_id, purpose = NULL) {
   ensure(scalar_text(profile), "export.profile")
@@ -97,6 +140,22 @@ request_study_export <- function(repo, actor, study_id, profile, command_id, pur
 #' @param actor Requesting actor.
 #' @param operation_id Operation UUID.
 #' @return State, result reference and safe error code.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' job <- request_export(repo, study$manager, snapshot$id, "example-export")
+#' get_operation(repo, study$manager, job$id)
+#' }
 #' @export
 get_operation <- function(repo, actor, operation_id) {
   valid_id(operation_id)
@@ -110,6 +169,23 @@ get_operation <- function(repo, actor, operation_id) {
 #' @param study_id Optional study UUID limiting a worker partition.
 #' @param lease_seconds Lease duration, between 1 and 3600 seconds.
 #' @return Claimed row or empty data frame. Worker infrastructure API.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' request_export(repo, study$manager, snapshot$id, "example-export")
+#' job <- claim_job(repo, study_id = study$study_id)
+#' renew_job_lease(repo, job$id, job$lease_token, 60L)
+#' }
 #' @export
 claim_job <- function(repo, lease_seconds = 120, study_id = NULL) {
   transaction(repo, function() {
@@ -245,6 +321,22 @@ verify_manifest <- function(path, exact = TRUE) {
 #' Verify and reproduce a portable research export without a database
 #' @param path Export directory under the user's control.
 #' @return Recomputed delphyr_analysis after all listed checksums match.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' # 'path' is a directory with the files of a downloaded round export.
+#' reproduce_export(path)$results
+#' }
 #' @export
 reproduce_export <- function(path) {
   manifest <- verify_manifest(path, exact = FALSE)
@@ -265,6 +357,23 @@ reproduce_export <- function(path) {
 #' @param lease_seconds New reservation from now, between 1 and 3600 seconds.
 #' @return TRUE when the reservation was renewed; FALSE when it had ended or
 #'   the job is no longer held by that claim. Worker infrastructure API.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' request_export(repo, study$manager, snapshot$id, "example-export")
+#' job <- claim_job(repo, study_id = study$study_id)
+#' renew_job_lease(repo, job$id, job$lease_token, 60L)
+#' }
 #' @export
 renew_job_lease <- function(repo, job_id, lease_token, lease_seconds = 600L) {
   ensure(whole(lease_seconds) && length(lease_seconds) == 1L && lease_seconds > 0 && lease_seconds <= 3600, "lease")
@@ -310,11 +419,27 @@ delegated_actor <- function(repo, j) {
 #'   members and 300 rating fields.
 #' @param download_hours Hours an export can be downloaded after it was
 #'   registered, from 1 to 720; one day by default. The period is the
-#'   decision of the responsible organisation.
+#'   decision of the responsible organization.
 #' @param on_claim Optional function called with the claimed job (a one-row
 #'   data frame with `id` and `lease_token`) before it runs, for example to
 #'   renew its reservation from another process.
 #' @return FALSE when idle, otherwise a safe operation state.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' request_export(repo, study$manager, snapshot$id, "example-export")
+#' worker_step(repo, study_id = study$study_id)
+#' }
 #' @export
 worker_step <- function(repo, study_id = NULL, lease_seconds = 600L, download_hours = 24, on_claim = NULL) {
   ensure(is.numeric(download_hours) && length(download_hours) == 1L && is.finite(download_hours) && download_hours >= 1 && download_hours <= 720, "export.download_hours")
@@ -384,6 +509,24 @@ worker_step <- function(repo, study_id = NULL, lease_seconds = 600L, download_ho
 #' @return Private directory path for trusted server download code. An export
 #'   whose worker stopped after registering it but before giving it its final
 #'   name is delivered from its temporary name, `<id>.partial`.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' job <- request_export(repo, study$manager, snapshot$id, "example-export")
+#' worker_step(repo, study_id = study$study_id)
+#' operation <- get_operation(repo, study$manager, job$id)
+#' download_artifact(repo, study$manager, operation$artifact_id)
+#' }
 #' @export
 download_artifact <- function(repo, actor, artifact_id) {
   valid_id(artifact_id)

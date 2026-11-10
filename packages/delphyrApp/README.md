@@ -11,7 +11,8 @@ advance rounds, prepare feedback, and request private research exports.
 The interface offers **English, German, and French**, with English as the default.
 Scientific text stays in its stored authored language; selecting an interface
 language does not translate a protocol or manufacture an instrument translation.
-This is development software, not a production release.
+Version 0.1.0 is prepared for a first CRAN submission, after `delphyr`. It is
+development software, not a production release.
 
 ![Synthetic panel workspace](man/figures/panel-desktop.png)
 

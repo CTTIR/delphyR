@@ -43,3 +43,14 @@ interpretation or deviations. Study staff record these statements here; each
 change is a new immutable version, and topics without an entry stay marked
 "not documented". Recording a reference to an approval does not grant one.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+record_study_documentation(repo, study$manager, study$study_id,
+                           list(funding = "Synthetic example"), 0L,
+                           "Initial entry", "example-documentation")
+}
+}

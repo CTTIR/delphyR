@@ -39,3 +39,14 @@ registered if it does not exist yet; any other issuer, such as synthetic
 development accounts, must already be provisioned. The account receives no
 right by this step. A disabled account is not reactivated.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+register_staff_account(repo, study$manager, study$study_id,
+                       "https://idp.example.invalid", "staff-a",
+                       "Study coordinator", "example-staff")
+}
+}

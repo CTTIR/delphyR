@@ -13,7 +13,8 @@ package guides are English. Scientific wording retains its authored language.
 **Development software, using synthetic data only.** Local checks are not a
 production release or scientific validation. The current evidence and remaining
 gates are recorded in [implementation status](docs/IMPLEMENTATION_STATUS.md).
-This is not a CRAN release.
+Version 0.1.0 of both packages is prepared for a first CRAN submission;
+`delphyr` has to be accepted before `delphyrApp`, which imports it.
 
 The 0.0.2 maintenance changes and verification are recorded in the
 [31 October audit](docs/validation/2026-10-31-maintenance.md). New scientific

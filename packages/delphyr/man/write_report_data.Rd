@@ -17,3 +17,20 @@ Written basenames, to include in the enclosing export manifest.
 \description{
 Write allowlisted numeric report supplements to a private staging directory
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+transition_round(repo, study$manager, study$round$id, "closed",
+                 study$round$hash, "Example", "example-closed")
+snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+data <- prepare_report_data(repo, study$manager, snapshot$id)
+write_report_data(data, tempdir())
+}
+}

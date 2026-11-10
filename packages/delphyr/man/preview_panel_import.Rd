@@ -32,3 +32,14 @@ Restricted preview with rows, row/column issues, exact file hash and approval ha
 \description{
 Preview a synthetic panel CSV with blocking duplicate review
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'csv' is the text of a panel import file in the documented schema.
+preview <- preview_panel_import(repo, study$manager, study$study_id, csv)
+preview
+}
+}

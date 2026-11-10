@@ -20,3 +20,12 @@ Message UUID, campaign kind, round number, study pseudonym, the
 \description{
 List deliveries whose outcome is uncertain
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+list_uncertain_deliveries(repo, study$manager, study$study_id)
+}
+}

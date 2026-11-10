@@ -19,6 +19,14 @@ audit_panel_actions <- c("consent", "save", "submit", "withdraw_participation", 
 #' @param limit Maximum number of events, newest first, from 1 to 100000.
 #' @return Data frame occurred_at, action, detail, object_ref, reason,
 #'   actor_kind (staff, panel or worker) and actor_ref.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_audit_events(repo, study$manager, study$study_id, limit = 20L)
+#' }
 #' @export
 list_audit_events <- function(repo, actor, study_id, from = NULL, to = NULL, actions = NULL, limit = 500L) {
   authorize_any(repo, actor, study_id, c("audit", "manage"))

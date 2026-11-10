@@ -35,3 +35,21 @@ Committed revision id, revision and server time.
 \description{
 Save a response with optimistic concurrency and a durable receipt
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+panelist <- study$panel[[1]]
+enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+q <- get_questionnaire(repo, panelist, enrollment)
+save_response(repo, panelist, enrollment, q$items$id[1],
+              list(value = 7L, status = "answered"), 0L, "example-save")
+}
+}

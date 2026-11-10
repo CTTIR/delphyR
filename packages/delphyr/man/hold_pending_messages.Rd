@@ -26,3 +26,11 @@ of them, and a coordinator decides for each one in the interface: delivery
 confirmed, send again, or abandon. Run it before the worker is started on a
 restored database. Without `dry_run = FALSE` it changes nothing.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+hold_pending_messages(repo, dry_run = TRUE)
+}
+}

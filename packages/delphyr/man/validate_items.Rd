@@ -20,3 +20,15 @@ TRUE or a structured validation condition.
 \description{
 Validate an instrument import before any database writes
 }
+\examples{
+# The demo protocol asks for every item in German and English.
+items <- data.frame(
+  item_code = rep(c("I001", "I002"), each = 2), item_version = 1L,
+  locale = c("en", "de"),
+  text = c("Synthetic item one", "Synthetisches Item eins",
+           "Synthetic item two", "Synthetisches Item zwei"),
+  dimension_code = "relevance", scale_code = "relevance_9",
+  source_ref = "DEMO-SRC-01", required = TRUE, display_order = rep(1:2, each = 2)
+)
+validate_items(items, demo_protocol())
+}

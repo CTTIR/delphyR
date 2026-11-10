@@ -1,6 +1,9 @@
 #' Generate a private synthetic invitation token
 #' @return A 256-bit secret with redacted printing. Retain privately; only its hash
 #'   is persisted. Never put the token in logs, audit records or research exports.
+#' @examples
+#' token <- new_invitation_token()
+#' token  # printing never reveals the token
 #' @export
 new_invitation_token <- function() structure(paste(format(openssl::rand_bytes(32L)), collapse = ""), class = "delphyr_invitation_token")
 #' @export
@@ -34,6 +37,17 @@ invitation_match <- function(repo, actor, inv, token_hash) {
 #' @param reason Documented account-binding approval; do not include credentials.
 #' @param command_id Idempotency key.
 #' @return Invitation UUID and expiry, without the token or contact fields.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'draft' and 'principal' identify a reviewed contact draft and account.
+#' token <- new_invitation_token()
+#' issue_panel_invitation(repo, study$manager, study$study_id, draft, principal,
+#'                        token, 900L, "Approved account", "example-issue")
+#' }
 #' @export
 issue_panel_invitation <- function(repo, actor, study_id, draft_id, principal_id, token, ttl_seconds = 900L, reason, command_id) {
   h <- invitation_hash(token)
@@ -60,6 +74,16 @@ issue_panel_invitation <- function(repo, actor, study_id, draft_id, principal_id
 #' @inheritParams issue_panel_invitation
 #' @param invitation_id Invitation UUID.
 #' @return Invitation UUID.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'invitation' comes from issue_panel_invitation().
+#' revoke_panel_invitation(repo, study$manager, study$study_id, invitation$id,
+#'                         "No longer needed", "example-revoke")
+#' }
 #' @export
 revoke_panel_invitation <- function(repo, actor, study_id, invitation_id, reason, command_id) {
   valid_id(invitation_id)
@@ -82,6 +106,16 @@ revoke_panel_invitation <- function(repo, actor, study_id, invitation_id, reason
 #' @param confirmed Explicit TRUE from the confirmation action; never call on GET.
 #' @return Invitation, membership and pseudonym receipt. No consent or round
 #'   enrollment is created. Existing provisioned accounts are required.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'invitation' and 'token' come from issue_panel_invitation().
+#' accept_panel_invitation(repo, study$panel[[1]], study$study_id, invitation$id,
+#'                         token, TRUE, "example-accept")
+#' }
 #' @export
 accept_panel_invitation <- function(repo, actor, study_id, invitation_id, token, confirmed, command_id) {
   ensure(isTRUE(confirmed), "invitation.confirmed")
@@ -128,6 +162,16 @@ accept_panel_invitation <- function(repo, actor, study_id, invitation_id, token,
 #' Preview an invitation without creating membership or consuming its token
 #' @inheritParams accept_panel_invitation
 #' @return Study title and invitation expiry only, for the exact approved account.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'invitation' and 'token' come from issue_panel_invitation().
+#' preview_panel_invitation(repo, study$panel[[1]], study$study_id,
+#'                          invitation$id, token)
+#' }
 #' @export
 preview_panel_invitation <- function(repo, actor, study_id, invitation_id, token) {
   valid_id(study_id)
@@ -148,6 +192,16 @@ preview_panel_invitation <- function(repo, actor, study_id, invitation_id, token
 #' @param issuer Exact OIDC issuer URL of the qualified authentication gateway.
 #' @param subject Stable provider subject of the invited person.
 #' @return Principal UUID for issue_panel_invitation(); no rights are granted.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' register_invited_account(repo, study$manager, study$study_id,
+#'                          "https://idp.example.invalid", "subject-a",
+#'                          "Reviewed", "example-register")
+#' }
 #' @export
 register_invited_account <- function(repo, actor, study_id, issuer, subject, reason, command_id) {
   ensure(scalar_text(issuer) && nchar(issuer, type = "bytes") <= 512L && grepl("^https?://[^[:space:]?#@]+$", issuer), "invitation.issuer")
@@ -168,6 +222,14 @@ register_invited_account <- function(repo, actor, study_id, issuer, subject, rea
 #' @return One row per draft: source reference, display name, group, locale,
 #'   latest invitation id, expiry and state (unbound, outstanding, expired,
 #'   revoked or accepted). Never contains tokens, hashes, emails or pseudonyms.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_panel_invitations(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_panel_invitations <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "coordinate")
@@ -187,6 +249,11 @@ list_panel_invitations <- function(repo, actor, study_id) {
 #' @param study_id,invitation_id UUIDs returned by the issuing services.
 #' @param token Private output of new_invitation_token().
 #' @return A single private string with redacted printing; as.character() reveals it.
+#' @examples
+#' code <- invitation_code(uuid::UUIDgenerate(), uuid::UUIDgenerate(),
+#'                         new_invitation_token())
+#' code
+#' parse_invitation_code(as.character(code))$study_id
 #' @export
 invitation_code <- function(study_id, invitation_id, token) {
   valid_id(study_id)
@@ -197,6 +264,10 @@ invitation_code <- function(study_id, invitation_id, token) {
 #' Decode an invitation hand-over code
 #' @param code Value produced by invitation_code(); surrounding space is ignored.
 #' @return List study_id, invitation_id and token; DEL_UNAUTHORIZED when malformed.
+#' @examples
+#' study_id <- uuid::UUIDgenerate()
+#' code <- invitation_code(study_id, uuid::UUIDgenerate(), new_invitation_token())
+#' identical(parse_invitation_code(as.character(code))$study_id, study_id)
 #' @export
 parse_invitation_code <- function(code) {
   ensure(is.character(code) && length(code) == 1L && !is.na(code) && nchar(code, type = "bytes") <= 200L, "invitation.code", "DEL_UNAUTHORIZED")

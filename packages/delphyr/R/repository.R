@@ -3,6 +3,14 @@
 #' @param environment Development or test; production is not qualified.
 #' @param artifact_root Private directory for generated artifacts.
 #' @return A delphyr repository. Close its connection with DBI::dbDisconnect(repo$con).
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' migrate_repository(repo)
+#' DBI::dbDisconnect(repo$con)
+#' }
 #' @export
 connect_repository <- function(..., environment = c("development", "test"), artifact_root = tempfile("delphyr-artifacts-")) {
   environment <- match.arg(environment)
@@ -55,6 +63,13 @@ consistent_read <- function(repo, code) {
 #' @param repo Repository connected as migration owner.
 #' @param path Directory of SQL migrations, normally installed package resources.
 #' @return Invisibly TRUE. Changed historical migration files are rejected.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' migrate_repository(repo)
+#' }
 #' @export
 migrate_repository <- function(repo, path = system.file("sql", package = "delphyr")) {
   files <- sort(list.files(path, pattern = "^[0-9]+.*[.]sql$", full.names = TRUE))
@@ -82,6 +97,14 @@ migrate_repository <- function(repo, path = system.file("sql", package = "delphy
 #' @param subject Synthetic account name, prefixed demo-.
 #' @param can_create Allow creating demo studies.
 #' @return Principal UUID. This is not a production authentication adapter.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' principal <- provision_demo_principal(repo, "example-manager", TRUE)
+#' demo_actor(repo, principal)
+#' }
 #' @export
 provision_demo_principal <- function(repo, subject, can_create = FALSE) {
   ensure(repo$environment %in% c("development", "test") && scalar_text(subject) && grepl("^demo-", subject), "demo.identity", "DEL_FORBIDDEN")
@@ -93,6 +116,15 @@ provision_demo_principal <- function(repo, subject, can_create = FALSE) {
 #' @param principal_id Provisioned synthetic principal UUID.
 #' @param lifetime_seconds Positive session duration, at most one hour.
 #' @return Actor context for trusted server code, never accepted from browser payloads.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' principal <- provision_demo_principal(repo, "example-manager", TRUE)
+#' manager <- demo_actor(repo, principal)
+#' list_studies(repo, manager)
+#' }
 #' @export
 demo_actor <- function(repo, principal_id, lifetime_seconds = 3600) {
   ensure(repo$environment %in% c("development", "test"), "demo.actor", "DEL_FORBIDDEN")
@@ -192,6 +224,16 @@ command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, 
 #' @param protocol Validated demo protocol.
 #' @param command_id Idempotency key.
 #' @return Study id and protocol id.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' manager <- demo_actor(repo, provision_demo_principal(repo, "example-manager", TRUE))
+#' protocol <- demo_protocol()
+#' protocol$study$code <- "EXAMPLE-1"
+#' create_study(repo, manager, protocol, "example-create")
+#' }
 #' @export
 create_study <- function(repo, actor, protocol, command_id) {
   transaction(repo, function() {
@@ -231,6 +273,16 @@ create_study <- function(repo, actor, protocol, command_id) {
 #' @param reason Optional rationale, recorded in the audit trail.
 #' @return Membership id. The last management right of a study cannot be
 #'   revoked: a study always keeps one person who can manage it.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' principal <- provision_demo_principal(repo, "example-analyst")
+#' set_capability(repo, study$manager, study$study_id, principal, "analyse",
+#'                TRUE, "example-grant", reason = "Performs the analysis")
+#' }
 #' @export
 set_capability <- function(repo, actor, study_id, principal_id, capability, enabled, command_id, reason = NULL) {
   transaction(repo, function() {
@@ -258,6 +310,14 @@ set_capability <- function(repo, actor, study_id, principal_id, capability, enab
 #' @param repo Repository.
 #' @param actor Server actor.
 #' @return Study table without contacts or response data.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_studies(repo, study$manager)
+#' }
 #' @export
 list_studies <- function(repo, actor) {
   identity_check(repo, actor)
@@ -268,6 +328,14 @@ list_studies <- function(repo, actor) {
 #' @param actor Server actor.
 #' @param study_id Study UUID.
 #' @return Character vector; this UI hint does not replace service authorization.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_capabilities(repo, study$manager, study$study_id)
+#' }
 #' @export
 get_capabilities <- function(repo, actor, study_id) {
   m <- authorize(repo, actor, study_id)

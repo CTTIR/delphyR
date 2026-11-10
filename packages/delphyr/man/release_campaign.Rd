@@ -47,3 +47,14 @@ keeps the interval as well: a reminder that would reach a person sooner
 after the previous one, because quiet hours or a stopped worker held both,
 waits until the interval has passed.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'campaign' comes from prepare_campaign().
+release_campaign(repo, study$manager, campaign$id, campaign$hash,
+                 "Reviewed recipients and text", "example-release")
+}
+}

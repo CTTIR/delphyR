@@ -17,3 +17,11 @@ Invisibly TRUE. Changed historical migration files are rejected.
 \description{
 Apply checksummed forward migrations
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+migrate_repository(repo)
+}
+}

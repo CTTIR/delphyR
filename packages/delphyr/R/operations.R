@@ -7,6 +7,14 @@
 #' @param worker_id Stable name of the worker slot, for example "worker-1".
 #' @param started TRUE when the process has just started.
 #' @return Invisibly TRUE.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' record_worker_heartbeat(repo, "worker-1", TRUE)
+#' get_system_status(repo)
+#' }
 #' @export
 record_worker_heartbeat <- function(repo, worker_id, started = FALSE) {
   ensure(scalar_text(worker_id) && grepl("^[A-Za-z0-9_.:-]{1,100}$", worker_id), "worker.id")
@@ -34,6 +42,13 @@ record_worker_heartbeat <- function(repo, worker_id, started = FALSE) {
 #' @return A list with `ready`, `schema`, `workers`, `jobs`, `messages`,
 #'   `artifacts` and `attention`; only `ready`, `schema` and `attention` when
 #'   the schema is not current or the database does not answer.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' get_system_status(repo)
+#' }
 #' @export
 get_system_status <- function(repo, path = system.file("sql", package = "delphyr"), heartbeat_seconds = 60L) {
   ensure(whole(heartbeat_seconds) && length(heartbeat_seconds) == 1L && heartbeat_seconds > 0, "status.heartbeat")
@@ -99,6 +114,13 @@ get_system_status <- function(repo, path = system.file("sql", package = "delphyr
 #'   removed.
 #' @return A table of the expired exports: identifier, profile, expiry, whether
 #'   files are present and whether the removal was recorded.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' remove_expired_artifacts(repo, dry_run = TRUE)
+#' }
 #' @export
 remove_expired_artifacts <- function(repo, dry_run = TRUE, study_id = NULL, record_missing = FALSE) {
   ensure(is.logical(dry_run) && length(dry_run) == 1L && !is.na(dry_run), "artifacts.dry_run")
@@ -177,6 +199,13 @@ unfinished_exports <- function(repo, older_than_hours) {
 #'   that is still writing changes its directory far more often.
 #' @return A table of the directories: name, hours since the last change and
 #'   whether it was removed.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' remove_unfinished_exports(repo, dry_run = TRUE)
+#' }
 #' @export
 remove_unfinished_exports <- function(repo, dry_run = TRUE, older_than_hours = 1) {
   ensure(is.logical(dry_run) && length(dry_run) == 1L && !is.na(dry_run), "artifacts.dry_run")
@@ -205,6 +234,13 @@ remove_unfinished_exports <- function(repo, dry_run = TRUE, older_than_hours = 1
 #' @param study_id Optional study UUID; otherwise every study.
 #' @return A list with the numbers of messages `queued` and `in_flight` that
 #'   were found and the number `held`, which is zero for a dry run.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' hold_pending_messages(repo, dry_run = TRUE)
+#' }
 #' @export
 hold_pending_messages <- function(repo, dry_run = TRUE, study_id = NULL) {
   ensure(is.logical(dry_run) && length(dry_run) == 1L && !is.na(dry_run), "messages.dry_run")
@@ -225,13 +261,21 @@ hold_pending_messages <- function(repo, dry_run = TRUE, study_id = NULL) {
 #' and newest record. With `periods`, a proposed number of days per class, it
 #' also states how many records would be older than that period. It is a dry
 #' run: nothing is deleted, and the software ships no retention periods. A
-#' period is the decision of the responsible organisation.
+#' period is the decision of the responsible organization.
 #' @param repo Repository.
 #' @param actor Actor with manage capability.
 #' @param study_id Study UUID.
 #' @param periods Optional named numeric vector of days per data class.
 #' @return A table with data_class, records, oldest, newest, period_days and
 #'   older_than_period.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_retention_report(repo, study$manager, study$study_id)
+#' }
 #' @export
 get_retention_report <- function(repo, actor, study_id, periods = NULL) {
   authorize(repo, actor, study_id, "manage")

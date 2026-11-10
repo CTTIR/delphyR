@@ -3,6 +3,14 @@
 #' @param actor Study manager.
 #' @param study_id Study UUID.
 #' @return Version table with content hashes, configurations and amendment reasons.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_protocol_versions(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_protocol_versions <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "manage")
@@ -22,6 +30,18 @@ list_protocol_versions <- function(repo, actor, study_id) {
 #' @param reason Nonempty amendment rationale.
 #' @param command_id Idempotency key.
 #' @return New protocol id, version and hash.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' versions <- list_protocol_versions(repo, study$manager, study$study_id)
+#' protocol <- demo_protocol()
+#' amend_protocol(repo, study$manager, study$study_id, protocol,
+#'                versions$hash[nrow(versions)], "Prospective amendment",
+#'                "example-amend")
+#' }
 #' @export
 amend_protocol <- function(repo, actor, study_id, protocol, expected_hash, reason, command_id) {
   transaction(repo, function() {

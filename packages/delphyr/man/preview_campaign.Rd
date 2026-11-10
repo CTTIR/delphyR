@@ -20,3 +20,13 @@ Plain text, hash, the study's reminder rules, the approved send
 \description{
 Preview exact campaign text and pseudonymous recipients
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'campaign' comes from prepare_campaign().
+preview_campaign(repo, study$manager, campaign$id)
+}
+}

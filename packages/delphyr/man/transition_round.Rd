@@ -38,3 +38,16 @@ Round id and new state.
 \description{
 Advance an authorized round through its approval lifecycle
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+list_rounds(repo, study$manager, study$study_id)$state
+}
+}

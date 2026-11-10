@@ -4,6 +4,14 @@
 #' @param item_count Number of trilingual rating items.
 #' @param code Unique study code.
 #' @return Manager and panel actors, study/consent ids and unapproved round.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' str(study, max.level = 1)
+#' }
 #' @export
 demo_study <- function(repo, n = 30L, item_count = 12L, code = paste0("DEMO-", substr(uid(), 1, 8))) {
   ensure(repo$environment %in% c("development", "test") && whole(n) && length(n) == 1 && n >= 2 && n <= 300 && whole(item_count) && length(item_count) == 1 && item_count >= 1 && item_count <= 150, "demo")

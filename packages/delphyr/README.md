@@ -6,8 +6,9 @@
 and provides the transactional services used by `delphyrApp`. Offline analysis
 runs without Shiny or a database. Study services use PostgreSQL.
 
-This is development software for synthetic studies. It is not a CRAN release,
-a production qualification, or a validation of a study's scientific choices.
+Version 0.1.0 is prepared for a first CRAN submission. It is development
+software for synthetic studies, not a production qualification or a validation
+of a study's scientific choices.
 
 ## Install and start
 

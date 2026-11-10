@@ -26,3 +26,8 @@ Server-only delphyr_authentication_config. Never serialize to a browser.
 \description{
 Configure the trusted authentication gateway boundary
 }
+\examples{
+config <- new_authentication_config("https://identity.example/realms/study",
+                                    strrep("a", 64), "127.0.0.1")
+config  # the gateway secret is redacted
+}

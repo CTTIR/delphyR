@@ -45,3 +45,27 @@ candidate of the same analysis and records that it replaces the first:
 later views show the corrected version with the note for participants,
 while earlier display events keep referring to the version that was shown.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+transition_round(repo, study$manager, study$round$id, "closed",
+                 study$round$hash, "Example", "example-closed")
+snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+feedback <- create_feedback(repo, study$manager, analysis$id,
+                            command_id = "example-feedback")
+# 'released' is a released feedback, 'replacement' a newer candidate.
+release_feedback_correction(repo, study$manager, released$id, replacement$id,
+                            replacement$hash, "Dissent was missing",
+                            "No rating affected",
+                            "The summary now also states the dissenting view.",
+                            "example-correction")
+}
+}

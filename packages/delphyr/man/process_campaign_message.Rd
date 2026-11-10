@@ -32,3 +32,15 @@ participation, consent, submission and round state, which can only reduce
 the approved audience. A transient failure is retried with a growing delay
 up to three attempts.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+adapter <- new_message_adapter("local_test", function(message) {
+  list(status = "accepted", provider_ref = message$message_id)
+})
+process_campaign_message(repo, adapter, study$study_id)
+}
+}

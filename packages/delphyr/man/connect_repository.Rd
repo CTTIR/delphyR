@@ -23,3 +23,12 @@ A delphyr repository. Close its connection with DBI::dbDisconnect(repo$con).
 \description{
 Connect to an explicitly configured PostgreSQL database
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+migrate_repository(repo)
+DBI::dbDisconnect(repo$con)
+}
+}

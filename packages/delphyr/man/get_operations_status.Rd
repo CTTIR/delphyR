@@ -21,3 +21,12 @@ Counts of jobs by type and state with the age of the oldest waiting
 \description{
 Operational status of a study's background work
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+get_operations_status(repo, study$manager, study$study_id)
+}
+}

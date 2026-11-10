@@ -44,3 +44,14 @@ records the study team's explicit decision for one version pair, with its
 rationale. A later decision for the same pair supersedes the earlier one;
 the history is kept and exported.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+record_item_comparability(repo, study$manager, study$study_id, "I001",
+                          "relevance", 1L, 2L, TRUE, "Wording only",
+                          "example-comparability")
+}
+}

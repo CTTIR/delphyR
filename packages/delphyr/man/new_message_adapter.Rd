@@ -25,3 +25,10 @@ timeout or any other return value leaves the delivery uncertain; it is then
 never repeated automatically. No production adapter is shipped or approved:
 contact addresses are restricted to the reserved `.invalid` domain.
 }
+\examples{
+# A local test adapter that accepts every message without sending it.
+adapter <- new_message_adapter("local_test", function(message) {
+  list(status = "accepted", provider_ref = message$message_id)
+})
+class(adapter)
+}

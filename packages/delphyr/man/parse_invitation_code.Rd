@@ -15,3 +15,8 @@ List study_id, invitation_id and token; DEL_UNAUTHORIZED when malformed.
 \description{
 Decode an invitation hand-over code
 }
+\examples{
+study_id <- uuid::UUIDgenerate()
+code <- invitation_code(study_id, uuid::UUIDgenerate(), new_invitation_token())
+identical(parse_invitation_code(as.character(code))$study_id, study_id)
+}

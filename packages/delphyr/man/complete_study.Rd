@@ -23,3 +23,13 @@ Completed study UUID.
 \description{
 Complete a study after finalization and explicit item decisions
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+complete_study(repo, study$manager, study$study_id, "Stop after round 1",
+               "example-complete")
+}
+}

@@ -18,3 +18,9 @@ A single private string with redacted printing; as.character() reveals it.
 The code combines the study, invitation and private token so that the invited
 person enters one value after verified login. Treat the whole code as secret.
 }
+\examples{
+code <- invitation_code(uuid::UUIDgenerate(), uuid::UUIDgenerate(),
+                        new_invitation_token())
+code
+parse_invitation_code(as.character(code))$study_id
+}

@@ -38,3 +38,15 @@ Coding-event UUID. Counts represent decisions, not unique people.
 \description{
 Append a reasoned theme coding decision
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'source' and 'theme' come from record_qualitative_source() and
+# create_qualitative_theme().
+code_qualitative_source(repo, study$manager, study$study_id, source$id,
+                        theme$id, "include", "Fits the theme", "example-code")
+}
+}

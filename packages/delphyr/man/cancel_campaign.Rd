@@ -24,3 +24,14 @@ Campaign UUID; already recorded sink receipts remain immutable. A
 \description{
 Cancel remaining synthetic campaign delivery
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'campaign' comes from prepare_campaign().
+cancel_campaign(repo, study$manager, campaign$id, "Sent in error",
+                "example-cancel")
+}
+}

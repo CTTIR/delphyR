@@ -19,3 +19,12 @@ Character vector; this UI hint does not replace service authorization.
 \description{
 Read current study capabilities
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+get_capabilities(repo, study$manager, study$study_id)
+}
+}

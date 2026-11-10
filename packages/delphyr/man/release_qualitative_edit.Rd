@@ -35,3 +35,14 @@ Immutable release UUID and content hash.
 \description{
 Release an exact qualitative version after independent review
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'edit' is a reviewed edit from redact_qualitative_source().
+release_qualitative_edit(repo, study$manager, study$study_id, edit$id,
+                         edit$hash, "Faithful; dissent kept", "example-edit")
+}
+}

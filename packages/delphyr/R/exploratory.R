@@ -4,6 +4,14 @@
 #' @param study_id Study UUID.
 #' @return Round number, snapshot UUID and the number of submitted free-text
 #'   answers, with how many are already preserved as qualitative sources.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_contribution_rounds(repo, study$panel[[1]], study$study_id)
+#' }
 #' @export
 list_contribution_rounds <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "edit")
@@ -27,6 +35,21 @@ list_contribution_rounds <- function(repo, actor, study_id) {
 #' @param snapshot_id Snapshot UUID of a frozen round.
 #' @param command_id Idempotency key.
 #' @return Snapshot UUID and the number of sources created.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' import_round_contributions(repo, study$manager, snapshot$id, "example-import")
+#' }
 #' @export
 import_round_contributions <- function(repo, actor, snapshot_id, command_id) {
   transaction(repo, function() {
@@ -48,6 +71,14 @@ import_round_contributions <- function(repo, actor, snapshot_id, command_id) {
 #' @param actor Actor with analyse or manage capability.
 #' @return Edit UUID, source reference, kind, released text, release time and
 #'   the item codes linked to the source. Originals are not included.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_released_edits(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_released_edits <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("analyse", "manage"))
@@ -74,6 +105,29 @@ list_released_edits <- function(repo, actor, study_id) {
 #' @param participant_note Text shown to participants with the corrected feedback.
 #' @param command_id Idempotency key.
 #' @return The replacement feedback UUID and the feedback it replaces.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#'                             command_id = "example-feedback")
+#' # 'released' is a released feedback, 'replacement' a newer candidate.
+#' release_feedback_correction(repo, study$manager, released$id, replacement$id,
+#'                             replacement$hash, "Dissent was missing",
+#'                             "No rating affected",
+#'                             "The summary now also states the dissenting view.",
+#'                             "example-correction")
+#' }
 #' @export
 release_feedback_correction <- function(repo, actor, feedback_id, replacement_id, expected_hash, reason, impact_note, participant_note, command_id) {
   transaction(repo, function() {
@@ -99,6 +153,14 @@ release_feedback_correction <- function(repo, actor, feedback_id, replacement_id
 #' @param study_id Study UUID.
 #' @return One row per released feedback: round, UUID, hash, the round it is
 #'   assigned to and, where it was corrected, its replacement with rationale.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_released_feedback(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_released_feedback <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("analyse", "manage"))

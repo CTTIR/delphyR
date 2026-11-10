@@ -19,3 +19,12 @@ Invisibly TRUE.
 \description{
 Record that a worker process is alive
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+record_worker_heartbeat(repo, "worker-1", TRUE)
+get_system_status(repo)
+}
+}

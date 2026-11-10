@@ -19,3 +19,13 @@ Actor context for trusted server code, never accepted from browser payloads.
 \description{
 Create a short-lived, server-side demo actor
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+principal <- provision_demo_principal(repo, "example-manager", TRUE)
+manager <- demo_actor(repo, principal)
+list_studies(repo, manager)
+}
+}

@@ -19,3 +19,13 @@ Receipt metadata and invitation IDs without contact values.
 \description{
 Retrieve a minimal panel import receipt through current coordination rights
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'receipt' comes from import_panel().
+get_panel_import_receipt(repo, study$manager, receipt$id)
+}
+}

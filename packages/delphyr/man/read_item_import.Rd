@@ -32,3 +32,16 @@ which has no `item_version`.
 `domain_code` are accepted and not stored. Check the result with
 validate_items() before preparing a round.
 }
+\examples{
+file <- tempfile(fileext = ".csv")
+writeLines(c(
+  "item_code,item_version,locale,text,dimension_code,scale_code,source_ref,required,display_order",
+  "I001,1,en,Synthetic item one,relevance,relevance_9,DEMO-SRC-01,true,1",
+  "I001,1,de,Synthetisches Item eins,relevance,relevance_9,DEMO-SRC-01,true,1",
+  "I002,1,en,Synthetic item two,relevance,relevance_9,DEMO-SRC-01,true,2",
+  "I002,1,de,Synthetisches Item zwei,relevance,relevance_9,DEMO-SRC-01,true,2"
+), file)
+items <- read_item_import(file)
+validate_items(items, demo_protocol())
+unlink(file)
+}

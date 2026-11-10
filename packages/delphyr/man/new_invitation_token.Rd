@@ -13,3 +13,7 @@ A 256-bit secret with redacted printing. Retain privately; only its hash
 \description{
 Generate a private synthetic invitation token
 }
+\examples{
+token <- new_invitation_token()
+token  # printing never reveals the token
+}

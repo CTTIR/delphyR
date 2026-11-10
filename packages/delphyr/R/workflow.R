@@ -44,6 +44,18 @@ opened_states <- "('open','closed','frozen','analysed','feedback_ready','release
 #'   does not follow the contract is refused with DEL_VALIDATION, path
 #'   items.file, items.encoding, items.columns, items.rows or the column of
 #'   the first value that is not of its type, such as items.display_order.
+#' @examples
+#' file <- tempfile(fileext = ".csv")
+#' writeLines(c(
+#'   "item_code,item_version,locale,text,dimension_code,scale_code,source_ref,required,display_order",
+#'   "I001,1,en,Synthetic item one,relevance,relevance_9,DEMO-SRC-01,true,1",
+#'   "I001,1,de,Synthetisches Item eins,relevance,relevance_9,DEMO-SRC-01,true,1",
+#'   "I002,1,en,Synthetic item two,relevance,relevance_9,DEMO-SRC-01,true,2",
+#'   "I002,1,de,Synthetisches Item zwei,relevance,relevance_9,DEMO-SRC-01,true,2"
+#' ), file)
+#' items <- read_item_import(file)
+#' validate_items(items, demo_protocol())
+#' unlink(file)
 #' @export
 read_item_import <- function(file, delimiter = ",") {
   ensure(scalar_text(file) && file.exists(file) && !dir.exists(file), "items.file")
@@ -85,6 +97,17 @@ read_item_import <- function(file, delimiter = ",") {
 #'   read as a number is refused.
 #' @param protocol Study protocol.
 #' @return TRUE or a structured validation condition.
+#' @examples
+#' # The demo protocol asks for every item in German and English.
+#' items <- data.frame(
+#'   item_code = rep(c("I001", "I002"), each = 2), item_version = 1L,
+#'   locale = c("en", "de"),
+#'   text = c("Synthetic item one", "Synthetisches Item eins",
+#'            "Synthetic item two", "Synthetisches Item zwei"),
+#'   dimension_code = "relevance", scale_code = "relevance_9",
+#'   source_ref = "DEMO-SRC-01", required = TRUE, display_order = rep(1:2, each = 2)
+#' )
+#' validate_items(items, demo_protocol())
 #' @export
 validate_items <- function(items, protocol) {
   protocol <- new_protocol(protocol)
@@ -114,6 +137,15 @@ validate_items <- function(items, protocol) {
 #' @param command_id Idempotency key.
 #' @return Consent version id. A completed study refuses new versions with
 #'   DEL_CONFLICT (path study.state).
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' publish_consent(repo, study$manager, study$study_id,
+#'                 "Synthetic information for participants.", "en", "example-consent")
+#' }
 #' @export
 publish_consent <- function(repo, actor, study_id, text, locale, command_id) {
   transaction(repo, function() {
@@ -135,6 +167,15 @@ publish_consent <- function(repo, actor, study_id, text, locale, command_id) {
 #' @param decision TRUE for consent, FALSE for refusal or withdrawal.
 #' @param command_id Idempotency key.
 #' @return Consent event id.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' record_consent(repo, study$panel[[1]], study$study_id, study$consent_id,
+#'                TRUE, "example-consent")
+#' }
 #' @export
 record_consent <- function(repo, actor, study_id, consent_version_id, decision, command_id) {
   transaction(repo, function() {
@@ -158,6 +199,16 @@ record_consent <- function(repo, actor, study_id, consent_version_id, decision, 
 #' @param command_id Idempotency key.
 #' @return Study-specific pseudonym. A completed study refuses new members
 #'   with DEL_CONFLICT (path study.state).
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' principal <- provision_demo_principal(repo, "example-panelist")
+#' add_panelist(repo, study$manager, study$study_id, principal, "experts",
+#'              "example-add")
+#' }
 #' @export
 add_panelist <- function(repo, actor, study_id, principal_id, group_code, command_id) {
   transaction(repo, function() {
@@ -204,6 +255,17 @@ eligible_panel <- function(repo, study_id, number, config) {
 #' @param deadline UTC timestamp string with explicit offset.
 #' @param command_id Idempotency key.
 #' @return Round UUID and exact instrument hash.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # demo_study() prepares round 1; a later round needs the earlier one closed.
+#' deadline <- format(Sys.time() + 7 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+#' prepare_round(repo, study$manager, study$study_id, study$items,
+#'               study$consent_id, deadline, "example-round")
+#' }
 #' @export
 prepare_round <- function(repo, actor, study_id, items, consent_version_id, deadline, command_id) {
   transaction(repo, function() {
@@ -285,6 +347,16 @@ valid_deadline <- function(deadline) {
 #' @param reason Nonempty rationale.
 #' @param command_id Idempotency key.
 #' @return Round id and the new deadline in UTC.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' later <- format(Sys.time() + 14 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+#' change_round_deadline(repo, study$manager, study$round$id, later,
+#'                       study$round$hash, "More time", "example-deadline")
+#' }
 #' @export
 change_round_deadline <- function(repo, actor, round_id, deadline, expected_hash, reason, command_id) {
   transaction(repo, function() {
@@ -315,6 +387,18 @@ change_round_deadline <- function(repo, actor, round_id, deadline, expected_hash
 #' @param reason Nonempty human rationale.
 #' @param command_id Idempotency key.
 #' @return Round id and new state.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' list_rounds(repo, study$manager, study$study_id)$state
+#' }
 #' @export
 transition_round <- function(repo, actor, round_id, target, expected_hash, reason, command_id) {
   transaction(repo, function() {
@@ -373,6 +457,23 @@ current_responses <- function(repo, e) query(repo, "SELECT v.* FROM research.res
 #' @param expected_revision Last confirmed revision; zero for first save.
 #' @param command_id Idempotency key, reused only for identical retries.
 #' @return Committed revision id, revision and server time.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+#' panelist <- study$panel[[1]]
+#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+#' q <- get_questionnaire(repo, panelist, enrollment)
+#' save_response(repo, panelist, enrollment, q$items$id[1],
+#'               list(value = 7L, status = "answered"), 0L, "example-save")
+#' }
 #' @export
 save_response <- function(repo, actor, enrollment_id, round_item_id, response, expected_revision, command_id) {
   transaction(repo, function() {
@@ -405,6 +506,28 @@ save_response <- function(repo, actor, enrollment_id, round_item_id, response, e
 #' @param expected_revision_set Named integer vector: round-item UUID to revision.
 #' @param command_id Idempotency key.
 #' @return Durable submission receipt id and timestamp.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+#' panelist <- study$panel[[1]]
+#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+#' q <- get_questionnaire(repo, panelist, enrollment)
+#' saved <- lapply(q$items$id, function(item) {
+#'   save_response(repo, panelist, enrollment, item,
+#'                 list(value = 7L, status = "answered"), 0L, paste("save", item))
+#' })
+#' # The confirmed revision of every response, named by its round item.
+#' revisions <- setNames(vapply(saved, `[[`, integer(1), "revision"), q$items$id)
+#' submit_round(repo, panelist, enrollment, revisions, "example-submit")
+#' }
 #' @export
 submit_round <- function(repo, actor, enrollment_id, expected_revision_set, command_id) {
   transaction(repo, function() {
@@ -436,6 +559,21 @@ submit_round <- function(repo, actor, enrollment_id, expected_revision_set, comm
 #' @param enrollment_id Own enrollment UUID in a round that was opened; any
 #'   other enrollment is refused with DEL_NOT_FOUND, as an unknown one is.
 #' @return Instrument, own responses, receipt and required consent information.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+#' panelist <- study$panel[[1]]
+#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+#' get_questionnaire(repo, panelist, enrollment)
+#' }
 #' @export
 get_questionnaire <- function(repo, actor, enrollment_id) {
   transaction(repo, function() {
@@ -456,6 +594,21 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
 #' @param actor Panel actor.
 #' @param study_id Selected study.
 #' @return Enrollment table.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+#' panelist <- study$panel[[1]]
+#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+#' list_enrollments(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_enrollments <- function(repo, actor, study_id) {
   m <- authorize(repo, actor, study_id, "panel")
@@ -538,6 +691,14 @@ readiness_blocking <- function(readiness, target) {
 #' @return delphyr_validation: valid, issues (severity, code, path,
 #'   message_key, details) and schema_version. Approval ignores the
 #'   deadline_passed and no_enrollments findings; opening requires none.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_round_readiness(repo, study$manager, study$round$id)
+#' }
 #' @export
 get_round_readiness <- function(repo, actor, round_id) {
   transaction(repo, function() {
@@ -550,6 +711,14 @@ get_round_readiness <- function(repo, actor, round_id) {
 #' @return Round number, state, deadline, content hash, protocol version,
 #'   study information and every item with all approved language versions.
 #'   Contains no panel identities or responses.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_round_instrument(repo, study$manager, study$round$id)
+#' }
 #' @export
 get_round_instrument <- function(repo, actor, round_id) {
   transaction(repo, function() {
@@ -578,6 +747,18 @@ get_round_instrument <- function(repo, actor, round_id) {
 #' @inheritParams get_round_readiness
 #' @param command_id Idempotency key.
 #' @return Round UUID and the number of enrollments added.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+#' }
 #' @export
 enroll_panel <- function(repo, actor, round_id, command_id) {
   transaction(repo, function() {

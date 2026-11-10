@@ -1,14 +1,20 @@
 Package: delphyr
 Title: Reproducible Round-Based Delphi Studies
-Version: 0.0.2
-Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "raban.heller@uni-ulm.de")
-Description: Validated study protocols, deterministic consensus and longitudinal
- analysis, and transactional PostgreSQL services for round-based Delphi
- studies. Provides reproducible research exports and synthetic examples.
- Production use requires the documented security and operational acceptance
- gates.
+Version: 0.1.0
+Authors@R: person("Raban", "Heller", role = c("aut", "cre"), email = "raban.heller@uni-ulm.de",
+    comment = c(ORCID = "0000-0001-8006-9742"))
+Description: Supports round-based Delphi studies with validated study
+    protocols, deterministic consensus classification, longitudinal analysis
+    across rounds and transactional services backed by 'PostgreSQL'. Frozen
+    round snapshots can be analyzed offline, without a database, and research
+    exports can be reproduced from their files. Synthetic example studies are
+    included. Production use requires the documented security and operational
+    acceptance gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-US
+SystemRequirements: Optional: PostgreSQL (tested with version 17) for the
+    study services; Quarto for rendered HTML study reports.
 Imports: DBI, digest, jsonlite (>= 1.8.8), openssl, uuid
 Suggests: RPostgres, callr, withr, pkgload, testthat (>= 3.0.0), knitr, rmarkdown
 Config/testthat/edition: 3

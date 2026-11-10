@@ -23,11 +23,14 @@ only the transport and headers established by the separately configured,
 isolated authentication gateway. A header alone is not authentication.
 }
 \examples{
-if (FALSE) {
-  config <- new_authentication_config(
-    "https://identity.example/realms/study",
-    Sys.getenv("DELPHYR_GATEWAY_SECRET"), "127.0.0.1"
-  )
-  # In a trusted session factory: authenticated_actor(repo, session$request, config)
+\dontrun{
+# Needs a migrated PostgreSQL repository and a request forwarded by the
+# trusted authentication gateway, so the example is not run.
+config <- new_authentication_config(
+  "https://identity.example/realms/study",
+  Sys.getenv("DELPHYR_GATEWAY_SECRET"), "127.0.0.1"
+)
+# In a trusted session factory:
+actor <- authenticated_actor(repo, session$request, config)
 }
 }

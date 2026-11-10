@@ -17,3 +17,12 @@ Study table without contacts or response data.
 \description{
 List studies available to the current actor
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+list_studies(repo, study$manager)
+}
+}

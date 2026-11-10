@@ -36,3 +36,17 @@ Lineage-event UUID and hash. Child codes are new semantic identities.
 \description{
 Record a complete item split or merge without deleting its parents
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+record_item_lineage(repo, study$manager, study$study_id,
+                    parents = data.frame(item_code = "I001", item_version = 1L),
+                    children = data.frame(item_code = c("I001A", "I001B"),
+                                          item_version = 1L),
+                    relation = "split", reason = "Two aspects",
+                    command_id = "example-lineage")
+}
+}

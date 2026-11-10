@@ -28,3 +28,16 @@ the new enrollments as well; an open round with assigned feedback accepts no
 further enrollment, so that everyone rating in a round has the same
 information.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+}
+}

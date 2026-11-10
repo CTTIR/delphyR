@@ -336,6 +336,15 @@ write_study_export <- function(repo, actor, study_id, profile) {
 #' @param profile study_summary (aggregates with small-cell suppression) or
 #'   research_pseudonymized (full denominators and decision rationales).
 #' @return A delphyr_report_data with a content hash, for render_study_report().
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' data <- prepare_study_report_data(repo, study$manager, study$study_id)
+#' write_report_data(data, tempdir())
+#' }
 #' @export
 prepare_study_report_data <- function(repo, actor, study_id, profile = "study_summary") {
   ensure(scalar_text(profile) && profile %in% c("study_summary", "research_pseudonymized"), "report.profile")
@@ -345,6 +354,15 @@ prepare_study_report_data <- function(repo, actor, study_id, profile = "study_su
 #' @param path Extracted research_pseudonymized export under the user's control.
 #' @return The recomputed analysis of every round and the comparisons between
 #'   rounds, after all checksums, snapshot hashes and result hashes matched.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'path' is a directory with the files of a downloaded study export.
+#' reproduce_study_export(path)$comparisons
+#' }
 #' @export
 reproduce_study_export <- function(path) {
   manifest <- verify_manifest(path, exact = FALSE)
@@ -376,6 +394,15 @@ reproduce_study_export <- function(path) {
 #' @param enrollment_id Own enrollment UUID with assigned released feedback.
 #' @param output_dir Existing private directory controlled by trusted server code.
 #' @return Written file names; DEL_NOT_FOUND when no feedback is assigned.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'enrollment' is an enrollment of a round with assigned, released feedback.
+#' write_participant_feedback(repo, study$panel[[1]], enrollment, tempdir())
+#' }
 #' @export
 write_participant_feedback <- function(repo, actor, enrollment_id, output_dir) {
   ensure(scalar_text(output_dir) && dir.exists(output_dir), "feedback.output_dir")

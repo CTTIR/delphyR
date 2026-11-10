@@ -19,3 +19,12 @@ Principal UUID. This is not a production authentication adapter.
 \description{
 Provision a synthetic development principal
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+principal <- provision_demo_principal(repo, "example-manager", TRUE)
+demo_actor(repo, principal)
+}
+}

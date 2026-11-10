@@ -16,6 +16,16 @@ qualitative_object <- function(repo, study, id, table) {
 #' @param command_id Idempotency key.
 #' @param response_revision_id Optional immutable free-text response revision.
 #' @return Source UUID and content hash. This is restricted editorial data.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' record_qualitative_source(repo, study$manager, study$study_id,
+#'                           "Synthetic free-text comment.", "EXAMPLE-SRC",
+#'                           "example-source")
+#' }
 #' @export
 record_qualitative_source <- function(repo, actor, study_id, text, source_ref, command_id, response_revision_id = NULL) {
   transaction(repo, function() {
@@ -46,6 +56,17 @@ record_qualitative_source <- function(repo, actor, study_id, text, source_ref, c
 #' @param reason Rationale for all omissions or reformulation.
 #' @param command_id Idempotency key.
 #' @return Edit UUID and exact hash, requiring independent release.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'source' comes from record_qualitative_source().
+#' redact_qualitative_source(repo, study$manager, study$study_id, source$id,
+#'                           "Synthetic comment with [name removed].",
+#'                           "Remove a name", "example-redact")
+#' }
 #' @export
 redact_qualitative_source <- function(repo, actor, study_id, source_id, text, reason, command_id, kind = "redaction") {
   transaction(repo, function() {
@@ -72,6 +93,16 @@ redact_qualitative_source <- function(repo, actor, study_id, source_id, text, re
 #' @param reason Review rationale, including representation of dissent.
 #' @param command_id Idempotency key.
 #' @return Immutable release UUID and content hash.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'edit' is a reviewed edit from redact_qualitative_source().
+#' release_qualitative_edit(repo, study$manager, study$study_id, edit$id,
+#'                          edit$hash, "Faithful; dissent kept", "example-edit")
+#' }
 #' @export
 release_qualitative_edit <- function(repo, actor, study_id, edit_id, expected_hash, reason, command_id) {
   transaction(repo, function() {
@@ -97,6 +128,16 @@ release_qualitative_edit <- function(repo, actor, study_id, edit_id, expected_ha
 #' @param definition Coding definition or decision rule.
 #' @param command_id Idempotency key.
 #' @return Theme UUID.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' create_qualitative_theme(repo, study$manager, study$study_id, "DECISION", 1L,
+#'                          "Shared decision making",
+#'                          "Proposals on joint decisions", "example-theme")
+#' }
 #' @export
 create_qualitative_theme <- function(repo, actor, study_id, code, version, label, definition, command_id) {
   transaction(repo, function() {
@@ -121,6 +162,17 @@ create_qualitative_theme <- function(repo, actor, study_id, code, version, label
 #' @param reason Coding rationale or explanation of disagreement.
 #' @param command_id Idempotency key.
 #' @return Coding-event UUID. Counts represent decisions, not unique people.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'source' and 'theme' come from record_qualitative_source() and
+#' # create_qualitative_theme().
+#' code_qualitative_source(repo, study$manager, study$study_id, source$id,
+#'                         theme$id, "include", "Fits the theme", "example-code")
+#' }
 #' @export
 code_qualitative_source <- function(repo, actor, study_id, source_id, theme_id, decision, reason, command_id) {
   transaction(repo, function() {
@@ -151,6 +203,16 @@ qualitative_item <- function(repo, study, code, version) {
 #' @param reason Rationale for derivation or consolidation.
 #' @param command_id Idempotency key.
 #' @return Source-link UUID. This does not import or approve an instrument item.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'source' comes from record_qualitative_source().
+#' link_item_source(repo, study$manager, study$study_id, "I001", 1L, source$id,
+#'                  "Item derived from the comment", "example-link")
+#' }
 #' @export
 link_item_source <- function(repo, actor, study_id, item_code, item_version, source_id, reason, command_id) {
   transaction(repo, function() {
@@ -174,6 +236,19 @@ link_item_source <- function(repo, actor, study_id, item_code, item_version, sou
 #' @param reason Human decision rationale.
 #' @param command_id Idempotency key.
 #' @return Lineage-event UUID and hash. Child codes are new semantic identities.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' record_item_lineage(repo, study$manager, study$study_id,
+#'                     parents = data.frame(item_code = "I001", item_version = 1L),
+#'                     children = data.frame(item_code = c("I001A", "I001B"),
+#'                                           item_version = 1L),
+#'                     relation = "split", reason = "Two aspects",
+#'                     command_id = "example-lineage")
+#' }
 #' @export
 record_item_lineage <- function(repo, actor, study_id, parents, children, relation, reason, command_id) {
   transaction(repo, function() {
@@ -214,6 +289,14 @@ record_item_lineage <- function(repo, actor, study_id, parents, children, relati
 #'   originals and unreleased redactions and returns authorized export tables.
 #' @return Named tables with explicit source, coding, item and review provenance.
 #'   These are restricted research records, not participant feedback.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_qualitative_provenance(repo, study$manager, study$study_id)
+#' }
 #' @export
 get_qualitative_provenance <- function(repo, actor, study_id, export = FALSE) {
   transaction(repo, function() {
@@ -250,6 +333,14 @@ get_qualitative_provenance <- function(repo, actor, study_id, export = FALSE) {
 #' @param actor Actor with manage capability.
 #' @param study_id Study UUID.
 #' @return Reviewed content candidates and release state; excludes originals.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_qualitative_reviews(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_qualitative_reviews <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "manage")

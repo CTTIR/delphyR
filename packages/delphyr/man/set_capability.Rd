@@ -40,3 +40,14 @@ Membership id. The last management right of a study cannot be
 \description{
 Assign or revoke a study capability
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+principal <- provision_demo_principal(repo, "example-analyst")
+set_capability(repo, study$manager, study$study_id, principal, "analyse",
+               TRUE, "example-grant", reason = "Performs the analysis")
+}
+}

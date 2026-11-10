@@ -4,6 +4,10 @@
 #' @param trusted_proxy_addresses Exact transport peer addresses observed by httpuv.
 #' @param max_session_seconds Maximum lifetime of one Shiny actor, at most one hour.
 #' @return Server-only delphyr_authentication_config. Never serialize to a browser.
+#' @examples
+#' config <- new_authentication_config("https://identity.example/realms/study",
+#'                                     strrep("a", 64), "127.0.0.1")
+#' config  # the gateway secret is redacted
 #' @export
 new_authentication_config <- function(issuer, gateway_secret, trusted_proxy_addresses,
                                       max_session_seconds = 900L) {
@@ -35,12 +39,15 @@ new_authentication_config <- function(issuer, gateway_secret, trusted_proxy_addr
 #'   identities fail closed with DEL_UNAUTHORIZED. No account is auto-provisioned.
 #' @export
 #' @examples
-#' if (FALSE) {
-#'   config <- new_authentication_config(
-#'     "https://identity.example/realms/study",
-#'     Sys.getenv("DELPHYR_GATEWAY_SECRET"), "127.0.0.1"
-#'   )
-#'   # In a trusted session factory: authenticated_actor(repo, session$request, config)
+#' \dontrun{
+#' # Needs a migrated PostgreSQL repository and a request forwarded by the
+#' # trusted authentication gateway, so the example is not run.
+#' config <- new_authentication_config(
+#'   "https://identity.example/realms/study",
+#'   Sys.getenv("DELPHYR_GATEWAY_SECRET"), "127.0.0.1"
+#' )
+#' # In a trusted session factory:
+#' actor <- authenticated_actor(repo, session$request, config)
 #' }
 authenticated_actor <- function(repo, request, config) {
   ensure(inherits(config, "delphyr_authentication_config"), "authentication.config")

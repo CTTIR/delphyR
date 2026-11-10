@@ -22,3 +22,13 @@ Written file names; DEL_NOT_FOUND when no feedback is assigned.
 The participant-feedback profile: the released aggregate of the previous
 round and only this person's own previous answers.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'enrollment' is an enrollment of a round with assigned, released feedback.
+write_participant_feedback(repo, study$panel[[1]], enrollment, tempdir())
+}
+}

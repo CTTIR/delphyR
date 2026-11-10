@@ -29,9 +29,13 @@
 #' @return A shiny.appobj, runnable with shiny::runApp().
 #' @export
 #' @examples
-#' if (interactive() && FALSE) {
-#'   # Resolve repo and actor on the server before constructing the application.
-#'   shiny::runApp(run_app(repo, actor))
+#' \dontrun{
+#' # Needs a migrated PostgreSQL repository (see delphyr::migrate_repository())
+#' # and an interactive session, so the example is not run.
+#' repo <- delphyr::connect_repository(dbname = "delphyr")
+#' study <- delphyr::demo_study(repo, n = 4L, item_count = 2L)
+#' # Resolve repo and actor on the server before constructing the application.
+#' shiny::runApp(run_app(repo, study$manager))
 #' }
 run_app <- function(repo = NULL, actor = NULL, language = c("en", "fr", "de"), services = NULL,
                     actor_factory = NULL, repo_factory = NULL, autosave_ms = 1500, block_fields = 10L, sign_out_url = NULL) {

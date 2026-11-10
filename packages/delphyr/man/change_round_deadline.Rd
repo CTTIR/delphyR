@@ -41,3 +41,14 @@ passed accepts answers again after an extension. A closed round is never
 reopened this way. The change is recorded with its rationale in the
 round's history and in the audit trail.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+later <- format(Sys.time() + 14 * 86400, "\%Y-\%m-\%dT\%H:\%M:\%SZ", tz = "UTC")
+change_round_deadline(repo, study$manager, study$round$id, later,
+                      study$round$hash, "More time", "example-deadline")
+}
+}

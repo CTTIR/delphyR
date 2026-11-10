@@ -25,3 +25,21 @@ reservation is extended to `lease_seconds` from now, as long as it has not
 ended yet. The requester's rights are checked again when the result is
 recorded, with an identity that lasts as long as the reservation.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+transition_round(repo, study$manager, study$round$id, "closed",
+                 study$round$hash, "Example", "example-closed")
+snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+request_export(repo, study$manager, snapshot$id, "example-export")
+job <- claim_job(repo, study_id = study$study_id)
+renew_job_lease(repo, job$id, job$lease_token, 60L)
+}
+}

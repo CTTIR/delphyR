@@ -25,7 +25,7 @@ members and 300 rating fields.}
 
 \item{download_hours}{Hours an export can be downloaded after it was
 registered, from 1 to 720; one day by default. The period is the
-decision of the responsible organisation.}
+decision of the responsible organization.}
 
 \item{on_claim}{Optional function called with the claimed job (a one-row
 data frame with `id` and `lease_token`) before it runs, for example to
@@ -48,4 +48,21 @@ the reservation had ended counts as such a lost reservation (`DEL_CONFLICT`),
 not as a refusal of the requester. An export is written under a temporary
 name and gets its final name only after it is registered; one that cannot
 be registered is removed, whatever failed.
+}
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+for (state in c("review", "approved", "open")) {
+  transition_round(repo, study$manager, study$round$id, state,
+                   study$round$hash, "Example", paste0("example-", state))
+}
+transition_round(repo, study$manager, study$round$id, "closed",
+                 study$round$hash, "Example", "example-closed")
+snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+request_export(repo, study$manager, snapshot$id, "example-export")
+worker_step(repo, study_id = study$study_id)
+}
 }

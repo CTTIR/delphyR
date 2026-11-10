@@ -24,5 +24,14 @@ Lists each class of stored data with its count and the age of its oldest
 and newest record. With `periods`, a proposed number of days per class, it
 also states how many records would be older than that period. It is a dry
 run: nothing is deleted, and the software ships no retention periods. A
-period is the decision of the responsible organisation.
+period is the decision of the responsible organization.
+}
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+get_retention_report(repo, study$manager, study$study_id)
+}
 }

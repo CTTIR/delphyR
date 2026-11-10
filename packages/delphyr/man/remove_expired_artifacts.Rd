@@ -35,3 +35,11 @@ as not removed: its files may lie in another installation's export
 directory that uses the same database. With `record_missing = TRUE` the
 operator confirms that they are gone, and the removal is recorded.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+remove_expired_artifacts(repo, dry_run = TRUE)
+}
+}

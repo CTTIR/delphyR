@@ -23,3 +23,14 @@ Study title and invitation expiry only, for the exact approved account.
 \description{
 Preview an invitation without creating membership or consuming its token
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'invitation' and 'token' come from issue_panel_invitation().
+preview_panel_invitation(repo, study$panel[[1]], study$study_id,
+                         invitation$id, token)
+}
+}

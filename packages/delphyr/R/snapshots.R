@@ -18,6 +18,21 @@ read_snapshot <- function(value) {
 #' @param round_id Closed round UUID.
 #' @param command_id Idempotency key.
 #' @return Immutable snapshot UUID and content hash.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' snapshot$id
+#' }
 #' @export
 freeze_round <- function(repo, actor, round_id, command_id) {
   transaction(repo, function() {
@@ -42,6 +57,21 @@ freeze_round <- function(repo, actor, round_id, command_id) {
 #' @param actor Actor with analyse capability.
 #' @param snapshot_id Snapshot UUID.
 #' @return Validated delphyr_snapshot.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' get_snapshot(repo, study$manager, snapshot$id)
+#' }
 #' @export
 get_snapshot <- function(repo, actor, snapshot_id) {
   study <- object_study(repo, actor, "research.snapshots", snapshot_id)
@@ -54,6 +84,22 @@ get_snapshot <- function(repo, actor, snapshot_id) {
 #' @param snapshot_id Snapshot UUID.
 #' @param command_id Idempotency key.
 #' @return Analysis UUID and scientific result hash.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' get_analysis(repo, study$manager, analysis$id)
+#' }
 #' @export
 run_analysis <- function(repo, actor, snapshot_id, command_id) {
   transaction(repo, function() {
@@ -75,6 +121,22 @@ run_analysis <- function(repo, actor, snapshot_id, command_id) {
 #' @param actor Actor with analyse capability.
 #' @param analysis_id Analysis UUID.
 #' @return delphyr_analysis.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' get_analysis(repo, study$manager, analysis$id)
+#' }
 #' @export
 get_analysis <- function(repo, actor, analysis_id) {
   study <- object_study(repo, actor, "research.analyses", analysis_id)
@@ -98,6 +160,24 @@ get_analysis <- function(repo, actor, analysis_id) {
 #' @param command_id Idempotency key.
 #' @param released_edits UUIDs of released editorial versions of this study.
 #' @return Feedback UUID and hash, requiring separate release.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#'                             command_id = "example-feedback")
+#' feedback$id
+#' }
 #' @export
 create_feedback <- function(repo, actor, analysis_id, qualitative = list(), command_id, released_edits = character()) {
   transaction(repo, function() {
@@ -129,6 +209,24 @@ create_feedback <- function(repo, actor, analysis_id, qualitative = list(), comm
 #' @param expected_hash Exact reviewed content hash.
 #' @param command_id Idempotency key.
 #' @return Feedback UUID.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#'                             command_id = "example-feedback")
+#' release_feedback(repo, study$manager, feedback$id, feedback$hash, "example-release")
+#' }
 #' @export
 release_feedback <- function(repo, actor, feedback_id, expected_hash, command_id) {
   transaction(repo, function() {
@@ -152,6 +250,25 @@ release_feedback <- function(repo, actor, feedback_id, expected_hash, command_id
 #' @return Target round UUID. A round shows one feedback: a second assignment,
 #'   of the same or of another feedback, is refused with DEL_CONFLICT (path
 #'   feedback.assigned). A retry under the same key returns the receipt.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#'                             command_id = "example-feedback")
+#' # 'next_round' is the round prepared after the analysed one.
+#' assign_feedback(repo, study$manager, next_round$id, feedback$id, "example-assign")
+#' }
 #' @export
 assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
   transaction(repo, function() {
@@ -175,6 +292,15 @@ assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
 #'   decisions for revised items that were in force when the target round
 #'   opened, the released qualitative content and, where the feedback was
 #'   corrected, the note for participants; or NULL.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'enrollment' is an enrollment of a round with assigned, released feedback.
+#' get_feedback(repo, study$panel[[1]], enrollment)
+#' }
 #' @export
 get_feedback <- function(repo, actor, enrollment_id) {
   transaction(repo, function() {
@@ -219,6 +345,14 @@ get_feedback <- function(repo, actor, enrollment_id) {
 #'   frozen snapshots and analyses of their work; it holds no panel data.
 #' @param study_id Study UUID.
 #' @return Round table.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_rounds(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_rounds <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("manage", "analyse"))
@@ -234,6 +368,23 @@ list_rounds <- function(repo, actor, study_id) {
 #' @param command_id Idempotency key.
 #' @return Decision UUID. A completed study refuses new decisions with
 #'   DEL_CONFLICT (path study.state).
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' record_item_decision(repo, study$manager, analysis$id, "I001", "rerate",
+#'                      "No consensus yet", "example-decision")
+#' }
 #' @export
 record_item_decision <- function(repo, actor, analysis_id, item_code, disposition, reason, command_id) {
   transaction(repo, function() {
@@ -259,6 +410,14 @@ record_item_decision <- function(repo, actor, analysis_id, item_code, dispositio
 #' @param actor Study manager or analyst.
 #' @param study_id Study UUID.
 #' @return Protocol and published information versions, without panel identities.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_study_setup(repo, study$manager, study$study_id)
+#' }
 #' @export
 get_study_setup <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("manage", "analyse"))
@@ -269,6 +428,24 @@ get_study_setup <- function(repo, actor, study_id) {
 #' @param actor Study manager or analyst; only a manager releases it.
 #' @param feedback_id Feedback UUID.
 #' @return Content, hash and state of the candidate.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' transition_round(repo, study$manager, study$round$id, "closed",
+#'                  study$round$hash, "Example", "example-closed")
+#' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
+#' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
+#' feedback <- create_feedback(repo, study$manager, analysis$id,
+#'                             command_id = "example-feedback")
+#' get_feedback_candidate(repo, study$manager, feedback$id)
+#' }
 #' @export
 get_feedback_candidate <- function(repo, actor, feedback_id) {
   study <- object_study(repo, actor, "research.feedback", feedback_id)
@@ -283,6 +460,15 @@ get_feedback_candidate <- function(repo, actor, feedback_id) {
 #' @param reason Human completion rationale, including persistent dissent.
 #' @param command_id Idempotency key.
 #' @return Completed study UUID.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' complete_study(repo, study$manager, study$study_id, "Stop after round 1",
+#'                "example-complete")
+#' }
 #' @export
 complete_study <- function(repo, actor, study_id, reason, command_id) {
   transaction(repo, function() {

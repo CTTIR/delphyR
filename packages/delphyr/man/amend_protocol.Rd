@@ -38,3 +38,16 @@ changes the meaning of an existing scale code. Introduce a new scale code for
 changed scales and a new item version before using it. This service records a
 synthetic technical approval, not institutional or ethical approval.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+versions <- list_protocol_versions(repo, study$manager, study$study_id)
+protocol <- demo_protocol()
+amend_protocol(repo, study$manager, study$study_id, protocol,
+               versions$hash[nrow(versions)], "Prospective amendment",
+               "example-amend")
+}
+}

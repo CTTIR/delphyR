@@ -22,3 +22,13 @@ Aggregate feedback, own prior response table, the comparability
 \description{
 Read released aggregate feedback plus only the actor's prior answers
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'enrollment' is an enrollment of a round with assigned, released feedback.
+get_feedback(repo, study$panel[[1]], enrollment)
+}
+}

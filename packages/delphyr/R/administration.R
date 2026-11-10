@@ -3,6 +3,14 @@
 #' @param actor Server actor.
 #' @return List with can_create_study. Creating a study is granted by the
 #'   operator to an account, never chosen in the interface.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_account_rights(repo, study$manager)
+#' }
 #' @export
 get_account_rights <- function(repo, actor) {
   p <- identity_check(repo, actor)
@@ -15,6 +23,14 @@ get_account_rights <- function(repo, actor) {
 #' @return One row per staff account: principal UUID, issuer, subject, whether
 #'   the account and membership are active, and granted and revoked rights.
 #'   Panel membership is not part of this list.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_study_staff(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_study_staff <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "manage")
@@ -39,6 +55,16 @@ list_study_staff <- function(repo, actor, study_id) {
 #' @param reason Why this account is to receive rights.
 #' @param command_id Idempotency key.
 #' @return Principal UUID for set_capability().
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' register_staff_account(repo, study$manager, study$study_id,
+#'                        "https://idp.example.invalid", "staff-a",
+#'                        "Study coordinator", "example-staff")
+#' }
 #' @export
 register_staff_account <- function(repo, actor, study_id, issuer, subject, reason, command_id) {
   ensure(scalar_text(issuer) && nchar(issuer, type = "bytes") <= 512L && !grepl("[[:space:][:cntrl:]]", issuer), "staff.issuer")
@@ -63,6 +89,14 @@ register_staff_account <- function(repo, actor, study_id, issuer, subject, reaso
 #' @return Study pseudonym, stakeholder group, whether the member is active or
 #'   withdrew, and counts of rounds enrolled and submitted. No account
 #'   references, contacts or responses.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_panel(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_panel <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "manage")
@@ -75,6 +109,14 @@ list_panel <- function(repo, actor, study_id) {
 #' @inheritParams list_study_staff
 #' @param actor Actor with manage or analyse capability.
 #' @return Round number, item, disposition, rationale and time of each decision.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_item_decisions(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_item_decisions <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("manage", "analyse"))

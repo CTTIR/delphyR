@@ -41,3 +41,15 @@ Invitation UUID and expiry, without the token or contact fields.
 \description{
 Issue a synthetic invitation for an explicitly approved existing account
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'draft' and 'principal' identify a reviewed contact draft and account.
+token <- new_invitation_token()
+issue_panel_invitation(repo, study$manager, study$study_id, draft, principal,
+                       token, 900L, "Approved account", "example-issue")
+}
+}

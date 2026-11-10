@@ -20,3 +20,12 @@ Round number, snapshot UUID and the number of submitted free-text
 \description{
 List frozen rounds with free-text contributions
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+list_contribution_rounds(repo, study$panel[[1]], study$study_id)
+}
+}

@@ -2,3 +2,4 @@
 ^_pkgdown\.yml$
 ^site$
 ^pkgdown$
+^cran-comments\.md$

@@ -126,14 +126,14 @@ This is technical versioning, not an institutional or ethical approval.
 Downloads recheck authority and integrity. The numeric research profile
 contains the snapshot, protocol, results, provenance, dictionary, instrument
 texts, and an HTML report. The worker uses a trusted Quarto template when its
-optional runtime is available. Otherwise a basic HTML fallback is labelled;
+optional runtime is available. Otherwise a basic HTML fallback is labeled;
 a real render failure remains a failed job. Qualitative originals and individual
 free-text answers are excluded. Missing author information is not invented.
 
 ## Preserve sources and review editorial work
 
 Editors keep synthetic originals and create separate redactions or summaries
-with a reason. Summaries are labelled as summaries, not quotations. Another
+with a reason. Summaries are labeled as summaries, not quotations. Another
 authorized person reviews the exact version before release.
 
 Theme versions, inclusion/exclusion coding, source links, and item splits or

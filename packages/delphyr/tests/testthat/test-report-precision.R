@@ -59,6 +59,8 @@ for (profile in c("numeric_research_supplement", "study_report")) {
   local({
     report_profile <- profile
     test_that(paste(report_profile, "renders the exact consensus boundary"), {
+      # Rendering runs the external Quarto program.
+      skip_on_cran()
       skip_if(!nzchar(Sys.which("quarto")), "Quarto executable not installed")
       skip_if_not_installed("rmarkdown")
       skip_if_not_installed("knitr")

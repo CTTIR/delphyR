@@ -9,6 +9,26 @@
 #' @param template_version Positive immutable template version.
 #' @param command_id Idempotency key.
 #' @return Campaign id, exact content/recipient hash and recipient count.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' for (state in c("review", "approved", "open")) {
+#'   transition_round(repo, study$manager, study$round$id, state,
+#'                    study$round$hash, "Example", paste0("example-", state))
+#' }
+#' enroll_panel(repo, study$manager, study$round$id, "example-enroll")
+#' panelist <- study$panel[[1]]
+#' enrollment <- list_enrollments(repo, panelist, study$study_id)$id[1]
+#' enrollments <- list_campaign_enrollments(repo, study$manager, study$round$id)$id
+#' campaign <- prepare_campaign(repo, study$manager, study$round$id, enrollments,
+#'                              "invitation", "Synthetic invitation",
+#'                              "Synthetic study only.", locale = "en",
+#'                              command_id = "example-campaign")
+#' preview_campaign(repo, study$manager, campaign$id)
+#' }
 #' @export
 prepare_campaign <- function(repo, actor, round_id, enrollment_ids, kind, subject, body,
                              locale = "en", template_version = 1L, command_id) {
@@ -49,6 +69,15 @@ campaign_hash <- function(repo, c) {
 #' @param campaign_id Campaign UUID.
 #' @return Plain text, hash, the study's reminder rules, the approved send
 #'   window, pseudonyms and delivery states; no contacts or answers.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'campaign' comes from prepare_campaign().
+#' preview_campaign(repo, study$manager, campaign$id)
+#' }
 #' @export
 preview_campaign <- function(repo, actor, campaign_id) {
   c <- campaign_get(repo, actor, campaign_id)
@@ -122,6 +151,16 @@ valid_send_time <- function(x) {
 #'   `campaign.not_before` before any statement.
 #' @return Campaign id, approved recipient count and the approved earliest
 #'   send time. No message is sent.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'campaign' comes from prepare_campaign().
+#' release_campaign(repo, study$manager, campaign$id, campaign$hash,
+#'                  "Reviewed recipients and text", "example-release")
+#' }
 #' @export
 release_campaign <- function(repo, actor, campaign_id, expected_hash, reason, command_id, not_before = NULL) {
   transaction(repo, function() {
@@ -166,6 +205,16 @@ release_campaign <- function(repo, actor, campaign_id, expected_hash, reason, co
 #' @param command_id Idempotency key.
 #' @return Campaign UUID; already recorded sink receipts remain immutable. A
 #'   campaign that is already cancelled is refused as `campaign.state`.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' # 'campaign' comes from prepare_campaign().
+#' cancel_campaign(repo, study$manager, campaign$id, "Sent in error",
+#'                 "example-cancel")
+#' }
 #' @export
 cancel_campaign <- function(repo, actor, campaign_id, reason, command_id) {
   transaction(repo, function() {
@@ -297,6 +346,14 @@ complete_campaign_sink <- function(repo, j) {
 #' @param study_id Optional study UUID restricting the worker partition.
 #' @param lease_seconds Claim duration from 1 to 300 seconds.
 #' @return FALSE when idle or a message id/state/reason. Never sends external mail.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' process_campaign_sink(repo, study$study_id)
+#' }
 #' @export
 process_campaign_sink <- function(repo, study_id = NULL, lease_seconds = 30L) {
   process_campaign_message(repo, sink_adapter(), study_id, lease_seconds)
@@ -316,6 +373,12 @@ sink_adapter <- function() structure(list(name = "database_sink", external = FAL
 #' @param name Short adapter name recorded with each delivery.
 #' @param send Function of one message, as described.
 #' @return A delphyr_message_adapter for process_campaign_message().
+#' @examples
+#' # A local test adapter that accepts every message without sending it.
+#' adapter <- new_message_adapter("local_test", function(message) {
+#'   list(status = "accepted", provider_ref = message$message_id)
+#' })
+#' class(adapter)
 #' @export
 new_message_adapter <- function(name, send) {
   ensure(scalar_text(name) && grepl("^[a-z0-9_]{1,40}$", name) && !identical(name, "database_sink") && is.function(send), "adapter")
@@ -333,6 +396,17 @@ new_message_adapter <- function(name, send) {
 #' @param adapter Adapter from new_message_adapter(); the default is the local
 #'   database sink.
 #' @return FALSE when idle, or message id, state and reason.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' adapter <- new_message_adapter("local_test", function(message) {
+#'   list(status = "accepted", provider_ref = message$message_id)
+#' })
+#' process_campaign_message(repo, adapter, study$study_id)
+#' }
 #' @export
 process_campaign_message <- function(repo, adapter = sink_adapter(), study_id = NULL, lease_seconds = 30L) {
   started <- Sys.time()
@@ -401,6 +475,14 @@ deliver_campaign_message <- function(repo, adapter, study_id, lease_seconds) {
 #' @param study_id Study UUID.
 #' @return Message UUID, campaign kind, round number, study pseudonym, the
 #'   cause, the adapter and the time of the uncertain attempt.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_uncertain_deliveries(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_uncertain_deliveries <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "coordinate")
@@ -419,6 +501,16 @@ list_uncertain_deliveries <- function(repo, actor, study_id) {
 #' @param reason Rationale, including how delivery was or was not verified.
 #' @param command_id Idempotency key.
 #' @return Message UUID and its new delivery state.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' message <- list_uncertain_deliveries(repo, study$manager, study$study_id)$id[1]
+#' resolve_delivery(repo, study$manager, study$study_id, message, "requeue",
+#'                  "Provider confirmed no delivery", "example-resolve")
+#' }
 #' @export
 resolve_delivery <- function(repo, actor, study_id, message_id, resolution, reason, command_id) {
   transaction(repo, function() {
@@ -444,6 +536,14 @@ resolve_delivery <- function(repo, actor, study_id, message_id, resolution, reas
 #' @return Counts of jobs by type and state with the age of the oldest waiting
 #'   job, counts of messages by delivery state with the age of the oldest
 #'   waiting message, and the number of uncertain deliveries. No content.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' get_operations_status(repo, study$manager, study$study_id)
+#' }
 #' @export
 get_operations_status <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("manage", "coordinate"))
@@ -459,6 +559,14 @@ get_operations_status <- function(repo, actor, study_id) {
 #' @param actor Actor with coordinate capability.
 #' @param study_id Study UUID.
 #' @return Minimal round identifiers, numbers and states.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_campaign_rounds(repo, study$manager, study$study_id)
+#' }
 #' @export
 list_campaign_rounds <- function(repo, actor, study_id) {
   authorize(repo, actor, study_id, "coordinate")
@@ -472,6 +580,14 @@ list_campaign_rounds <- function(repo, actor, study_id) {
 #' @return Enrollment UUID, study pseudonym, participation state and the
 #'   number of approved reminders that count against the protocol's limit,
 #'   including reminders delivered before their campaign was cancelled.
+#' @examples
+#' \dontrun{
+#' # Needs a PostgreSQL database prepared with migrate_repository()
+#' # and the 'RPostgres' package, so the example is not run.
+#' repo <- connect_repository(dbname = "delphyr")
+#' study <- demo_study(repo, n = 4L, item_count = 2L)
+#' list_campaign_enrollments(repo, study$manager, study$round$id)
+#' }
 #' @export
 list_campaign_enrollments <- function(repo, actor, round_id) {
   r <- round_get(repo, actor, round_id, "coordinate")

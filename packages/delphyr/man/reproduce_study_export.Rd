@@ -16,3 +16,13 @@ The recomputed analysis of every round and the comparisons between
 \description{
 Verify and reproduce a study-level research export without a database
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+# 'path' is a directory with the files of a downloaded study export.
+reproduce_study_export(path)$comparisons
+}
+}

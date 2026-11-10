@@ -39,3 +39,14 @@ may already have been delivered. A coordinator decides with a rationale:
 again and accepts a possible duplicate; `abandon` stops it. Before a
 requeued message is sent, eligibility is checked again.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+message <- list_uncertain_deliveries(repo, study$manager, study$study_id)$id[1]
+resolve_delivery(repo, study$manager, study$study_id, message, "requeue",
+                 "Provider confirmed no delivery", "example-resolve")
+}
+}

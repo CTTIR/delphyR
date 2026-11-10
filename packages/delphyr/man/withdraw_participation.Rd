@@ -25,3 +25,13 @@ Stops further collection and delivery eligibility while retaining previously
 committed research data. This explicit synthetic policy is not a deletion
 workflow or a policy for use with real participants.
 }
+\examples{
+\dontrun{
+# Needs a PostgreSQL database prepared with migrate_repository()
+# and the 'RPostgres' package, so the example is not run.
+repo <- connect_repository(dbname = "delphyr")
+study <- demo_study(repo, n = 4L, item_count = 2L)
+withdraw_participation(repo, study$panel[[1]], study$study_id,
+                       "synthetic_retain_prior_data", "example-withdraw")
+}
+}
