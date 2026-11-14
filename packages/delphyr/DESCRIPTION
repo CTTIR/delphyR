@@ -16,7 +16,7 @@ Language: en-US
 SystemRequirements: Optional: PostgreSQL (tested with version 17) for the
     study services; Quarto for rendered HTML study reports.
 Imports: DBI, digest, jsonlite (>= 1.8.8), openssl, uuid
-Suggests: RPostgres, callr, withr, pkgload, testthat (>= 3.0.0), knitr, rmarkdown
+Suggests: RPostgres, callr, withr, pkgload, testthat (>= 3.1.7), knitr, rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/CTTIR/delphyR
