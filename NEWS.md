@@ -12,7 +12,7 @@
 
 # delphyr / delphyrApp 0.0.2 (development)
 
-- Show the logos in the new consensus and ideation colour (plum #91617B),
+- Show the logos in the new consensus and ideation colour (plum `#91617B`),
   shared with brainwritR; `tools/branding/render.R` recolours the approved hexmakR
   masters and keeps the name outlines.
 - Preserve full numeric precision in protocol persistence, downloads, amendment
