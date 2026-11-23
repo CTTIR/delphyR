@@ -8,7 +8,7 @@ This is a new submission. The companion package 'delphyrApp', which imports
 0 errors | 0 warnings | 1 note
 
 * checking CRAN incoming feasibility ... NOTE
-  Maintainer: 'Raban Heller <raban.heller@uni-ulm.de>'
+  Maintainer: 'R. Heller <raban.heller@uni-ulm.de>'
   New submission
 
   This is the expected note for a first submission.

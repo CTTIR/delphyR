@@ -16,6 +16,18 @@
   `reproduce_export()` and `reproduce_study_export()` verify them without a
   database. The examples of the database services are complete and say in
   one line why they are not run.
+* `demo_snapshot()` refuses empty or non-numeric `values` and `groups` of
+  another length with `DEL_VALIDATION` (path `values` or `groups`) instead of
+  an unstructured `data.frame()` error; one group can be given for everyone.
+* The `README.md` of a round export is written in English like the
+  study-level exports and in plain ASCII, so that the bytes recorded in the
+  manifest no longer depend on the locale of the worker. The bundled
+  `example-round-export` carries the new text and checksum.
+* The help pages are written with Markdown (`Roxygen: list(markdown = TRUE)`):
+  code such as `suppressMessages()` is set as code instead of showing literal
+  backticks. `?delphyr` gives an overview of the package.
+* The reference index of the site groups the 129 exported functions by task,
+  each group with a one-line description, in English.
 
 # delphyr 0.0.2
 
