@@ -15,8 +15,8 @@ get_operations_status(repo, actor, study_id)
 }
 \value{
 Counts of jobs by type and state with the age of the oldest waiting
-  job, counts of messages by delivery state with the age of the oldest
-  waiting message, and the number of uncertain deliveries. No content.
+job, counts of messages by delivery state with the age of the oldest
+waiting message, and the number of uncertain deliveries. No content.
 }
 \description{
 Operational status of a study's background work

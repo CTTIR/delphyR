@@ -13,23 +13,23 @@ read_item_import(file, delimiter = ",")
 }
 \value{
 Data frame for validate_items() and prepare_round(). A file that
-  does not follow the contract is refused with DEL_VALIDATION, path
-  items.file, items.encoding, items.columns, items.rows or the column of
-  the first value that is not of its type, such as items.display_order.
+does not follow the contract is refused with DEL_VALIDATION, path
+items.file, items.encoding, items.columns, items.rows or the column of
+the first value that is not of its type, such as items.display_order.
 }
 \description{
 Reads a UTF-8 CSV item file. Every value is read as text, so codes keep
 their leading zeros and a text such as "NA" stays text. Required columns
-are `item_code`, `item_version`, `locale`, `text`, `dimension_code`,
-`scale_code`, `source_ref`, `required` and `display_order`. This differs
+are \code{item_code}, \code{item_version}, \code{locale}, \code{text}, \code{dimension_code},
+\code{scale_code}, \code{source_ref}, \code{required} and \code{display_order}. This differs
 from the v1 item import contract of the specification in two ways:
-`item_version` is an additional column, because a version names the rated
-wording across rounds, and `source_ref` is required, not optional. A file
+\code{item_version} is an additional column, because a version names the rated
+wording across rounds, and \code{source_ref} is required, not optional. A file
 that lacks either column is refused, as is the specification's v1 example,
-which has no `item_version`.
-`item_version` and `display_order` must be written as whole numbers and
-`required` as true or false. The optional columns `definition` and
-`domain_code` are accepted and not stored. Check the result with
+which has no \code{item_version}.
+\code{item_version} and \code{display_order} must be written as whole numbers and
+\code{required} as true or false. The optional columns \code{definition} and
+\code{domain_code} are accepted and not stored. Check the result with
 validate_items() before preparing a round.
 }
 \examples{

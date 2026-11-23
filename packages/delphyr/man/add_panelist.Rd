@@ -21,7 +21,7 @@ add_panelist(repo, actor, study_id, principal_id, group_code, command_id)
 }
 \value{
 Study-specific pseudonym. A completed study refuses new members
-  with DEL_CONFLICT (path study.state).
+with DEL_CONFLICT (path study.state).
 }
 \description{
 Register a synthetic panel member

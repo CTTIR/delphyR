@@ -37,11 +37,11 @@ request headers are never written.
 }
 \details{
 Entries are written to standard error as messages, one JSON object per
-line; `suppressMessages()` silences them. Set
-`options(delphyr.log_sink = function(line) ...)` to route them elsewhere.
-`options(delphyr.log_level = )` or the environment variable
-`DELPHYR_LOG_LEVEL` selects `off`, `error` (failures), `warning` (refusals
-and failures; the default) or `info` (every operation).
+line; \code{suppressMessages()} silences them. Set
+\code{options(delphyr.log_sink = function(line) ...)} to route them elsewhere.
+\code{options(delphyr.log_level = )} or the environment variable
+\code{DELPHYR_LOG_LEVEL} selects \code{off}, \code{error} (failures), \code{warning} (refusals
+and failures; the default) or \code{info} (every operation).
 }
 \examples{
 options(delphyr.log_sink = function(line) NULL)

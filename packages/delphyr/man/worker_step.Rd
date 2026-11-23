@@ -28,7 +28,7 @@ registered, from 1 to 720; one day by default. The period is the
 decision of the responsible organization.}
 
 \item{on_claim}{Optional function called with the claimed job (a one-row
-data frame with `id` and `lease_token`) before it runs, for example to
+data frame with \code{id} and \code{lease_token}) before it runs, for example to
 renew its reservation from another process.}
 }
 \value{
@@ -39,12 +39,12 @@ The requester's identity is delegated for exactly as long as this worker
 holds the job's reservation, as the database measures it: renewing the
 reservation (renew_job_lease()) extends it, and it ends when the
 reservation ends or another worker takes the job up. A refusal that a retry
-cannot change (`DEL_FORBIDDEN`, `DEL_UNAUTHORIZED`, `DEL_NOT_FOUND`,
-`DEL_VALIDATION`) ends the job; any other failure, including a report that
-could not be rendered (`DEL_RENDER`) and a reservation that ended before
-the result was recorded (`DEL_CONFLICT` with path `job.lease`), is retried
+cannot change (\code{DEL_FORBIDDEN}, \code{DEL_UNAUTHORIZED}, \code{DEL_NOT_FOUND},
+\code{DEL_VALIDATION}) ends the job; any other failure, including a report that
+could not be rendered (\code{DEL_RENDER}) and a reservation that ended before
+the result was recorded (\code{DEL_CONFLICT} with path \code{job.lease}), is retried
 after ten seconds, up to three attempts. A rights check refused because
-the reservation had ended counts as such a lost reservation (`DEL_CONFLICT`),
+the reservation had ended counts as such a lost reservation (\code{DEL_CONFLICT}),
 not as a refusal of the requester. An export is written under a temporary
 name and gets its final name only after it is registered; one that cannot
 be registered is removed, whatever failed.

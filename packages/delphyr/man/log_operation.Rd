@@ -26,7 +26,7 @@ The value of code().
 \description{
 Measures the operation and writes one entry, see log_event(). A refused or
 failed operation signals its original condition again, extended by the field
-`correlation_id`, so that the message shown to a person can quote it.
+\code{correlation_id}, so that the message shown to a person can quote it.
 }
 \examples{
 options(delphyr.log_sink = function(line) NULL)

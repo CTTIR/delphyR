@@ -31,7 +31,7 @@ record_item_decision(
 }
 \value{
 Decision UUID. A completed study refuses new decisions with
-  DEL_CONFLICT (path study.state).
+DEL_CONFLICT (path study.state).
 }
 \description{
 Record a human decision separately from analytic classification

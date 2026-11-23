@@ -15,8 +15,8 @@ get_round_instrument(repo, actor, round_id)
 }
 \value{
 Round number, state, deadline, content hash, protocol version,
-  study information and every item with all approved language versions.
-  Contains no panel identities or responses.
+study information and every item with all approved language versions.
+Contains no panel identities or responses.
 }
 \description{
 Read the exact instrument of a round for review

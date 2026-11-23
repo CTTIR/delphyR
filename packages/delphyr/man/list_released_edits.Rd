@@ -15,7 +15,7 @@ list_released_edits(repo, actor, study_id)
 }
 \value{
 Edit UUID, source reference, kind, released text, release time and
-  the item codes linked to the source. Originals are not included.
+the item codes linked to the source. Originals are not included.
 }
 \description{
 List released editorial versions available for participant feedback

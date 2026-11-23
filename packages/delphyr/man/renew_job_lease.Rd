@@ -9,7 +9,7 @@ renew_job_lease(repo, job_id, lease_token, lease_seconds = 600L)
 \arguments{
 \item{repo}{Trusted worker repository.}
 
-\item{job_id}{Job UUID of a claim, see the `on_claim` hook of worker_step().}
+\item{job_id}{Job UUID of a claim, see the \code{on_claim} hook of worker_step().}
 
 \item{lease_token}{Lease token of that claim.}
 
@@ -17,11 +17,11 @@ renew_job_lease(repo, job_id, lease_token, lease_seconds = 600L)
 }
 \value{
 TRUE when the reservation was renewed; FALSE when it had ended or
-  the job is no longer held by that claim. Worker infrastructure API.
+the job is no longer held by that claim. Worker infrastructure API.
 }
 \description{
 A worker process that is still working on a job keeps it reserved: the
-reservation is extended to `lease_seconds` from now, as long as it has not
+reservation is extended to \code{lease_seconds} from now, as long as it has not
 ended yet. The requester's rights are checked again when the result is
 recorded, with an identity that lasts as long as the reservation.
 }

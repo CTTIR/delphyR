@@ -19,7 +19,7 @@ cancel_campaign(repo, actor, campaign_id, reason, command_id)
 }
 \value{
 Campaign UUID; already recorded sink receipts remain immutable. A
-  campaign that is already cancelled is refused as `campaign.state`.
+campaign that is already cancelled is refused as \code{campaign.state}.
 }
 \description{
 Cancel remaining synthetic campaign delivery

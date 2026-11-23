@@ -8,7 +8,7 @@ new_invitation_token()
 }
 \value{
 A 256-bit secret with redacted printing. Retain privately; only its hash
-  is persisted. Never put the token in logs, audit records or research exports.
+is persisted. Never put the token in logs, audit records or research exports.
 }
 \description{
 Generate a private synthetic invitation token

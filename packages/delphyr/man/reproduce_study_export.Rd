@@ -11,7 +11,7 @@ reproduce_study_export(path)
 }
 \value{
 The recomputed analysis of every round and the comparisons between
-  rounds, after all checksums, snapshot hashes and result hashes matched.
+rounds, after all checksums, snapshot hashes and result hashes matched.
 }
 \description{
 Verify and reproduce a study-level research export without a database

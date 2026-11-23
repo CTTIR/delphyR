@@ -13,6 +13,7 @@ Description: Supports round-based Delphi studies with validated study
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en-US
+Roxygen: list(markdown = TRUE)
 SystemRequirements: Optional: PostgreSQL (tested with version 17) for the
     study services; Quarto for rendered HTML study reports.
 Imports: DBI, digest, jsonlite (>= 1.8.8), openssl, uuid

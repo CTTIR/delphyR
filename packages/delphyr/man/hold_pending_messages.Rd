@@ -14,17 +14,17 @@ hold_pending_messages(repo, dry_run = TRUE, study_id = NULL)
 \item{study_id}{Optional study UUID; otherwise every study.}
 }
 \value{
-A list with the numbers of messages `queued` and `in_flight` that
-  were found and the number `held`, which is zero for a dry run.
+A list with the numbers of messages \code{queued} and \code{in_flight} that
+were found and the number \code{held}, which is zero for a dry run.
 }
 \description{
 After a database was restored from a backup, a message that was waiting
 when the backup was taken may have been delivered before the loss. This
 function turns every message that is queued or in flight into an uncertain
-delivery with the cause `restored_from_backup`. The worker then sends none
+delivery with the cause \code{restored_from_backup}. The worker then sends none
 of them, and a coordinator decides for each one in the interface: delivery
 confirmed, send again, or abandon. Run it before the worker is started on a
-restored database. Without `dry_run = FALSE` it changes nothing.
+restored database. Without \code{dry_run = FALSE} it changes nothing.
 }
 \examples{
 \dontrun{

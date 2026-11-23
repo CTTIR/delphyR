@@ -16,18 +16,18 @@ that is still writing changes its directory far more often.}
 }
 \value{
 A table of the directories: name, hours since the last change and
-  whether it was removed.
+whether it was removed.
 }
 \description{
-A worker writes an export under a temporary name, `<id>.partial`, and gives
+A worker writes an export under a temporary name, \verb{<id>.partial}, and gives
 it its final name only after the export is registered. A worker that was
 stopped while it wrote, for example by the operating system, leaves the
 temporary directory behind. An earlier release, which named an export
 before registering it, and a study export whose worker stopped just before
-the registration leave a complete directory under the final name, `<id>`,
+the registration leave a complete directory under the final name, \verb{<id>},
 that no registration covers. Nothing can download such directories and
 nothing else removes them. This function removes both kinds once they have
-not changed for `older_than_hours`. Without `dry_run = FALSE` it removes
+not changed for \code{older_than_hours}. Without \code{dry_run = FALSE} it removes
 nothing. The export directory belongs to one database: a directory whose
 registration this database does not hold, for example after the database
 was restored from an older backup, is treated the same way.

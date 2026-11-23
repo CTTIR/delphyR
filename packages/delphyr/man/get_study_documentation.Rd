@@ -15,7 +15,7 @@ get_study_documentation(repo, actor, study_id)
 }
 \value{
 Current version, hash and fields; a topic table that marks every
-  reporting topic documented or not documented; and the version history.
+reporting topic documented or not documented; and the version history.
 }
 \description{
 Read the current study documentation and its version history

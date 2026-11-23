@@ -32,7 +32,7 @@ for example "2026-10-02T00:00:00Z". A time that does not exist, such as
 }
 \value{
 Data frame occurred_at, action, detail, object_ref, reason,
-  actor_kind (staff, panel or worker) and actor_ref.
+actor_kind (staff, panel or worker) and actor_ref.
 }
 \description{
 Every event names time, action, object and actor, with the recorded

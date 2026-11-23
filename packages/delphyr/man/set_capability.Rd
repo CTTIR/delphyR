@@ -35,7 +35,7 @@ audit or contacts_export. The contact export is never implied by a role.}
 }
 \value{
 Membership id. The last management right of a study cannot be
-  revoked: a study always keeps one person who can manage it.
+revoked: a study always keeps one person who can manage it.
 }
 \description{
 Assign or revoke a study capability

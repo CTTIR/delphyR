@@ -13,7 +13,7 @@ get_account_rights(repo, actor)
 }
 \value{
 List with can_create_study. Creating a study is granted by the
-  operator to an account, never chosen in the interface.
+operator to an account, never chosen in the interface.
 }
 \description{
 Rights of the signed-in account outside any study

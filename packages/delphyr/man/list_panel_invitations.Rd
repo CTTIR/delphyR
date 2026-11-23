@@ -15,8 +15,8 @@ list_panel_invitations(repo, actor, study_id)
 }
 \value{
 One row per draft: source reference, display name, group, locale,
-  latest invitation id, expiry and state (unbound, outstanding, expired,
-  revoked or accepted). Never contains tokens, hashes, emails or pseudonyms.
+latest invitation id, expiry and state (unbound, outstanding, expired,
+revoked or accepted). Never contains tokens, hashes, emails or pseudonyms.
 }
 \description{
 List imported invitation drafts and their current invitation state

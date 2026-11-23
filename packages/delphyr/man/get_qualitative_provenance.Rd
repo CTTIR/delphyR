@@ -18,7 +18,7 @@ originals and unreleased redactions and returns authorized export tables.}
 }
 \value{
 Named tables with explicit source, coding, item and review provenance.
-  These are restricted research records, not participant feedback.
+These are restricted research records, not participant feedback.
 }
 \description{
 Read restricted qualitative provenance or reviewed export tables

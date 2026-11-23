@@ -15,7 +15,7 @@ list_contribution_rounds(repo, actor, study_id)
 }
 \value{
 Round number, snapshot UUID and the number of submitted free-text
-  answers, with how many are already preserved as qualitative sources.
+answers, with how many are already preserved as qualitative sources.
 }
 \description{
 List frozen rounds with free-text contributions

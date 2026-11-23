@@ -15,8 +15,8 @@ list_study_staff(repo, actor, study_id)
 }
 \value{
 One row per staff account: principal UUID, issuer, subject, whether
-  the account and membership are active, and granted and revoked rights.
-  Panel membership is not part of this list.
+the account and membership are active, and granted and revoked rights.
+Panel membership is not part of this list.
 }
 \description{
 List study staff and their current rights

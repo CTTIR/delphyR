@@ -17,7 +17,7 @@ request_export(repo, actor, snapshot_id, command_id, purpose = NULL)
 
 \item{purpose}{What the export is for, 10 to 500 characters. It is
 recorded as the rationale of the request in the audit trail and written
-into the manifest of the export, under `purposes`. A request merged into
+into the manifest of the export, under \code{purposes}. A request merged into
 a pending export of the same snapshot adds its purpose there.}
 }
 \value{

@@ -35,8 +35,8 @@ Message UUID and its new delivery state.
 \description{
 An uncertain delivery is never repeated automatically, because the message
 may already have been delivered. A coordinator decides with a rationale:
-`confirmed_delivered` records that delivery was verified; `requeue` sends it
-again and accepts a possible duplicate; `abandon` stops it. Before a
+\code{confirmed_delivered} records that delivery was verified; \code{requeue} sends it
+again and accepts a possible duplicate; \code{abandon} stops it. Before a
 requeued message is sent, eligibility is checked again.
 }
 \examples{

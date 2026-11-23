@@ -13,7 +13,7 @@ analyse_round(snapshot, rules = snapshot$protocol$analysis$consensus)
 }
 \value{
 delphyr_analysis containing results, denominators, missingness,
-  distributions, settings, warnings and scientific provenance.
+distributions, settings, warnings and scientific provenance.
 }
 \description{
 Analyse a frozen round independently of the application

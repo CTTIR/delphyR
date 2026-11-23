@@ -15,7 +15,7 @@ authenticated_actor(repo, request, config)
 }
 \value{
 Short-lived delphyr_actor. Unknown, disabled, spoofed or missing
-  identities fail closed with DEL_UNAUTHORIZED. No account is auto-provisioned.
+identities fail closed with DEL_UNAUTHORIZED. No account is auto-provisioned.
 }
 \description{
 This adapter does not implement OIDC or verify browser credentials. It accepts

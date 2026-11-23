@@ -15,7 +15,7 @@ list_released_feedback(repo, actor, study_id)
 }
 \value{
 One row per released feedback: round, UUID, hash, the round it is
-  assigned to and, where it was corrected, its replacement with rationale.
+assigned to and, where it was corrected, its replacement with rationale.
 }
 \description{
 Read the released feedback of a round and its corrections

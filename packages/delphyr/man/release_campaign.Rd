@@ -30,11 +30,11 @@ release_campaign(
 \item{not_before}{Earliest send time with an explicit offset, for example
 "2026-10-05T09:00:00+02:00"; NULL means now. At most 90 days ahead. A
 time that does not exist in the calendar is refused as
-`campaign.not_before` before any statement.}
+\code{campaign.not_before} before any statement.}
 }
 \value{
 Campaign id, approved recipient count and the approved earliest
-  send time. No message is sent.
+send time. No message is sent.
 }
 \description{
 The approval covers the exact text, the exact recipients and the earliest

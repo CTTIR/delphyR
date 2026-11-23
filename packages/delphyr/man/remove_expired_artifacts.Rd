@@ -23,16 +23,16 @@ removed.}
 }
 \value{
 A table of the expired exports: identifier, profile, expiry, whether
-  files are present and whether the removal was recorded.
+files are present and whether the removal was recorded.
 }
 \description{
 An export is a temporary private copy of data that stays in the database.
-After `expires_at` it can no longer be downloaded; this function removes its
+After \code{expires_at} it can no longer be downloaded; this function removes its
 directory and records the time. It never touches research data, and without
-`dry_run = FALSE` it removes nothing. An export whose directory is absent
+\code{dry_run = FALSE} it removes nothing. An export whose directory is absent
 from this private directory is reported as not present and stays recorded
 as not removed: its files may lie in another installation's export
-directory that uses the same database. With `record_missing = TRUE` the
+directory that uses the same database. With \code{record_missing = TRUE} the
 operator confirms that they are gone, and the removal is recorded.
 }
 \examples{

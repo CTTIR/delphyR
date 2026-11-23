@@ -15,7 +15,7 @@ list_uncertain_deliveries(repo, actor, study_id)
 }
 \value{
 Message UUID, campaign kind, round number, study pseudonym, the
-  cause, the adapter and the time of the uncertain attempt.
+cause, the adapter and the time of the uncertain attempt.
 }
 \description{
 List deliveries whose outcome is uncertain

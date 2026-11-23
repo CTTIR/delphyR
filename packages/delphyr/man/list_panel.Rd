@@ -15,8 +15,8 @@ list_panel(repo, actor, study_id)
 }
 \value{
 Study pseudonym, stakeholder group, whether the member is active or
-  withdrew, and counts of rounds enrolled and submitted. No account
-  references, contacts or responses.
+withdrew, and counts of rounds enrolled and submitted. No account
+references, contacts or responses.
 }
 \description{
 List the panel of a study by pseudonym

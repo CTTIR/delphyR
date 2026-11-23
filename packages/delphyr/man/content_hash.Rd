@@ -14,8 +14,8 @@ content_hash(x, version = "2")
 }
 \value{
 SHA-256 string of sorted UTF-8 JSON, excluding no fields implicitly.
-  Version 2 starts with `v2:`; legacy version 1 is an unprefixed digest.
-  A legacy hash cannot detect changes below its original numeric precision.
+Version 2 starts with \verb{v2:}; legacy version 1 is an unprefixed digest.
+A legacy hash cannot detect changes below its original numeric precision.
 }
 \description{
 Canonical scientific content hash

@@ -15,15 +15,15 @@ new_message_adapter(name, send)
 A delphyr_message_adapter for process_campaign_message().
 }
 \description{
-The contract for a delivery provider. `send` receives one message as a list
+The contract for a delivery provider. \code{send} receives one message as a list
 with message_id, idempotency_key, kind, locale, subject, body, to and
-display_name, and must return `list(status = "accepted", provider_ref = )`,
-`list(status = "rejected", reason = )` for a permanent refusal or
-`list(status = "retry", reason = )` for a transient failure. The same
+display_name, and must return \code{list(status = "accepted", provider_ref = )},
+\code{list(status = "rejected", reason = )} for a permanent refusal or
+\code{list(status = "retry", reason = )} for a transient failure. The same
 idempotency key is passed on every attempt for a message. An error, a
 timeout or any other return value leaves the delivery uncertain; it is then
 never repeated automatically. No production adapter is shipped or approved:
-contact addresses are restricted to the reserved `.invalid` domain.
+contact addresses are restricted to the reserved \code{.invalid} domain.
 }
 \examples{
 # A local test adapter that accepts every message without sending it.

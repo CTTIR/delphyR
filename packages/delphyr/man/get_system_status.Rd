@@ -18,21 +18,21 @@ get_system_status(
 \item{heartbeat_seconds}{Age after which a worker counts as silent.}
 }
 \value{
-A list with `ready`, `schema`, `workers`, `jobs`, `messages`,
-  `artifacts` and `attention`; only `ready`, `schema` and `attention` when
-  the schema is not current or the database does not answer.
+A list with \code{ready}, \code{schema}, \code{workers}, \code{jobs}, \code{messages},
+\code{artifacts} and \code{attention}; only \code{ready}, \code{schema} and \code{attention} when
+the schema is not current or the database does not answer.
 }
 \description{
 For monitoring and the first look at an incident. The result holds counts
 and ages only: no study content, contact, account or study identifier.
-`ready` is TRUE when the database answers and its schema is exactly the
-one this software version ships. `attention` lists what a person should
+\code{ready} is TRUE when the database answers and its schema is exactly the
+one this software version ships. \code{attention} lists what a person should
 look at; it does not make the application unready. A database whose
 schema is not the one of this software, for example one of the previous
 release, is reported with its schema state alone: the tables of later
-migrations may not exist there yet. `artifacts` counts exports that can be
+migrations may not exist there yet. \code{artifacts} counts exports that can be
 downloaded, expired ones whose files were not yet removed, removed ones,
-and `unfinished`: directories in the private export directory of `repo`
+and \code{unfinished}: directories in the private export directory of \code{repo}
 that no registration covers, left by a stopped worker or an earlier release
 (see remove_unfinished_exports()).
 }
