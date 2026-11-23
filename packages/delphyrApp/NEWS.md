@@ -16,6 +16,9 @@
   package. The package carries the full licence text in `LICENSE.md`.
 * The reference index and the article index of the site have English group
   titles with one-line descriptions.
+* The panel screenshots in the README and in `inst/figures` show the current
+  interface (logo, consent buttons, a saved response with its receipt) instead
+  of the interface of version 0.0.1.
 
 # delphyrApp 0.0.2
 

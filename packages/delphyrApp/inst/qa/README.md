@@ -64,6 +64,14 @@ interface correctly identifies its fallback to the approved English wording.
 This check does not qualify PostgreSQL persistence, authentication, external
 messages, every workflow, other browsers, or assistive technologies.
 
+Figures recaptured on 23 November 2026, delphyrApp 0.1.0: `panel-desktop.png`
+(1100 pixels wide; also the README figure) and `panel-mobile.png` (390 pixels
+wide) show this fixture in headless Chrome 157.0.8103.79 on macOS after
+consent and one saved rating. English, German and French views, the receipt
+after submission and both widths were inspected; the document width equalled
+the viewport in every view. The manager figures still show the interface of
+version 0.0.1, because their capture needs the PostgreSQL fixture.
+
 ## PostgreSQL browser path
 
 A separate real-database Chromium check passed on 2026-09-25 at 09:28 UTC.
