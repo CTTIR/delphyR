@@ -10,16 +10,26 @@ demo_snapshot(
 )
 }
 \arguments{
-\item{values}{Integer ratings; NA creates an explicit not_answered response.}
+\item{values}{Integer ratings from 1 to 9, one per synthetic panel member
+and at least one; NA creates an explicit not_answered response.}
 
-\item{groups}{Optional group assignments.}
+\item{groups}{Optional group assignments: one group of the demo protocol
+(\code{professionals} or \code{public_contributors}) for everyone, or one per value.}
 }
 \value{
-Validated synthetic snapshot.
+Validated synthetic snapshot. Invalid input raises DEL_VALIDATION
+(path \code{values}, \code{groups} or the path reported by \code{\link[=new_snapshot]{new_snapshot()}}).
 }
 \description{
 Synthetic offline snapshot
 }
 \examples{
 analyse_round(demo_snapshot())$results
+# Two groups, one unanswered rating.
+two_groups <- demo_snapshot(
+  c(7, 8, NA, 9),
+  groups = c("professionals", "professionals",
+             "public_contributors", "public_contributors")
+)
+analyse_round(two_groups)$missingness
 }

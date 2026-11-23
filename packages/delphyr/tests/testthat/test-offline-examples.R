@@ -1,0 +1,26 @@
+test_that("demo_snapshot() refuses unusable input with a structured condition", {
+  path <- function(code) tryCatch(code, DEL_VALIDATION = function(e) e$path)
+  expect_identical(path(demo_snapshot(numeric())), "values")
+  expect_identical(path(demo_snapshot(NULL)), "values")
+  expect_identical(path(demo_snapshot(c("7", "8"))), "values")
+  expect_identical(path(demo_snapshot(matrix(1:4, 2))), "values")
+  expect_identical(path(demo_snapshot(1:3, c("professionals", "public_contributors"))), "groups")
+  expect_identical(path(demo_snapshot(1:3, groups = 1:3)), "groups")
+  # Values and groups outside the demo protocol keep their specific paths.
+  expect_identical(path(demo_snapshot(c(0, 10))), "value_int")
+  expect_identical(path(demo_snapshot(1:3, rep("unknown", 3))), "assignments")
+})
+test_that("demo_snapshot() accepts one group for everyone and all-missing ratings", {
+  s <- demo_snapshot(c(7, 8, 9), "public_contributors")
+  expect_identical(unique(s$data$group_code), "public_contributors")
+  expect_identical(nrow(s$data), 3L)
+  single <- analyse_round(demo_snapshot(7))
+  expect_identical(single$decisions$classification, "insufficient_data")
+  expect_identical(single$results$median[single$results$stratum == "overall"], 7)
+  missing <- analyse_round(demo_snapshot(c(NA, NA)))
+  overall <- missing$results[missing$results$stratum == "overall", ]
+  expect_identical(overall$n_valid, 0L)
+  expect_identical(overall$n_not_answered, 2L)
+  expect_true(is.na(overall$p_agree) && is.na(overall$median))
+  expect_identical(missing$decisions$classification, "insufficient_data")
+})

@@ -112,13 +112,26 @@ validate_snapshot_rows <- function(joined, scales) {
   invisible(TRUE)
 }
 #' Synthetic offline snapshot
-#' @param values Integer ratings; NA creates an explicit not_answered response.
-#' @param groups Optional group assignments.
-#' @return Validated synthetic snapshot.
+#' @param values Integer ratings from 1 to 9, one per synthetic panel member
+#'   and at least one; NA creates an explicit not_answered response.
+#' @param groups Optional group assignments: one group of the demo protocol
+#'   (`professionals` or `public_contributors`) for everyone, or one per value.
+#' @return Validated synthetic snapshot. Invalid input raises DEL_VALIDATION
+#'   (path `values`, `groups` or the path reported by [new_snapshot()]).
 #' @export
 #' @examples
 #' analyse_round(demo_snapshot())$results
+#' # Two groups, one unanswered rating.
+#' two_groups <- demo_snapshot(
+#'   c(7, 8, NA, 9),
+#'   groups = c("professionals", "professionals",
+#'              "public_contributors", "public_contributors")
+#' )
+#' analyse_round(two_groups)$missingness
 demo_snapshot <- function(values = c(1, 4, 6, 7, 7, 8, 8, 9, 9, 9), groups = rep("professionals", length(values))) {
+  ensure(is.atomic(values) && is.null(dim(values)) && length(values) > 0L &&
+    (is.numeric(values) || all(is.na(values))), "values")
+  ensure(is.character(groups) && length(groups) %in% c(1L, length(values)), "groups")
   p <- demo_protocol()
   p$analysis$consensus$group_policy <- "pooled"
   a <- data.frame(panelist_id = sprintf("P%03d", seq_along(values)), group_code = groups, submitted = TRUE)
