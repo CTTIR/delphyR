@@ -4,6 +4,11 @@
   `delphyrApp`): full-sentence descriptions, declared language and system
   requirements, per-package `NEWS.md`, `cran-comments.md` and spelling word
   lists, and an R CMD check workflow covering the CRAN platforms.
+- Refine both packages before submission: Markdown help pages with a package
+  overview each, reference indexes grouped by task in English, a round export
+  README in English, structured input errors in `demo_snapshot()`, current
+  panel screenshots, `LICENSE.md` and `Additional_repositories` for
+  `delphyrApp`, and README badges. Details are in the `NEWS.md` of each package.
 
 # delphyr / delphyrApp 0.0.2 (development)
 

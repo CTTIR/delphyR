@@ -19,6 +19,7 @@
 * The panel screenshots in the README and in `inst/figures` show the current
   interface (logo, consent buttons, a saved response with its receipt) instead
   of the interface of version 0.0.1.
+* The README shows the R CMD check status and the licence as badges.
 
 # delphyrApp 0.0.2
 

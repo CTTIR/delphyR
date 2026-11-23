@@ -1,5 +1,10 @@
 # delphyr <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="man/figures/logo-with-name-dark.png" /><img src="man/figures/logo-with-name.png" align="right" alt="delphyr logo" width="120" height="139" /></picture>
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/CTTIR/delphyR/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main&event=push)](https://github.com/CTTIR/delphyR/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!-- badges: end -->
+
 **Reproducible Delphi analysis, independent of the application.**
 
 `delphyr` validates protocols and response scales, analyses frozen round data,

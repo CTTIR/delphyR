@@ -1,5 +1,10 @@
 # delphyR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="packages/delphyrApp/man/figures/logo-with-name-dark.png" /><img src="packages/delphyrApp/man/figures/logo-with-name.png" align="right" alt="delphyrApp logo" width="120" height="139" /></picture>
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/CTTIR/delphyR/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main&event=push)](https://github.com/CTTIR/delphyR/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!-- badges: end -->
+
 **A traceable workflow for round-based Delphi studies.**
 
 delphyR combines the independent R package `delphyr`, the multilingual Shiny
