@@ -3,6 +3,8 @@ test_that("demo_snapshot() refuses unusable input with a structured condition", 
   expect_identical(path(demo_snapshot(numeric())), "values")
   expect_identical(path(demo_snapshot(NULL)), "values")
   expect_identical(path(demo_snapshot(c("7", "8"))), "values")
+  expect_identical(path(demo_snapshot(NA_character_)), "values")
+  expect_identical(path(demo_snapshot(c(TRUE, NA))), "values")
   expect_identical(path(demo_snapshot(matrix(1:4, 2))), "values")
   expect_identical(path(demo_snapshot(1:3, c("professionals", "public_contributors"))), "groups")
   expect_identical(path(demo_snapshot(1:3, groups = 1:3)), "groups")

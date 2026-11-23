@@ -130,7 +130,7 @@ validate_snapshot_rows <- function(joined, scales) {
 #' analyse_round(two_groups)$missingness
 demo_snapshot <- function(values = c(1, 4, 6, 7, 7, 8, 8, 9, 9, 9), groups = rep("professionals", length(values))) {
   ensure(is.atomic(values) && is.null(dim(values)) && length(values) > 0L &&
-    (is.numeric(values) || all(is.na(values))), "values")
+    (is.numeric(values) || (is.logical(values) && all(is.na(values)))), "values")
   ensure(is.character(groups) && length(groups) %in% c(1L, length(values)), "groups")
   p <- demo_protocol()
   p$analysis$consensus$group_policy <- "pooled"
