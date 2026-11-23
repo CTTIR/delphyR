@@ -5,6 +5,7 @@ checksums
 CMD
 colour
 copyediting
+CSVs
 CTTIR
 de
 delphyr
@@ -23,7 +24,10 @@ OIDC
 onboarding
 ORCID
 OSS
+PostgreSQL
 preselected
+PyTorch
+R's
 recolours
 redactions
 reflow

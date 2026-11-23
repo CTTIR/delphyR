@@ -60,7 +60,7 @@ request_job <- function(repo, actor, snapshot_id, type, key, purpose = NULL) {
 #' }
 #' @export
 request_analysis <- function(repo, actor, snapshot_id, command_id) request_job(repo, actor, snapshot_id, "analysis", command_id)
-#' Queue a private pseudonymized numeric research export
+#' Queue a private pseudonymised numeric research export
 #' @param repo Repository.
 #' @param actor Actor with export capability.
 #' @param snapshot_id Immutable snapshot UUID.
@@ -132,7 +132,7 @@ request_study_export <- function(repo, actor, study_id, profile, command_id, pur
     }, reason = purpose, detail = profile)
   })
 }
-#' Retrieve an authorized operation state
+#' Retrieve an authorised operation state
 #' @param repo Repository.
 #' @param actor Requesting actor.
 #' @param operation_id Operation UUID.
@@ -416,7 +416,7 @@ delegated_actor <- function(repo, j) {
 #'   members and 300 rating fields.
 #' @param download_hours Hours an export can be downloaded after it was
 #'   registered, from 1 to 720; one day by default. The period is the
-#'   decision of the responsible organization.
+#'   decision of the responsible organisation.
 #' @param on_claim Optional function called with the claimed job (a one-row
 #'   data frame with `id` and `lease_token`) before it runs, for example to
 #'   renew its reservation from another process.
@@ -498,10 +498,10 @@ worker_step <- function(repo, study_id = NULL, lease_seconds = 600L, download_ho
   log_work(paste0("job.", j$type, if (j$type == "export") paste0(".", j$profile)), started, result$state, j$id, error_class = result$error_code)
   result
 }
-#' Resolve a private artifact only after a fresh rights check
+#' Resolve a private artefact only after a fresh rights check
 #' @param repo Repository.
 #' @param actor Original requesting actor with current export capability.
-#' @param artifact_id Artifact UUID.
+#' @param artifact_id Artefact UUID.
 #' @return Private directory path for trusted server download code. An export
 #'   whose worker stopped after registering it but before giving it its final
 #'   name is delivered from its temporary name, `<id>.partial`.

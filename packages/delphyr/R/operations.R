@@ -105,7 +105,7 @@ get_system_status <- function(repo, path = system.file("sql", package = "delphyr
 #' as not removed: its files may lie in another installation's export
 #' directory that uses the same database. With `record_missing = TRUE` the
 #' operator confirms that they are gone, and the removal is recorded.
-#' @param repo Trusted worker repository with the artifact root of the worker.
+#' @param repo Trusted worker repository with the artefact root of the worker.
 #' @param dry_run TRUE lists what would be removed.
 #' @param study_id Optional study UUID; otherwise every study.
 #' @param record_missing TRUE also records exports without a directory as
@@ -190,7 +190,7 @@ unfinished_exports <- function(repo, older_than_hours) {
 #' nothing. The export directory belongs to one database: a directory whose
 #' registration this database does not hold, for example after the database
 #' was restored from an older backup, is treated the same way.
-#' @param repo Trusted worker repository with the artifact root of the worker.
+#' @param repo Trusted worker repository with the artefact root of the worker.
 #' @param dry_run TRUE lists what would be removed.
 #' @param older_than_hours Hours since the last change, at least one; a job
 #'   that is still writing changes its directory far more often.
@@ -256,7 +256,7 @@ hold_pending_messages <- function(repo, dry_run = TRUE, study_id = NULL) {
 #' and newest record. With `periods`, a proposed number of days per class, it
 #' also states how many records would be older than that period. It is a dry
 #' run: nothing is deleted, and the software ships no retention periods. A
-#' period is the decision of the responsible organization.
+#' period is the decision of the responsible organisation.
 #' @param repo Repository.
 #' @param actor Actor with manage capability.
 #' @param study_id Study UUID.

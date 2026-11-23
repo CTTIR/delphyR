@@ -21,7 +21,7 @@ new_authentication_config(
 \item{max_session_seconds}{Maximum lifetime of one Shiny actor, at most one hour.}
 }
 \value{
-Server-only delphyr_authentication_config. Never serialize to a browser.
+Server-only delphyr_authentication_config. Never serialise to a browser.
 }
 \description{
 Configure the trusted authentication gateway boundary

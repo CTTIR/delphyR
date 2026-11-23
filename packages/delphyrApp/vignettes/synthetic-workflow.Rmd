@@ -126,19 +126,19 @@ This is technical versioning, not an institutional or ethical approval.
 Downloads recheck authority and integrity. The numeric research profile
 contains the snapshot, protocol, results, provenance, dictionary, instrument
 texts, and an HTML report. The worker uses a trusted Quarto template when its
-optional runtime is available. Otherwise a basic HTML fallback is labeled;
+optional runtime is available. Otherwise a basic HTML fallback is labelled;
 a real render failure remains a failed job. Qualitative originals and individual
 free-text answers are excluded. Missing author information is not invented.
 
 ## Preserve sources and review editorial work
 
 Editors keep synthetic originals and create separate redactions or summaries
-with a reason. Summaries are labeled as summaries, not quotations. Another
-authorized person reviews the exact version before release.
+with a reason. Summaries are labelled as summaries, not quotations. Another
+authorised person reviews the exact version before release.
 
 Theme versions, inclusion/exclusion coding, source links, and item splits or
 merges preserve their provenance. Linking a source does not import an instrument
-item. Hidden interface sections never replace service-level authorization.
+item. Hidden interface sections never replace service-level authorisation.
 
 ## Import contacts without granting access
 
@@ -149,7 +149,7 @@ LF or CRLF file terminators are supported without changing the uploaded hash.
 
 Explicit approval imports the whole reviewed file atomically and returns a
 receipt for unbound invitation drafts. It creates no account, consent, response
-link, or round enrollment. Separate invitation services require approval of an
+link, or round enrolment. Separate invitation services require approval of an
 existing stable issuer/subject identity; the complete invitation browser journey
 is not established by this CSV workflow.
 
@@ -169,7 +169,7 @@ deleting existing receipts. An expired in-flight lease becomes
 
 The interface uses system fonts, visible labels, keyboard focus, responsive
 forms, and live status regions. Language changes must preserve pending values;
-color alone does not communicate status. Permission-filtered navigation retains
+colour alone does not communicate status. Permission-filtered navigation retains
 open forms when moving between study sections.
 
 These are design choices and specific local checks, not formal accessibility

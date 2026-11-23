@@ -2,7 +2,7 @@
 % Please edit documentation in R/jobs.R
 \name{get_operation}
 \alias{get_operation}
-\title{Retrieve an authorized operation state}
+\title{Retrieve an authorised operation state}
 \usage{
 get_operation(repo, actor, operation_id)
 }
@@ -17,7 +17,7 @@ get_operation(repo, actor, operation_id)
 State, result reference and safe error code.
 }
 \description{
-Retrieve an authorized operation state
+Retrieve an authorised operation state
 }
 \examples{
 \dontrun{

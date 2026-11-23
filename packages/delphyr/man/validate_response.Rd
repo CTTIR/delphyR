@@ -2,7 +2,7 @@
 % Please edit documentation in R/domain.R
 \name{validate_response}
 \alias{validate_response}
-\title{Validate and normalize an answer}
+\title{Validate and normalise an answer}
 \usage{
 validate_response(value, status, scale)
 }
@@ -17,7 +17,7 @@ validate_response(value, status, scale)
 List with status, value_int and value_text; DEL_VALIDATION on error.
 }
 \description{
-Validate and normalize an answer
+Validate and normalise an answer
 }
 \examples{
 validate_response(7, "answered", new_scale("ordinal_integer", 1:9))

@@ -19,7 +19,7 @@ save_response(
 
 \item{actor}{Panel actor.}
 
-\item{enrollment_id}{Own enrollment UUID.}
+\item{enrollment_id}{Own enrolment UUID.}
 
 \item{round_item_id}{Assigned response field UUID.}
 

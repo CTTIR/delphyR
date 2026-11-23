@@ -129,10 +129,10 @@ revoke_panel_invitation <- function(repo, actor, study_id, invitation_id, reason
 }
 #' Accept an invitation after verified login and an explicit confirmed action
 #' @inheritParams issue_panel_invitation
-#' @param invitation_id Invitation UUID, not a panelist identifier.
+#' @param invitation_id Invitation UUID, not a panellist identifier.
 #' @param confirmed Explicit TRUE from the confirmation action; never call on GET.
 #' @return Invitation, membership and pseudonym receipt. No consent or round
-#'   enrollment is created. Existing provisioned accounts are required.
+#'   enrolment is created. Existing provisioned accounts are required.
 #' @examples
 #' \dontrun{
 #' # Needs a running PostgreSQL server prepared with migrate_repository().

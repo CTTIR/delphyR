@@ -24,7 +24,7 @@ prepare_campaign(
 
 \item{round_id}{Study round UUID.}
 
-\item{enrollment_ids}{Exact recipient enrollment UUIDs; no addresses accepted.}
+\item{enrollment_ids}{Exact recipient enrolment UUIDs; no addresses accepted.}
 
 \item{kind}{invitation, round_start, reminder, deadline_change or completion.}
 

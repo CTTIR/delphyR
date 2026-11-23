@@ -21,7 +21,7 @@ accept_panel_invitation(
 
 \item{study_id}{Study UUID.}
 
-\item{invitation_id}{Invitation UUID, not a panelist identifier.}
+\item{invitation_id}{Invitation UUID, not a panellist identifier.}
 
 \item{token}{Private output of new_invitation_token(). Never persisted in plaintext.}
 
@@ -31,7 +31,7 @@ accept_panel_invitation(
 }
 \value{
 Invitation, membership and pseudonym receipt. No consent or round
-enrollment is created. Existing provisioned accounts are required.
+enrolment is created. Existing provisioned accounts are required.
 }
 \description{
 Accept an invitation after verified login and an explicit confirmed action

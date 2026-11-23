@@ -1,4 +1,4 @@
-#' Prepare an authorized aggregate report and numeric export supplement
+#' Prepare an authorised aggregate report and numeric export supplement
 #' @param repo Repository.
 #' @param actor Actor with current export capability.
 #' @param snapshot_id Immutable numeric snapshot UUID.

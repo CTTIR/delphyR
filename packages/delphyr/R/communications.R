@@ -2,7 +2,7 @@
 #' @param repo Development/test repository.
 #' @param actor Actor with coordinate capability.
 #' @param round_id Study round UUID.
-#' @param enrollment_ids Exact recipient enrollment UUIDs; no addresses accepted.
+#' @param enrollment_ids Exact recipient enrolment UUIDs; no addresses accepted.
 #' @param kind invitation, round_start, reminder, deadline_change or completion.
 #' @param subject,body Final plain text without unresolved template placeholders.
 #' @param locale en, fr or de.
@@ -597,7 +597,7 @@ list_campaign_rounds <- function(repo, actor, study_id) {
 #' @param repo Repository.
 #' @param actor Actor with coordinate capability.
 #' @param round_id Round UUID.
-#' @return Enrollment UUID, study pseudonym, participation state and the
+#' @return Enrolment UUID, study pseudonym, participation state and the
 #'   number of approved reminders that count against the protocol's limit,
 #'   including reminders delivered before their campaign was cancelled.
 #' @examples

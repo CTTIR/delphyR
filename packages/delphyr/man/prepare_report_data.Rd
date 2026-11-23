@@ -2,7 +2,7 @@
 % Please edit documentation in R/reporting.R
 \name{prepare_report_data}
 \alias{prepare_report_data}
-\title{Prepare an authorized aggregate report and numeric export supplement}
+\title{Prepare an authorised aggregate report and numeric export supplement}
 \usage{
 prepare_report_data(repo, actor, snapshot_id)
 }
@@ -17,7 +17,7 @@ prepare_report_data(repo, actor, snapshot_id)
 A delphyr_report_data with allowlisted tables and a content hash.
 }
 \description{
-Prepare an authorized aggregate report and numeric export supplement
+Prepare an authorised aggregate report and numeric export supplement
 }
 \examples{
 \dontrun{

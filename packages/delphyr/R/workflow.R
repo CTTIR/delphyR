@@ -243,7 +243,7 @@ eligible_panel <- function(repo, study_id, number, config) {
   }
   panel
 }
-#' Prepare a frozen-instrument candidate and enroll active panelists
+#' Prepare a frozen-instrument candidate and enrol active panellists
 #' @param repo Repository.
 #' @param actor Study manager.
 #' @param study_id Study UUID.
@@ -258,7 +258,7 @@ eligible_panel <- function(repo, study_id, number, config) {
 #' repo <- connect_repository(dbname = "delphyr")
 #' study <- demo_study(repo, n = 4L, item_count = 2L)
 #' # demo_study() prepared round 1. A later round needs the earlier one
-#' # released or finalized; here the candidate is withdrawn and replaced.
+#' # released or finalised; here the candidate is withdrawn and replaced.
 #' transition_round(repo, study$manager, study$round$id, "cancelled",
 #'                  study$round$hash, "Replaced", "example-withdraw")
 #' deadline <- format(Sys.time() + 7 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
@@ -373,7 +373,7 @@ change_round_deadline <- function(repo, actor, round_id, deadline, expected_hash
     }, reason = reason, detail = deadline)
   })
 }
-#' Advance an authorized round through its approval lifecycle
+#' Advance an authorised round through its approval lifecycle
 #' @param repo Repository.
 #' @param actor Study manager.
 #' @param round_id Round UUID.
@@ -448,7 +448,7 @@ current_responses <- function(repo, e) query(repo, "SELECT v.* FROM research.res
 #' Save a response with optimistic concurrency and a durable receipt
 #' @param repo Repository.
 #' @param actor Panel actor.
-#' @param enrollment_id Own enrollment UUID.
+#' @param enrollment_id Own enrolment UUID.
 #' @param round_item_id Assigned response field UUID.
 #' @param response List with value and status.
 #' @param expected_revision Last confirmed revision; zero for first save.
@@ -499,7 +499,7 @@ save_response <- function(repo, actor, enrollment_id, round_item_id, response, e
 #' Submit the exact confirmed revision set atomically
 #' @param repo Repository.
 #' @param actor Panel actor.
-#' @param enrollment_id Own enrollment UUID.
+#' @param enrollment_id Own enrolment UUID.
 #' @param expected_revision_set Named integer vector: round-item UUID to revision.
 #' @param command_id Idempotency key.
 #' @return Durable submission receipt id and timestamp.
@@ -553,8 +553,8 @@ submit_round <- function(repo, actor, enrollment_id, expected_revision_set, comm
 #' Retrieve only the actor's current questionnaire and consent information
 #' @param repo Repository.
 #' @param actor Panel actor.
-#' @param enrollment_id Own enrollment UUID in a round that was opened; any
-#'   other enrollment is refused with DEL_NOT_FOUND, as an unknown one is.
+#' @param enrollment_id Own enrolment UUID in a round that was opened; any
+#'   other enrolment is refused with DEL_NOT_FOUND, as an unknown one is.
 #' @return Instrument, own responses, receipt and required consent information.
 #' @examples
 #' \dontrun{
@@ -580,7 +580,7 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
     list(round = z$round, enrollment = e, items = query(repo, "SELECT id,item_code,item_version,dimension_code,scale_code,texts::text,required,display_order FROM research.round_items WHERE study_id=$1 AND round_id=$2 ORDER BY display_order,item_code,dimension_code", e$study_id, e$round_id), responses = current_responses(repo, e), protocol = from_json(one(query(repo, "SELECT config::text FROM research.protocol_versions WHERE id=$1", z$round$protocol_id))$config), consent = cver, receipt = query(repo, "SELECT id,submitted_at::text FROM research.submissions WHERE study_id=$1 AND enrollment_id=$2", e$study_id, e$id))
   })
 }
-#' List own round enrollments
+#' List own round enrolments
 #'
 #' Lists only rounds that were opened. A round that is still being prepared,
 #' reviewed or approved, or that was withdrawn, is not shown to panel members,
@@ -588,7 +588,7 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
 #' @param repo Repository.
 #' @param actor Panel actor.
 #' @param study_id Selected study.
-#' @return Enrollment table.
+#' @return Enrolment table.
 #' @examples
 #' \dontrun{
 #' # Needs a running PostgreSQL server prepared with migrate_repository().
@@ -598,7 +598,7 @@ get_questionnaire <- function(repo, actor, enrollment_id) {
 #'   transition_round(repo, study$manager, study$round$id, state,
 #'                    study$round$hash, "Example", paste0("example-", state))
 #' }
-#' # Each panel member sees only their own enrollments.
+#' # Each panel member sees only their own enrolments.
 #' list_enrollments(repo, study$panel[[1]], study$study_id)
 #' }
 #' @export
@@ -682,7 +682,7 @@ readiness_blocking <- function(readiness, target) {
 #' @param round_id Round UUID.
 #' @return delphyr_validation: valid, issues (severity, code, path,
 #'   message_key, details) and schema_version. Approval ignores the
-#'   deadline_passed and no_enrollments findings; opening requires none.
+#'   `deadline_passed` and `no_enrollments` findings; opening requires none.
 #' @examples
 #' \dontrun{
 #' # Needs a running PostgreSQL server prepared with migrate_repository().
@@ -724,19 +724,19 @@ get_round_instrument <- function(repo, actor, round_id) {
     )
   })
 }
-#' Enroll eligible panel members who joined after a round was prepared
+#' Enrol eligible panel members who joined after a round was prepared
 #'
 #' Applies the round's protocol entry policy and each member's current
-#' stakeholder group. Enrollment, withdrawal and group changes of one study
+#' stakeholder group. Enrolment, withdrawal and group changes of one study
 #' take effect one after the other: a member who withdraws meanwhile is either
-#' not enrolled or enrolled and withdrawn. Enrollment is possible until the
+#' not enrolled or enrolled and withdrawn. Enrolment is possible until the
 #' round closes. Feedback already assigned to an unopened round is assigned to
-#' the new enrollments as well; an open round with assigned feedback accepts no
-#' further enrollment, so that everyone rating in a round has the same
+#' the new enrolments as well; an open round with assigned feedback accepts no
+#' further enrolment, so that everyone rating in a round has the same
 #' information.
 #' @inheritParams get_round_readiness
 #' @param command_id Idempotency key.
-#' @return Round UUID and the number of enrollments added.
+#' @return Round UUID and the number of enrolments added.
 #' @examples
 #' \dontrun{
 #' # Needs a running PostgreSQL server prepared with migrate_repository().

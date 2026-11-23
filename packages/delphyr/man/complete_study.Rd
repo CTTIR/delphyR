@@ -2,7 +2,7 @@
 % Please edit documentation in R/snapshots.R
 \name{complete_study}
 \alias{complete_study}
-\title{Complete a study after finalization and explicit item decisions}
+\title{Complete a study after finalisation and explicit item decisions}
 \usage{
 complete_study(repo, actor, study_id, reason, command_id)
 }
@@ -21,7 +21,7 @@ complete_study(repo, actor, study_id, reason, command_id)
 Completed study UUID.
 }
 \description{
-Complete a study after finalization and explicit item decisions
+Complete a study after finalisation and explicit item decisions
 }
 \examples{
 \dontrun{
@@ -36,7 +36,7 @@ transition_round(repo, study$manager, study$round$id, "closed",
                  study$round$hash, "Example", "example-closed")
 snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
 analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
-# Every item has a decision before its round is finalized.
+# Every item has a decision before its round is finalised.
 for (item in unique(study$items$item_code)) {
   record_item_decision(repo, study$manager, analysis$id, item, "finalize",
                        "Consensus reached", paste("example-decision", item))

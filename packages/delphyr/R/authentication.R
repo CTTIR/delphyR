@@ -3,7 +3,7 @@
 #' @param gateway_secret Private random secret overwritten by the internal gateway.
 #' @param trusted_proxy_addresses Exact transport peer addresses observed by httpuv.
 #' @param max_session_seconds Maximum lifetime of one Shiny actor, at most one hour.
-#' @return Server-only delphyr_authentication_config. Never serialize to a browser.
+#' @return Server-only delphyr_authentication_config. Never serialise to a browser.
 #' @examples
 #' config <- new_authentication_config("https://identity.example/realms/study",
 #'                                     strrep("a", 64), "127.0.0.1")

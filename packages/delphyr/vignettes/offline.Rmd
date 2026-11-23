@@ -1,8 +1,8 @@
 ---
-title: "Analyzing two Delphi rounds offline"
+title: "Analysing two Delphi rounds offline"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Analyzing two Delphi rounds offline}
+  %\VignetteIndexEntry{Analysing two Delphi rounds offline}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 resource_files:
@@ -190,16 +190,16 @@ and export profile.
 
 The database export uses the same `analyse_round()` logic. Its manifest includes
 `snapshot.json`, analysis tables, a dictionary, frozen instrument texts, and the
-HTML report. After extracting an authorized export, `reproduce_export()` checks
+HTML report. After extracting an authorised export, `reproduce_export()` checks
 its file hashes and recomputes the analysis without the application or Quarto:
 
 ```{r exported-study, eval=FALSE}
-# A previously authorized local export, not an example downloaded from a public URL.
+# A previously authorised local export, not an example downloaded from a public URL.
 reproduced <- reproduce_export("/path/to/extracted-export")
 reproduced$provenance$result_hash
 ```
 
-Report services require an authorized database connection and are separate from
+Report services require an authorised database connection and are separate from
 the executable offline example above. Reports distinguish frozen research data
 from editorial records observed at export time. Missing author information stays
 explicitly undocumented. Qualitative originals and individual free-text answers

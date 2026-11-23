@@ -11,7 +11,7 @@ get_feedback(repo, actor, enrollment_id)
 
 \item{actor}{Panel actor.}
 
-\item{enrollment_id}{Own target enrollment in a round that was opened.}
+\item{enrollment_id}{Own target enrolment in a round that was opened.}
 }
 \value{
 Aggregate feedback, own prior response table, the comparability
@@ -58,7 +58,7 @@ for (state in c("review", "approved", "open")) {
   transition_round(repo, study$manager, round_2$id, state, round_2$hash,
                    "Example", paste0("example-2-", state))
 }
-# The panel member's enrollment in round 2 shows the released feedback.
+# The panel member's enrolment in round 2 shows the released feedback.
 enrollments <- list_enrollments(repo, panelist, study$study_id)
 enrollment <- enrollments$id[enrollments$number == 2]
 get_feedback(repo, panelist, enrollment)

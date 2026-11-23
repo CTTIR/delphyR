@@ -150,7 +150,7 @@ inability to judge are reported separately. Quartiles use type 7; consensus rule
 use unrounded proportions. Changed item meanings require an explicit
 comparability decision.
 
-Private exports are separated by profile and right: pseudonymized research data
+Private exports are separated by profile and right: pseudonymised research data
 of all frozen rounds, an aggregated summary with small-cell suppression, the
 audit trail, and contact data under its own right. Research exports contain the
 frozen snapshots, protocol versions, analyses, comparisons between rounds,
@@ -195,7 +195,7 @@ decision, institutional approvals, a test with assistive technology and
 production operation remain open, see the
 [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
-## Contributing and license
+## Contributing and licence
 
 Use synthetic examples and preserve existing study evidence. `admin/` remains
 local and ignored; credentials, real participant data, local libraries, and

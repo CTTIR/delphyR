@@ -15,7 +15,7 @@ connect_repository(
 
 \item{environment}{Development or test; production is not qualified.}
 
-\item{artifact_root}{Private directory for generated artifacts.}
+\item{artifact_root}{Private directory for generated artefacts.}
 }
 \value{
 A delphyr repository. Close its connection with DBI::dbDisconnect(repo$con).

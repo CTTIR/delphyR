@@ -2,7 +2,7 @@
 % Please edit documentation in R/snapshots.R
 \name{get_feedback_candidate}
 \alias{get_feedback_candidate}
-\title{Preview the exact reviewed feedback artifact before release}
+\title{Preview the exact reviewed feedback artefact before release}
 \usage{
 get_feedback_candidate(repo, actor, feedback_id)
 }
@@ -17,7 +17,7 @@ get_feedback_candidate(repo, actor, feedback_id)
 Content, hash and state of the candidate.
 }
 \description{
-Preview the exact reviewed feedback artifact before release
+Preview the exact reviewed feedback artefact before release
 }
 \examples{
 \dontrun{

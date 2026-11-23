@@ -2,7 +2,7 @@
 % Please edit documentation in R/workflow.R
 \name{prepare_round}
 \alias{prepare_round}
-\title{Prepare a frozen-instrument candidate and enroll active panelists}
+\title{Prepare a frozen-instrument candidate and enrol active panellists}
 \usage{
 prepare_round(
   repo,
@@ -33,7 +33,7 @@ prepare_round(
 Round UUID and exact instrument hash.
 }
 \description{
-Prepare a frozen-instrument candidate and enroll active panelists
+Prepare a frozen-instrument candidate and enrol active panellists
 }
 \examples{
 \dontrun{
@@ -41,7 +41,7 @@ Prepare a frozen-instrument candidate and enroll active panelists
 repo <- connect_repository(dbname = "delphyr")
 study <- demo_study(repo, n = 4L, item_count = 2L)
 # demo_study() prepared round 1. A later round needs the earlier one
-# released or finalized; here the candidate is withdrawn and replaced.
+# released or finalised; here the candidate is withdrawn and replaced.
 transition_round(repo, study$manager, study$round$id, "cancelled",
                  study$round$hash, "Replaced", "example-withdraw")
 deadline <- format(Sys.time() + 7 * 86400, "\%Y-\%m-\%dT\%H:\%M:\%SZ", tz = "UTC")

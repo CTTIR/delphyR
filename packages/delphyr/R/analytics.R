@@ -25,17 +25,20 @@ classify_consensus <- function(counts, rule) {
   c(counts, list(p_agree = pa, p_disagree = pd, classification = status))
 }
 #' Construct an immutable analysis input
-#' @param responses Long data frame: panelist_id, item_code, item_version,
-#'   dimension_code, answer_status, value_integer, value_text. Only submitted data.
-#' @param assignments All assigned panelists: panelist_id, group_code, submitted.
-#' @param items Instrument table: item_code, item_version, dimension_code, scale_code.
-#'   Item versions must be positive and within R's integer range.
+#' @param responses Long data frame: `panelist_id`, `item_code`,
+#'   `item_version`, `dimension_code`, `answer_status`, `value_integer`,
+#'   `value_text`. Only submitted data.
+#' @param assignments All assigned panellists: `panelist_id`, `group_code`,
+#'   `submitted`.
+#' @param items Instrument table: `item_code`, `item_version`,
+#'   `dimension_code`, `scale_code`. Item versions must be positive and within
+#'   R's integer range.
 #' @param protocol Validated protocol.
 #' @param round_number Positive round number.
 #' @param snapshot_id Stable identifier, or content hash when NULL.
 #' @param hash_version "2" for new snapshots; "1" only to reconstruct an
 #'   existing legacy record without changing its scientific identity.
-#' @return delphyr_snapshot, with all assigned fields materialized, including missingness.
+#' @return delphyr_snapshot, with all assigned fields materialised, including missingness.
 #' @export
 #' @examples
 #' s <- demo_snapshot()

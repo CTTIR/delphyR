@@ -9,7 +9,7 @@ create_study(repo, actor, protocol, command_id)
 \arguments{
 \item{repo}{Repository.}
 
-\item{actor}{Authorized server actor.}
+\item{actor}{Authorised server actor.}
 
 \item{protocol}{Validated demo protocol.}
 

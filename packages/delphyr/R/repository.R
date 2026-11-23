@@ -1,7 +1,7 @@
 #' Connect to an explicitly configured PostgreSQL database
 #' @param ... Arguments passed to DBI::dbConnect(RPostgres::Postgres()).
 #' @param environment Development or test; production is not qualified.
-#' @param artifact_root Private directory for generated artifacts.
+#' @param artifact_root Private directory for generated artefacts.
 #' @return A delphyr repository. Close its connection with DBI::dbDisconnect(repo$con).
 #' @examples
 #' \dontrun{
@@ -216,7 +216,7 @@ command <- function(repo, actor, study, type, key, payload, fun, reason = NULL, 
 }
 #' Create an isolated synthetic study and its first immutable protocol
 #' @param repo Repository.
-#' @param actor Authorized server actor.
+#' @param actor Authorised server actor.
 #' @param protocol Validated demo protocol.
 #' @param command_id Idempotency key.
 #' @return Study id and protocol id.
@@ -321,7 +321,7 @@ list_studies <- function(repo, actor) {
 #' @param repo Repository.
 #' @param actor Server actor.
 #' @param study_id Study UUID.
-#' @return Character vector; this UI hint does not replace service authorization.
+#' @return Character vector; this UI hint does not replace service authorisation.
 #' @examples
 #' \dontrun{
 #' # Needs a running PostgreSQL server prepared with migrate_repository().

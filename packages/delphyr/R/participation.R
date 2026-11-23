@@ -52,7 +52,7 @@ withdraw_participation <- function(repo, actor, study_id, retention_policy, comm
 #' @param group_code Group declared by the current protocol.
 #' @param reason Nonempty rationale.
 #' @param command_id Idempotency key.
-#' @return Immutable group-change receipt; existing enrollments stay unchanged.
+#' @return Immutable group-change receipt; existing enrolments stay unchanged.
 #' @examples
 #' \dontrun{
 #' # Needs a running PostgreSQL server prepared with migrate_repository().

@@ -298,7 +298,7 @@ record_item_lineage <- function(repo, actor, study_id, parents, children, relati
 #' @param actor Actor with edit capability; export also requires export capability.
 #' @param study_id Study UUID.
 #' @param export FALSE includes originals for editorial review. TRUE excludes
-#'   originals and unreleased redactions and returns authorized export tables.
+#'   originals and unreleased redactions and returns authorised export tables.
 #' @return Named tables with explicit source, coding, item and review provenance.
 #'   These are restricted research records, not participant feedback.
 #' @examples

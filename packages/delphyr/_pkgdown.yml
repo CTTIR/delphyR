@@ -138,7 +138,7 @@ reference:
       - resolve_delivery
       - hold_pending_messages
   - title: Background jobs, exports and reports
-    desc: Queue analyses and exports, run the worker, download artifacts and render reports.
+    desc: Queue analyses and exports, run the worker, download artefacts and render reports.
     contents:
       - request_analysis
       - request_export

@@ -14,7 +14,7 @@ get_capabilities(repo, actor, study_id)
 \item{study_id}{Study UUID.}
 }
 \value{
-Character vector; this UI hint does not replace service authorization.
+Character vector; this UI hint does not replace service authorisation.
 }
 \description{
 Read current study capabilities

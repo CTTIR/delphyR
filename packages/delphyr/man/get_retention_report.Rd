@@ -24,7 +24,7 @@ Lists each class of stored data with its count and the age of its oldest
 and newest record. With \code{periods}, a proposed number of days per class, it
 also states how many records would be older than that period. It is a dry
 run: nothing is deleted, and the software ships no retention periods. A
-period is the decision of the responsible organization.
+period is the decision of the responsible organisation.
 }
 \examples{
 \dontrun{

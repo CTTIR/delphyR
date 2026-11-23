@@ -28,7 +28,7 @@ new_scale <- function(type, levels = integer(), labels = as.character(levels),
     missing_options = missing_options
   ), class = "delphyr_scale")
 }
-#' Validate and normalize an answer
+#' Validate and normalise an answer
 #' @param value Scalar integer or text, or NULL for missing responses.
 #' @param status Answer status.
 #' @param scale A scale created by new_scale().

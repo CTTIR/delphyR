@@ -13,7 +13,7 @@ preview_panel_invitation(repo, actor, study_id, invitation_id, token)
 
 \item{study_id}{Study UUID.}
 
-\item{invitation_id}{Invitation UUID, not a panelist identifier.}
+\item{invitation_id}{Invitation UUID, not a panellist identifier.}
 
 \item{token}{Private output of new_invitation_token(). Never persisted in plaintext.}
 }

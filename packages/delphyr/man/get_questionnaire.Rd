@@ -11,8 +11,8 @@ get_questionnaire(repo, actor, enrollment_id)
 
 \item{actor}{Panel actor.}
 
-\item{enrollment_id}{Own enrollment UUID in a round that was opened; any
-other enrollment is refused with DEL_NOT_FOUND, as an unknown one is.}
+\item{enrollment_id}{Own enrolment UUID in a round that was opened; any
+other enrolment is refused with DEL_NOT_FOUND, as an unknown one is.}
 }
 \value{
 Instrument, own responses, receipt and required consent information.

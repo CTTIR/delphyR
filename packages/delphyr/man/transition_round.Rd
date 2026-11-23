@@ -2,7 +2,7 @@
 % Please edit documentation in R/workflow.R
 \name{transition_round}
 \alias{transition_round}
-\title{Advance an authorized round through its approval lifecycle}
+\title{Advance an authorised round through its approval lifecycle}
 \usage{
 transition_round(
   repo,
@@ -36,7 +36,7 @@ cancelled; a cancelled round is final and frees its round number.}
 Round id and new state.
 }
 \description{
-Advance an authorized round through its approval lifecycle
+Advance an authorised round through its approval lifecycle
 }
 \examples{
 \dontrun{

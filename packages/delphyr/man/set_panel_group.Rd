@@ -30,7 +30,7 @@ set_panel_group(
 \item{command_id}{Idempotency key.}
 }
 \value{
-Immutable group-change receipt; existing enrollments stay unchanged.
+Immutable group-change receipt; existing enrolments stay unchanged.
 }
 \description{
 Change stakeholder group only for future round preparation

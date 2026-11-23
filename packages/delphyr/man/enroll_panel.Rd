@@ -2,7 +2,7 @@
 % Please edit documentation in R/workflow.R
 \name{enroll_panel}
 \alias{enroll_panel}
-\title{Enroll eligible panel members who joined after a round was prepared}
+\title{Enrol eligible panel members who joined after a round was prepared}
 \usage{
 enroll_panel(repo, actor, round_id, command_id)
 }
@@ -16,16 +16,16 @@ enroll_panel(repo, actor, round_id, command_id)
 \item{command_id}{Idempotency key.}
 }
 \value{
-Round UUID and the number of enrollments added.
+Round UUID and the number of enrolments added.
 }
 \description{
 Applies the round's protocol entry policy and each member's current
-stakeholder group. Enrollment, withdrawal and group changes of one study
+stakeholder group. Enrolment, withdrawal and group changes of one study
 take effect one after the other: a member who withdraws meanwhile is either
-not enrolled or enrolled and withdrawn. Enrollment is possible until the
+not enrolled or enrolled and withdrawn. Enrolment is possible until the
 round closes. Feedback already assigned to an unopened round is assigned to
-the new enrollments as well; an open round with assigned feedback accepts no
-further enrollment, so that everyone rating in a round has the same
+the new enrolments as well; an open round with assigned feedback accepts no
+further enrolment, so that everyone rating in a round has the same
 information.
 }
 \examples{

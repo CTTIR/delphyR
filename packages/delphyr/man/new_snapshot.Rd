@@ -15,13 +15,16 @@ new_snapshot(
 )
 }
 \arguments{
-\item{responses}{Long data frame: panelist_id, item_code, item_version,
-dimension_code, answer_status, value_integer, value_text. Only submitted data.}
+\item{responses}{Long data frame: \code{panelist_id}, \code{item_code},
+\code{item_version}, \code{dimension_code}, \code{answer_status}, \code{value_integer},
+\code{value_text}. Only submitted data.}
 
-\item{assignments}{All assigned panelists: panelist_id, group_code, submitted.}
+\item{assignments}{All assigned panellists: \code{panelist_id}, \code{group_code},
+\code{submitted}.}
 
-\item{items}{Instrument table: item_code, item_version, dimension_code, scale_code.
-Item versions must be positive and within R's integer range.}
+\item{items}{Instrument table: \code{item_code}, \code{item_version},
+\code{dimension_code}, \code{scale_code}. Item versions must be positive and within
+R's integer range.}
 
 \item{protocol}{Validated protocol.}
 
@@ -33,7 +36,7 @@ Item versions must be positive and within R's integer range.}
 existing legacy record without changing its scientific identity.}
 }
 \value{
-delphyr_snapshot, with all assigned fields materialized, including missingness.
+delphyr_snapshot, with all assigned fields materialised, including missingness.
 }
 \description{
 Construct an immutable analysis input

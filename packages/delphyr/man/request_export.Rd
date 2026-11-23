@@ -2,7 +2,7 @@
 % Please edit documentation in R/jobs.R
 \name{request_export}
 \alias{request_export}
-\title{Queue a private pseudonymized numeric research export}
+\title{Queue a private pseudonymised numeric research export}
 \usage{
 request_export(repo, actor, snapshot_id, command_id, purpose = NULL)
 }
@@ -24,7 +24,7 @@ a pending export of the same snapshot adds its purpose there.}
 Operation id. Free-text exports require a separate reviewed profile.
 }
 \description{
-Queue a private pseudonymized numeric research export
+Queue a private pseudonymised numeric research export
 }
 \examples{
 \dontrun{

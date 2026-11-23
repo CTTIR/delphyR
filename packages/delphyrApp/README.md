@@ -95,14 +95,14 @@ creating unbound invitation drafts; importing an address grants no account acces
 Campaign previews bind exact pseudonyms and text before local sink processing.
 
 Analysis, report rendering, exports, and sink processing belong to a separate
-worker. **Check operation** refreshes queued work. Downloads recheck authorization
-and artifact integrity. A hidden control is never the authorization boundary.
+worker. **Check operation** refreshes queued work. Downloads recheck authorisation
+and artefact integrity. A hidden control is never the authorisation boundary.
 
 ## Design and verification
 
 System fonts, teal and slate accents, visible labels, focus states, responsive
 forms, and restrained surfaces follow the CTTIR `brainwritR` family. Status
-messages use a polite live region and do not depend on color. Tables can scroll;
+messages use a polite live region and do not depend on colour. Tables can scroll;
 reduced-motion preferences are respected. Deadlines include the study time zone
 and UTC offset.
 

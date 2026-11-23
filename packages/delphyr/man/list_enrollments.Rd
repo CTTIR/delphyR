@@ -2,7 +2,7 @@
 % Please edit documentation in R/workflow.R
 \name{list_enrollments}
 \alias{list_enrollments}
-\title{List own round enrollments}
+\title{List own round enrolments}
 \usage{
 list_enrollments(repo, actor, study_id)
 }
@@ -14,7 +14,7 @@ list_enrollments(repo, actor, study_id)
 \item{study_id}{Selected study.}
 }
 \value{
-Enrollment table.
+Enrolment table.
 }
 \description{
 Lists only rounds that were opened. A round that is still being prepared,
@@ -30,7 +30,7 @@ for (state in c("review", "approved", "open")) {
   transition_round(repo, study$manager, study$round$id, state,
                    study$round$hash, "Example", paste0("example-", state))
 }
-# Each panel member sees only their own enrollments.
+# Each panel member sees only their own enrolments.
 list_enrollments(repo, study$panel[[1]], study$study_id)
 }
 }

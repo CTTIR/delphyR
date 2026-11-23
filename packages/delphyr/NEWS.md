@@ -1,12 +1,12 @@
 # delphyr 0.1.0
 
 * First version prepared for CRAN. The Description is written in full
-  sentences, the documentation language is declared (`Language: en-US`),
+  sentences, the documentation language is declared (`Language: en-GB`),
   optional system software (PostgreSQL, Quarto) is listed under
   `SystemRequirements`, and the maintainer's ORCID is recorded.
 * The package has its own `NEWS.md` and spelling word list; earlier changes
   were recorded jointly for `delphyr` and `delphyrApp` (below).
-* The offline vignette is titled "Analyzing two Delphi rounds offline".
+* The offline vignette is titled "Analysing two Delphi rounds offline".
 * `render_study_report()` passes the session's library paths to 'Quarto'
   through `R_LIBS` (set and restored around the call) instead of
   `system2(env = )`, which does not work for 'Quarto' on Windows.
@@ -28,7 +28,10 @@
   backticks. `?delphyr` gives an overview of the package.
 * The reference index of the site groups the 129 exported functions by task,
   each group with a one-line description, in English.
-* `README.md` shows the status of `R CMD check` and the license as badges.
+* `README.md` shows the status of `R CMD check` and the licence as badges.
+* The help pages, README and vignette use British spelling (authorised,
+  enrolment, organisation, panellist). Function, argument and column names
+  such as `enroll_panel()`, `enrollment_id` and `panelist_id` are unchanged.
 
 # delphyr 0.0.2
 

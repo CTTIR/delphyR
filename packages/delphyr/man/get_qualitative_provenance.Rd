@@ -14,7 +14,7 @@ get_qualitative_provenance(repo, actor, study_id, export = FALSE)
 \item{study_id}{Study UUID.}
 
 \item{export}{FALSE includes originals for editorial review. TRUE excludes
-originals and unreleased redactions and returns authorized export tables.}
+originals and unreleased redactions and returns authorised export tables.}
 }
 \value{
 Named tables with explicit source, coding, item and review provenance.

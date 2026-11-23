@@ -25,7 +25,7 @@ members and 300 rating fields.}
 
 \item{download_hours}{Hours an export can be downloaded after it was
 registered, from 1 to 720; one day by default. The period is the
-decision of the responsible organization.}
+decision of the responsible organisation.}
 
 \item{on_claim}{Optional function called with the claimed job (a one-row
 data frame with \code{id} and \code{lease_token}) before it runs, for example to

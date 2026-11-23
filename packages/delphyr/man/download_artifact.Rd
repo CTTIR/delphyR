@@ -2,7 +2,7 @@
 % Please edit documentation in R/jobs.R
 \name{download_artifact}
 \alias{download_artifact}
-\title{Resolve a private artifact only after a fresh rights check}
+\title{Resolve a private artefact only after a fresh rights check}
 \usage{
 download_artifact(repo, actor, artifact_id)
 }
@@ -11,7 +11,7 @@ download_artifact(repo, actor, artifact_id)
 
 \item{actor}{Original requesting actor with current export capability.}
 
-\item{artifact_id}{Artifact UUID.}
+\item{artifact_id}{Artefact UUID.}
 }
 \value{
 Private directory path for trusted server download code. An export
@@ -19,7 +19,7 @@ whose worker stopped after registering it but before giving it its final
 name is delivered from its temporary name, \verb{<id>.partial}.
 }
 \description{
-Resolve a private artifact only after a fresh rights check
+Resolve a private artefact only after a fresh rights check
 }
 \examples{
 \dontrun{

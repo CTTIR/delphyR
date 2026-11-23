@@ -16,7 +16,7 @@ get_round_readiness(repo, actor, round_id)
 \value{
 delphyr_validation: valid, issues (severity, code, path,
 message_key, details) and schema_version. Approval ignores the
-deadline_passed and no_enrollments findings; opening requires none.
+\code{deadline_passed} and \code{no_enrollments} findings; opening requires none.
 }
 \description{
 Reports every finding at once instead of failing on the first. Errors block

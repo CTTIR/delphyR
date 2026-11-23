@@ -10,7 +10,7 @@ Description: Provides an English, French and German 'shiny' interface for
     only; production authentication and deployment remain acceptance gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Language: en-US
+Language: en-GB
 Roxygen: list(markdown = TRUE)
 SystemRequirements: PostgreSQL (tested with version 17) for running
     studies.

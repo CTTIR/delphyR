@@ -2,7 +2,7 @@
 % Please edit documentation in R/snapshots.R
 \name{get_study_setup}
 \alias{get_study_setup}
-\title{Read authorized setup information for the round editor}
+\title{Read authorised setup information for the round editor}
 \usage{
 get_study_setup(repo, actor, study_id)
 }

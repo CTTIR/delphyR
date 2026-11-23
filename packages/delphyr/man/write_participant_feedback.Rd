@@ -11,7 +11,7 @@ write_participant_feedback(repo, actor, enrollment_id, output_dir)
 
 \item{actor}{Panel actor.}
 
-\item{enrollment_id}{Own enrollment UUID with assigned released feedback.}
+\item{enrollment_id}{Own enrolment UUID with assigned released feedback.}
 
 \item{output_dir}{Existing private directory controlled by trusted server code.}
 }
@@ -58,7 +58,7 @@ for (state in c("review", "approved", "open")) {
   transition_round(repo, study$manager, round_2$id, state, round_2$hash,
                    "Example", paste0("example-2-", state))
 }
-# The panel member's enrollment in round 2 shows the released feedback.
+# The panel member's enrolment in round 2 shows the released feedback.
 enrollments <- list_enrollments(repo, panelist, study$study_id)
 enrollment <- enrollments$id[enrollments$number == 2]
 out <- tempfile("feedback-")

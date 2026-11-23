@@ -2,7 +2,7 @@
 % Please edit documentation in R/snapshots.R
 \name{get_snapshot}
 \alias{get_snapshot}
-\title{Retrieve a frozen snapshot through current study authorization}
+\title{Retrieve a frozen snapshot through current study authorisation}
 \usage{
 get_snapshot(repo, actor, snapshot_id)
 }
@@ -17,7 +17,7 @@ get_snapshot(repo, actor, snapshot_id)
 Validated delphyr_snapshot.
 }
 \description{
-Retrieve a frozen snapshot through current study authorization
+Retrieve a frozen snapshot through current study authorisation
 }
 \examples{
 \dontrun{

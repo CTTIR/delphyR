@@ -11,7 +11,7 @@ submit_round(repo, actor, enrollment_id, expected_revision_set, command_id)
 
 \item{actor}{Panel actor.}
 
-\item{enrollment_id}{Own enrollment UUID.}
+\item{enrollment_id}{Own enrolment UUID.}
 
 \item{expected_revision_set}{Named integer vector: round-item UUID to revision.}
 

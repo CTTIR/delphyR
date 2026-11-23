@@ -9,6 +9,8 @@
   README in English, structured input errors in `demo_snapshot()`, current
   panel screenshots, `LICENSE.md` and `Additional_repositories` for
   `delphyrApp`, and README badges. Details are in the `NEWS.md` of each package.
+- Both packages declare British English (`Language: en-GB`); their help pages,
+  READMEs and vignettes and the repository README use British spelling.
 
 # delphyr / delphyrApp 0.0.2 (development)
 

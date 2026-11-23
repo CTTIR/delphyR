@@ -51,7 +51,7 @@ freeze_round <- function(repo, actor, round_id, command_id) {
     })
   })
 }
-#' Retrieve a frozen snapshot through current study authorization
+#' Retrieve a frozen snapshot through current study authorisation
 #' @param repo Repository.
 #' @param actor Actor with analyse capability.
 #' @param snapshot_id Snapshot UUID.
@@ -285,7 +285,7 @@ assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
 #' Read released aggregate feedback plus only the actor's prior answers
 #' @param repo Repository.
 #' @param actor Panel actor.
-#' @param enrollment_id Own target enrollment in a round that was opened.
+#' @param enrollment_id Own target enrolment in a round that was opened.
 #' @return Aggregate feedback, own prior response table, the comparability
 #'   decisions for revised items that were in force when the target round
 #'   opened, the released qualitative content and, where the feedback was
@@ -326,7 +326,7 @@ assign_feedback <- function(repo, actor, round_id, feedback_id, command_id) {
 #'   transition_round(repo, study$manager, round_2$id, state, round_2$hash,
 #'                    "Example", paste0("example-2-", state))
 #' }
-#' # The panel member's enrollment in round 2 shows the released feedback.
+#' # The panel member's enrolment in round 2 shows the released feedback.
 #' enrollments <- list_enrollments(repo, panelist, study$study_id)
 #' enrollment <- enrollments$id[enrollments$number == 2]
 #' get_feedback(repo, panelist, enrollment)
@@ -430,7 +430,7 @@ record_item_decision <- function(repo, actor, analysis_id, item_code, dispositio
     }, reason = reason, detail = paste(item_code, disposition))
   })
 }
-#' Read authorized setup information for the round editor
+#' Read authorised setup information for the round editor
 #'
 #' Analysts read it as well: the protocol holds the rules and the time zone of
 #' the analyses they work with.
@@ -450,7 +450,7 @@ get_study_setup <- function(repo, actor, study_id) {
   authorize_any(repo, actor, study_id, c("manage", "analyse"))
   list(protocol = protocol_for(repo, study_id)$config, consent_versions = query(repo, "SELECT id,locale,content,hash FROM identity.consent_versions WHERE study_id=$1 ORDER BY created_at", study_id))
 }
-#' Preview the exact reviewed feedback artifact before release
+#' Preview the exact reviewed feedback artefact before release
 #' @param repo Repository.
 #' @param actor Study manager or analyst; only a manager releases it.
 #' @param feedback_id Feedback UUID.
@@ -479,7 +479,7 @@ get_feedback_candidate <- function(repo, actor, feedback_id) {
   x <- one(query(repo, "SELECT content::text,hash,state FROM research.feedback WHERE id=$1", feedback_id))
   list(content = jsonlite::fromJSON(x$content), hash = x$hash, state = x$state)
 }
-#' Complete a study after finalization and explicit item decisions
+#' Complete a study after finalisation and explicit item decisions
 #' @param repo Repository.
 #' @param actor Study manager.
 #' @param study_id Study UUID.
@@ -499,7 +499,7 @@ get_feedback_candidate <- function(repo, actor, feedback_id) {
 #'                  study$round$hash, "Example", "example-closed")
 #' snapshot <- freeze_round(repo, study$manager, study$round$id, "example-freeze")
 #' analysis <- run_analysis(repo, study$manager, snapshot$id, "example-analysis")
-#' # Every item has a decision before its round is finalized.
+#' # Every item has a decision before its round is finalised.
 #' for (item in unique(study$items$item_code)) {
 #'   record_item_decision(repo, study$manager, analysis$id, item, "finalize",
 #'                        "Consensus reached", paste("example-decision", item))

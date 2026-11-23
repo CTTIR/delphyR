@@ -12,7 +12,7 @@ remove_expired_artifacts(
 )
 }
 \arguments{
-\item{repo}{Trusted worker repository with the artifact root of the worker.}
+\item{repo}{Trusted worker repository with the artefact root of the worker.}
 
 \item{dry_run}{TRUE lists what would be removed.}
 

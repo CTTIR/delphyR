@@ -6,13 +6,13 @@ Authors@R: person("R.", "Heller", role = c("aut", "cre", "cph"), email = "raban.
 Description: Supports round-based Delphi studies with validated study
     protocols, deterministic consensus classification, longitudinal analysis
     across rounds and transactional services backed by 'PostgreSQL'. Frozen
-    round snapshots can be analyzed offline, without a database, and research
+    round snapshots can be analysed offline, without a database, and research
     exports can be reproduced from their files. Synthetic example studies are
     included. Production use requires the documented security and operational
     acceptance gates.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Language: en-US
+Language: en-GB
 Roxygen: list(markdown = TRUE)
 SystemRequirements: Optional: PostgreSQL (tested with version 17) for the
     study services; Quarto for rendered HTML study reports.
