@@ -28,7 +28,7 @@
   backticks. `?delphyr` gives an overview of the package.
 * The reference index of the site groups the 129 exported functions by task,
   each group with a one-line description, in English.
-* The README shows the R CMD check status and the licence as badges.
+* `README.md` shows the status of `R CMD check` and the license as badges.
 
 # delphyr 0.0.2
 

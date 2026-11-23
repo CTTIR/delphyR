@@ -13,13 +13,13 @@
   available while it is not yet on CRAN.
 * The help pages are written with Markdown
   (`Roxygen: list(markdown = TRUE)`); `?delphyrApp` gives an overview of the
-  package. The package carries the full licence text in `LICENSE.md`.
+  package. The package carries the full license text in `LICENSE.md`.
 * The reference index and the article index of the site have English group
   titles with one-line descriptions.
-* The panel screenshots in the README and in `inst/figures` show the current
+* The panel screenshots in `README.md` and in `inst/figures` show the current
   interface (logo, consent buttons, a saved response with its receipt) instead
   of the interface of version 0.0.1.
-* The README shows the R CMD check status and the licence as badges.
+* `README.md` shows the status of `R CMD check` and the license as badges.
 
 # delphyrApp 0.0.2
 
