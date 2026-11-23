@@ -12,9 +12,12 @@ first; this package will be submitted only after 'delphyr' is on CRAN.
   New submission
   Strong dependencies not in the CRAN or BioC software repositories:
     delphyr
+  Availability using Additional_repositories specification:
+    delphyr   yes   https://cttir.r-universe.dev
 
   This warning disappears once 'delphyr' has been accepted; otherwise the
-  check is clean.
+  check is clean. Until then `Additional_repositories` names the repository
+  that provides 'delphyr'.
 
 ## Test environments
 
