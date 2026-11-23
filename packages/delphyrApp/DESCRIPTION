@@ -11,10 +11,12 @@ Description: Provides an English, French and German 'shiny' interface for
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en-US
+Roxygen: list(markdown = TRUE)
 SystemRequirements: PostgreSQL (tested with version 17) for running
     studies.
 Imports: DBI, shiny, bslib, delphyr (>= 0.1.0), htmltools, jsonlite (>= 1.8.8), uuid, zip
 Suggests: testthat (>= 3.1.7), knitr, rmarkdown, withr
+Additional_repositories: https://cttir.r-universe.dev
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://github.com/CTTIR/delphyR

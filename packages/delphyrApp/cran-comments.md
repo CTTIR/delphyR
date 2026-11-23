@@ -8,7 +8,7 @@ first; this package will be submitted only after 'delphyr' is on CRAN.
 0 errors | 1 warning | 0 notes (local check while 'delphyr' is not yet on CRAN)
 
 * checking CRAN incoming feasibility ... WARNING
-  Maintainer: 'Raban Heller <raban.heller@uni-ulm.de>'
+  Maintainer: 'R. Heller <raban.heller@uni-ulm.de>'
   New submission
   Strong dependencies not in the CRAN or BioC software repositories:
     delphyr

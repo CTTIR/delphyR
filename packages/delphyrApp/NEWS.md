@@ -9,6 +9,13 @@
   were recorded jointly for `delphyr` and `delphyrApp` (below).
 * The example of `run_app()` runs in interactive sessions instead of being
   marked as not run.
+* `Additional_repositories` names the CTTIR r-universe, where `delphyr` is
+  available while it is not yet on CRAN.
+* The help pages are written with Markdown
+  (`Roxygen: list(markdown = TRUE)`); `?delphyrApp` gives an overview of the
+  package. The package carries the full licence text in `LICENSE.md`.
+* The reference index and the article index of the site have English group
+  titles with one-line descriptions.
 
 # delphyrApp 0.0.2
 
