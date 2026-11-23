@@ -200,6 +200,19 @@ safe_csv <- function(x) {
   }
   x
 }
+# README of a round export. Plain ASCII in the language of the package and of
+# the study-level exports, so that its bytes, which the manifest records, do
+# not depend on the locale of the worker.
+round_export_readme <- function() {
+  c(
+    "# delphyR export: research_round", "",
+    "Pseudonymized research data of one frozen round. Contains no contacts or account mappings. Pseudonyms are not anonymous. Not a public release.", "",
+    "Synthetic development data. Thresholds are synthetic examples, not a methodological recommendation.",
+    "`manifest.json` lists every file with its size and SHA-256 checksum. CSV text is masked against spreadsheet formulas.", "",
+    "`snapshot.json` is the authoritative, unmodified data. Run `Rscript reproduce.R <directory>` to recompute the analysis.",
+    "The free-text profile is not released."
+  )
+}
 # Writes a round export under a temporary name, `<id>.partial`. The worker
 # gives it its final name only after the export is registered.
 write_export <- function(repo, actor, snapshot_id) {
@@ -224,7 +237,7 @@ write_export <- function(repo, actor, snapshot_id) {
   utils::write.csv(safe_csv(s$data), file.path(staging, "responses-spreadsheet.csv"), row.names = FALSE, na = "")
   utils::write.csv(safe_csv(revisions), file.path(staging, "submission-provenance.csv"), row.names = FALSE, na = "")
   utils::write.csv(safe_csv(a$results), file.path(staging, "analysis-results.csv"), row.names = FALSE, na = "")
-  writeLines(c("# Synthetischer Forschungsexport", "Keine Kontakte oder Kontozuordnungen. Pseudonyme sind nicht anonym.", "snapshot.json ist der ma\u00dfgebliche unver\u00e4nderte Datensatz; CSV-Texte sind formelsicher maskiert.", "Ausf\u00fchren: Rscript reproduce.R <Exportverzeichnis>. Freitextprofil nicht freigegeben.", "Schwellen sind synthetische Beispiele, keine methodische Empfehlung."), file.path(staging, "README.md"))
+  writeLines(round_export_readme(), file.path(staging, "README.md"))
   writeLines(c("args <- commandArgs(trailingOnly=TRUE)", "path <- if(length(args)) args[1] else '.'", "result <- delphyr::reproduce_export(path)", "print(result$results)"), file.path(staging, "reproduce.R"))
   # The time of the export is kept apart from the time of its data: the
   # frozen round's close.

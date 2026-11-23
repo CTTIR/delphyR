@@ -1,0 +1,23 @@
+test_that("the README of a round export is locale-independent English", {
+  text <- round_export_readme()
+  expect_true(is.character(text) && length(text) > 1L)
+  expect_false(any(grepl("[^\\x01-\\x7f]", text, perl = TRUE)))
+  expect_match(text[1], "^# delphyR export: research_round$")
+  expect_true(any(grepl("snapshot.json", text, fixed = TRUE)) && any(grepl("reproduce.R", text, fixed = TRUE)))
+  # The bundled example carries exactly this text; its manifest records the bytes.
+  bundled <- system.file("extdata", "example-round-export", package = "delphyr")
+  skip_if(!nzchar(bundled), "bundled example export not installed")
+  expect_identical(readLines(file.path(bundled, "README.md"), warn = FALSE), text)
+  expect_s3_class(reproduce_export(bundled), "delphyr_analysis")
+})
+test_that("the bundled exports are verified file by file", {
+  bundled <- system.file("extdata", "example-round-export", package = "delphyr")
+  skip_if(!nzchar(bundled), "bundled example export not installed")
+  copy <- tempfile("export-")
+  dir.create(copy)
+  on.exit(unlink(copy, recursive = TRUE), add = TRUE)
+  file.copy(list.files(bundled, full.names = TRUE), copy)
+  expect_s3_class(reproduce_export(copy), "delphyr_analysis")
+  cat("changed\n", file = file.path(copy, "README.md"), append = TRUE)
+  expect_identical(tryCatch(reproduce_export(copy), DEL_VALIDATION = function(e) e$path), "manifest.checksum")
+})
