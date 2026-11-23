@@ -4,141 +4,181 @@ development:
   mode: auto
 destination: site
 reference:
-  - title: Analyse und Reproduktion
+  - title: Protocols and scales
+    desc: Declare and validate the study protocol, its response scales and instrument items.
     contents:
+      - new_protocol
+      - validate_protocol
+      - demo_protocol
+      - new_scale
+      - validate_response
+      - validate_items
+      - read_item_import
+  - title: Offline analysis
+    desc: Freeze a round, classify consensus, compare rounds and prepare disclosure-controlled feedback without a database.
+    contents:
+      - new_snapshot
+      - demo_snapshot
       - analyse_round
       - classify_consensus
       - compare_rounds
-      - run_analysis
+      - prepare_feedback
+      - validate_feedback
+      - content_hash
+  - title: Reproduction
+    desc: Verify a research export and recompute its analysis from its files.
+    contents:
       - reproduce_export
       - reproduce_study_export
-  - title: Studienverwaltung und Dienste
+  - title: Repository, identities and demonstration
+    desc: Connect and migrate the PostgreSQL repository, resolve trusted identities and create synthetic studies.
     contents:
-      - accept_panel_invitation
-      - add_panelist
-      - amend_protocol
-      - assign_feedback
-      - authenticated_actor
-      - cancel_campaign
-      - change_round_deadline
-      - claim_job
-      - code_qualitative_source
-      - complete_study
       - connect_repository
-      - content_hash
-      - create_feedback
-      - create_qualitative_theme
-      - create_study
-      - del_abort
-      - demo_actor
-      - demo_protocol
-      - demo_snapshot
-      - demo_study
-      - download_artifact
-      - enroll_panel
-      - freeze_round
-      - get_account_rights
-      - get_analysis
-      - get_capabilities
-      - get_feedback
-      - get_feedback_candidate
-      - get_item_comparability
-      - get_operation
-      - get_operations_status
-      - get_panel_import_receipt
-      - get_qualitative_provenance
-      - get_questionnaire
-      - get_retention_report
-      - get_round_instrument
-      - get_round_readiness
-      - get_snapshot
-      - get_study_documentation
-      - get_study_setup
-      - get_system_status
-      - hold_pending_messages
-      - import_panel
-      - import_round_contributions
-      - invitation_code
-      - issue_panel_invitation
-      - link_item_source
-      - list_audit_events
-      - list_campaign_enrollments
-      - list_campaign_rounds
-      - list_contribution_rounds
-      - list_enrollments
-      - list_item_decisions
-      - list_panel
-      - list_panel_invitations
-      - list_protocol_versions
-      - list_qualitative_reviews
-      - list_released_edits
-      - list_released_feedback
-      - list_rounds
-      - list_studies
-      - list_study_staff
-      - list_uncertain_deliveries
-      - log_event
-      - log_operation
       - migrate_repository
       - new_authentication_config
-      - new_correlation_id
-      - new_invitation_token
-      - new_message_adapter
-      - new_protocol
-      - new_scale
-      - new_snapshot
-      - parse_invitation_code
-      - prepare_campaign
-      - prepare_feedback
-      - prepare_report_data
-      - prepare_round
-      - prepare_study_report_data
-      - preview_campaign
-      - preview_panel_import
-      - preview_panel_invitation
-      - process_campaign_message
-      - process_campaign_sink
+      - authenticated_actor
       - provision_demo_principal
-      - publish_consent
-      - read_item_import
-      - record_consent
-      - record_item_comparability
-      - record_item_decision
-      - record_item_lineage
-      - record_qualitative_source
-      - record_study_documentation
-      - record_worker_heartbeat
-      - redact_qualitative_source
-      - register_invited_account
+      - demo_actor
+      - demo_study
+  - title: Studies, protocol versions and staff
+    desc: Create and complete studies, amend protocols and manage staff rights.
+    contents:
+      - create_study
+      - list_studies
+      - get_study_setup
+      - complete_study
+      - list_protocol_versions
+      - amend_protocol
+      - get_capabilities
+      - set_capability
+      - get_account_rights
       - register_staff_account
-      - release_campaign
+      - list_study_staff
+  - title: Panel, imports and invitations
+    desc: Maintain the pseudonymous panel, import contacts and issue account-bound invitations.
+    contents:
+      - add_panelist
+      - list_panel
+      - set_panel_group
+      - withdraw_participation
+      - preview_panel_import
+      - import_panel
+      - get_panel_import_receipt
+      - new_invitation_token
+      - invitation_code
+      - parse_invitation_code
+      - issue_panel_invitation
+      - preview_panel_invitation
+      - accept_panel_invitation
+      - revoke_panel_invitation
+      - register_invited_account
+      - list_panel_invitations
+  - title: Rounds, consent and responses
+    desc: Prepare and open rounds, record consent, save revisions and submit.
+    contents:
+      - publish_consent
+      - record_consent
+      - prepare_round
+      - get_round_instrument
+      - get_round_readiness
+      - enroll_panel
+      - list_rounds
+      - transition_round
+      - change_round_deadline
+      - list_enrollments
+      - get_questionnaire
+      - save_response
+      - submit_round
+  - title: Snapshots, analyses and feedback
+    desc: Freeze closed rounds, persist analyses and release reviewed feedback.
+    contents:
+      - freeze_round
+      - get_snapshot
+      - run_analysis
+      - get_analysis
+      - create_feedback
+      - get_feedback_candidate
       - release_feedback
       - release_feedback_correction
+      - assign_feedback
+      - get_feedback
+      - list_released_feedback
+      - record_item_decision
+      - list_item_decisions
+  - title: Qualitative sources and item lineage
+    desc: Preserve originals, review redactions and summaries, code themes and record item provenance.
+    contents:
+      - record_qualitative_source
+      - redact_qualitative_source
       - release_qualitative_edit
-      - remove_expired_artifacts
-      - remove_unfinished_exports
-      - render_study_report
-      - renew_job_lease
+      - list_qualitative_reviews
+      - list_released_edits
+      - create_qualitative_theme
+      - code_qualitative_source
+      - link_item_source
+      - record_item_lineage
+      - get_qualitative_provenance
+      - list_contribution_rounds
+      - import_round_contributions
+      - record_item_comparability
+      - get_item_comparability
+  - title: Campaigns and delivery
+    desc: Approve message campaigns and resolve their delivery through a provider adapter.
+    contents:
+      - list_campaign_rounds
+      - list_campaign_enrollments
+      - prepare_campaign
+      - preview_campaign
+      - release_campaign
+      - cancel_campaign
+      - new_message_adapter
+      - process_campaign_message
+      - process_campaign_sink
+      - list_uncertain_deliveries
+      - resolve_delivery
+      - hold_pending_messages
+  - title: Background jobs, exports and reports
+    desc: Queue analyses and exports, run the worker, download artifacts and render reports.
+    contents:
       - request_analysis
       - request_export
       - request_study_export
-      - resolve_delivery
-      - revoke_panel_invitation
-      - save_response
-      - set_capability
-      - set_panel_group
-      - submit_round
-      - transition_round
-      - validate_feedback
-      - validate_items
-      - validate_protocol
-      - validate_response
-      - withdraw_participation
+      - get_operation
+      - claim_job
+      - renew_job_lease
       - worker_step
-      - write_participant_feedback
+      - record_worker_heartbeat
+      - download_artifact
+      - prepare_report_data
+      - prepare_study_report_data
       - write_report_data
+      - render_study_report
+      - write_participant_feedback
+  - title: Audit, documentation and operations
+    desc: Read the audit trail, record author-supplied documentation and inspect the state of a deployment.
+    contents:
+      - list_audit_events
+      - record_study_documentation
+      - get_study_documentation
+      - get_system_status
+      - get_operations_status
+      - get_retention_report
+      - remove_expired_artifacts
+      - remove_unfinished_exports
+  - title: Conditions and technical log
+    desc: Structured errors and a log of fixed tokens without study content.
+    contents:
+      - del_abort
+      - new_correlation_id
+      - log_event
+      - log_operation
+  - title: Package
+    desc: Overview of the package.
+    contents:
+      - delphyr-package
 articles:
-  - title: Anleitungen
+  - title: Guides
+    desc: Worked examples that run offline with synthetic data.
     navbar: ~
     contents:
       - offline
