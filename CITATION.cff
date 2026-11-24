@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+type: software
+title: 'delphyR: Reproducible Round-Based Delphi Studies and Multilingual Workflows'
+version: 0.1.0
+authors:
+  - family-names: Heller
+    given-names: R.
+    orcid: https://orcid.org/0000-0001-8006-9742
+repository-code: https://github.com/CTTIR/delphyR
+license: MIT
+abstract: >-
+  The delphyR repository contains the delphyr R package for reproducible
+  round-based Delphi studies and the delphyrApp package for English, French
+  and German Shiny workflows. It supports validated protocols, deterministic
+  consensus classification, offline analysis of frozen round snapshots and
+  transactional PostgreSQL services. Production authentication, deployment
+  and study acceptance remain separate gates.
+keywords:
+  - Delphi studies
+  - consensus
+  - reproducible research
+  - R
+  - Shiny
